@@ -4730,8 +4730,6 @@ class Sales extends MY_Controller
 		$this->data['pos'] = $this->pos_model->getSetting();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv = $this->sales_model->getInvoiceByID($id);
-        // $this->erp->print_arrays($inv);
-        //$this->erp->view_rights($inv->created_by);
         $this->data['barcode'] = "<img src='" . site_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" .$inv->reference_no . "' class='pull-left' />";
         $this->data['customer'] = $this->site->getCompanyByID($inv->customer_id);
         $this->data['payments'] = $this->sales_model->getPaymentsForSale($id);
