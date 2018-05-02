@@ -14,7 +14,7 @@
         product_tax = 0, invoice_tax = 0, total_discount = 0, total = 0, surcharge = 0,
         tax_rates = <?php echo json_encode($tax_rates); ?>;
 		
-	//var $biller = $("#slbiller");
+	   
 		$(window).load(function(){
 			<?php if($Admin || $Owner){ ?>
 			billerChange();
@@ -29,6 +29,7 @@
         localStorage.setItem('renote', '<?= $this->erp->decode_html($inv->note); ?>');
 		localStorage.setItem('iref', '<?= $inv->reference_no ?>');
 		localStorage.setItem('slbiller', <?= $inv->biller_id ?>);
+		localStorage.setItem('slwarehouse', '<?= $inv->warehouse_id ?>');
         localStorage.setItem('reitems', JSON.stringify(<?= $inv_items; ?>));
         localStorage.setItem('rediscount', '<?= $inv->order_discount_id ?>');
 		localStorage.setItem('sldiscount', '<?= $inv->order_discount_id ?>');
@@ -631,7 +632,7 @@
     }
 	
 	function billerChange(){
-        var id = $("#slbiller").val();
+        var id = $('#slbiller').val();
         $("#slwarehouse").empty();
         $.ajax({
             url: '<?= base_url() ?>auth/getWarehouseByProject/'+id,
@@ -639,17 +640,26 @@
             success: function(result){
                 $.each(result, function(i,val){
                     var b_id = val.id;
+					var code = val.code;
                     var name = val.name;
-                    var opt = '<option value="' + b_id + '">' + name + '</option>';
+                    var opt = '<option value="' + b_id + '">'+ name +'</option>';
                     $("#slwarehouse").append(opt);
+					
                 });
+				
                 $('#slwarehouse option[selected="selected"]').each(
                     function() {
-                        $(this).removeAttr('selected');
+                        //$(this).removeAttr('selected');
                     }
                 );
-				$('#slwarehouse').val($('#slwarehouse option:first-child').val()).trigger('change');
+				//$('#slwarehouse').val($('#slwarehouse option:first-child').val()).trigger('change');
                 //$("#slwarehouse").select2("val", "<?=$Settings->default_warehouse;?>");
+				
+				if(slwarehouse = localStorage.getItem('slwarehouse')){
+					$('#slwarehouse').select2("val", slwarehouse);
+				}else{
+					$("#slwarehouse").select2("val", "<?=$Settings->default_warehouse;?>");
+				}
             }
         });
     }
