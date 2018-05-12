@@ -11137,12 +11137,12 @@ class Reports extends MY_Controller
     function getSaleProduct($id = NULL, $pdf = NULL, $xls = NULL) {
         
         if ($this->input->get('start_date')) {
-            $start_date = $this->erp->fsd($this->input->get('start_date'));
+            $start_date = $this->erp->fsd($this->input->get('start_date')).' 00:00';
         } else {
             $start_date = null;
         }
         if ($this->input->get('end_date')) {
-            $end_date = $this->erp->fsd($this->input->get('end_date'));
+            $end_date = $this->erp->fsd($this->input->get('end_date')).' 23:59';
         } else {
             $end_date = null;
         }
@@ -19791,12 +19791,14 @@ class Reports extends MY_Controller
         
         $this->page_construct('reports/product_test', $meta, $this->data);
     }
-        function inventory($pdf, $excel,$reference,$wahouse_id,$product_id,$from_date,$to_date,$stockType,$cate_id,$biller){
-		$wid = $this->reports_model->getWareByUserID();
-        
+	
+    function inventory($pdf, $excel,$reference,$wahouse_id,$product_id,$from_date,$to_date,$stockType,$cate_id,$biller)
+	{
+		$wid = $this->reports_model->getWareByUserID();        
         $this->erp->checkPermissions('inventory_valuation_detail', NULL, 'product_report');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        if ($pdf || $excel) {
+       
+		if ($pdf || $excel) {
                 $this->load->library('excel');
                 $this->excel->setActiveSheetIndex(0);
                 $this->excel->getActiveSheet()->setTitle(lang('inventory'));
@@ -19819,13 +19821,10 @@ class Reports extends MY_Controller
                 $gqty = 0;  
                 $warehouses = $this->reports_model->getWarehousesInventoryValuation($wid,$wahouse_id,$cate_id,$product_id,$stockType,$from_date,$to_date,$reference,$biller);
                 foreach($warehouses as $ware){
-                    // $total_qoh_per_warehouse = 0;
-                    // $total_assetVal_per_warehouse = 0;
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, "Warehouse >> ".$ware->warehouse);
                     $this->excel->getActiveSheet()->mergeCells('A'.$row.':K'.$row);
                     $this->excel->getActiveSheet()->getStyle('A'. $row.':K'.$row)->getFont()->setBold(true);
                     $this->excel->getActiveSheet()->getStyle('A'. $row.':K'.$row)->getFont()->setSize(12);
-                    // $categories = $this->reports_model->getCategories($ware->warehouse_id);
                     $categories = $this->reports_model->getCategoriesInventoryValuationByWarehouse($ware->warehouse_id,$cate_id,$product_id,$stockType,$from_date,$to_date,$reference,$biller);
                     $total_qoh_per_warehouse_cat = 0;
                     $total_assetVal_per_warehouse_cat = 0;
@@ -19834,9 +19833,7 @@ class Reports extends MY_Controller
                         $this->excel->getActiveSheet()->SetCellValue('A' .$row, "   "."Category >> ".$cat->category_name);
                         $this->excel->getActiveSheet()->mergeCells('A'.$row.':K'.$row);
                         $this->excel->getActiveSheet()->getStyle('A'. $row)->getFont()->setBold(true);
-                        $this->excel->getActiveSheet()->getStyle('A'. $row.':K'.$row)->getFont()->setSize(11);
-                        // $products = $this->reports_model->getProducts($ware->warehouse_id, $cat->category_id);
-						
+                        $this->excel->getActiveSheet()->getStyle('A'. $row.':K'.$row)->getFont()->setSize(11);						
                         $total_qoh_per_warehouse = 0;
                         $total_assetVal_per_warehouse = 0;
                         $products = $this->reports_model->getProductsInventoryValuationByWhCat($ware->warehouse_id,($cate_id?$cate_id:$cat->category_id),$product_id,$stockType,$from_date,$to_date,$reference,$biller);
@@ -19848,12 +19845,10 @@ class Reports extends MY_Controller
                            $this->excel->getActiveSheet()->SetCellValue('A' .$row, $pro->product_code?"     ".$pro->product_code.' >> '.$pro->product_name:"     ".$pro->product_id.' >> '.$pro->product_name.'('.$pro->un.')');
                            $this->excel->getActiveSheet()->mergeCells('A'.$row.':K'.$row);
                            $this->excel->getActiveSheet()->getStyle('A'. $row)->getFont()->setBold(true);
-                           // $this->excel->getActiveSheet()->SetCellValue('B'. $row.':K'. $row);
-                            }
-                            $qty_on_hand = 0;
-                            $total_on_hand = 0;
-                            $total_asset_val = 0;
-                           // $prod = $this->reports_model->getByProduct($ware->warehouse_id,$cat->category_id,$pro->product_id);
+                        }
+                           $qty_on_hand = 0;
+                           $total_on_hand = 0;
+                           $total_asset_val = 0;
                            $prod = $this->reports_model->getProductsInventoryValuationByProduct($ware->warehouse_id,($cate_id?$cate_id:$cat->category_id),($product_id?$product_id:$pro->product_id),$stockType,$from_date,$to_date,$reference,$biller);
                            $row++;
                            foreach ($prod as $getpro) {
@@ -19874,7 +19869,7 @@ class Reports extends MY_Controller
                                     $p_qty = (-1) * $getpro->quantity;
                                 }
 
-                               $unit_name = $this->erp->convert_unit_2_string($getpro->product_id,$p_qty);
+								$unit_name = $this->reports_model->convertQuantityUnit($getpro->product_id,$p_qty);
                                 
                                 $qty_on_hand += $p_qty ;// $pr->qty_on_hand;
                                 
@@ -19889,20 +19884,16 @@ class Reports extends MY_Controller
                                 $this->excel->getActiveSheet()->SetCellValue('D' .$row, $getpro->name);
                                 $this->excel->getActiveSheet()->SetCellValue('E' .$row, $getpro->reference_no." ");
                                 $this->excel->getActiveSheet()->SetCellValue('F' .$row, $getpro->biller_name);
-                                $this->excel->getActiveSheet()->SetCellValue('G' .$row, $p_qty.' '.$unit_name);
+                                $this->excel->getActiveSheet()->SetCellValue('G' .$row, $p_qty.'   '.$unit_name);
                                 $this->excel->getActiveSheet()->SetCellValue('H' .$row, $p_cost);
                                 $this->excel->getActiveSheet()->SetCellValue('I' .$row, $qty_on_hand);
                                 $this->excel->getActiveSheet()->SetCellValue('J' .$row, $cost);
                                 $this->excel->getActiveSheet()->SetCellValue('K' .$row, $asset_value);
-                                // $a = $i+1;
                                 $total_on_hand = $qty_on_hand;
                                 $total_asset_val = $asset_value;
                                 
                                 $row++;                   
                             }
-
-                            // $total_qoh_per_warehouse += $total_on_hand;
-                            // $total_assetVal_per_warehouse += $total_asset_val;
                             $this->excel->getActiveSheet()->mergeCells('A'.$row.':H'.$row);
                             $this->excel->getActiveSheet()->SetCellValue('A' .$row, lang('total').">>");
                             $this->excel->getActiveSheet()->getStyle('A' .$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
@@ -19913,9 +19904,7 @@ class Reports extends MY_Controller
 
                             $total_qoh_per_warehouse += $total_on_hand;
                             $total_assetVal_per_warehouse += $total_asset_val;
-                            $row++;                          
-                            // $this->excel->getActiveSheet()->SetCellValue('I' .$i, $total_on_hand);
-                            // $this->excel->getActiveSheet()->SetCellValue('J' .$i, $total_asset_val);
+                            $row++;
                             
                         }
 
@@ -19957,9 +19946,9 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(15);
