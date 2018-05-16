@@ -5134,6 +5134,15 @@ class Sales extends MY_Controller
 						$old_sqty = $sale_item->quantity;
 					}
 					
+					$quantity_balance = 0;
+                    if($item_option != 0) {
+                        $row = $this->purchases_model->getVariantQtyById($item_option);
+                        $quantity_balance = $item_quantity * $row->qty_unit;
+                        $item_cost   = $item_cost * $row->qty_unit;
+                    }else{
+                        $quantity_balance = $item_quantity;
+                    }
+					
                     $products[] = array(
                         'product_id' => $item_id,
                         'digital_id' => $digital_id,
@@ -5146,6 +5155,7 @@ class Sales extends MY_Controller
                         'net_unit_price' => $item_net_price,
                         'unit_price' => $this->erp->formatDecimal($unitPrice),
                         'quantity' => $item_quantity,
+						'quantity_balance'  => $quantity_balance,
                         'warehouse_id' => $warehouse_id,
                         'item_tax' => $pr_item_tax,
                         'tax_rate_id' => $pr_tax,

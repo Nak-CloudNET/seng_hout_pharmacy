@@ -1774,6 +1774,22 @@ class Sales_model extends CI_Model
 							$this->db->insert('costing', $item_cost);
 						}
 					}
+					$purchase_items = array(
+                        'product_id' 		=> $item['product_id'],
+                        'product_code' 		=> $item['product_code'],
+                        'product_name' 		=> $item['product_name'],
+                        'option_id' 		=> $item['option_id'],
+                        'quantity' 			=> $item['quantity'],
+                        'quantity_balance' 	=> (-1) * $item['quantity_balance'],
+                        'warehouse_id' 		=> $item['warehouse_id'],
+                        'expiry' 			=> $item['expiry'],
+                        'date' 				=> date('Y-m-d', strtotime($data['date'])),
+                        'status' 			=> ($data['sale_status'] == 'completed' ? 'received' : ''),
+                        'transaction_type' 	=> 'SALE',
+                        'transaction_id' 	=> $sale_item_id,
+                        'product_type' 		=> $item['product_type']
+                    );
+                    $this->site->syncSalePurchaseItems($purchase_items);
 				}
 				
 				$i++;
@@ -1784,10 +1800,10 @@ class Sales_model extends CI_Model
             }
 			
 			
-			if ($data['sale_status'] == 'completed') {
+			/*if ($data['sale_status'] == 'completed') {
 				$cost = $this->site->costing($items);
 				$this->site->syncPurchaseItems_delivery($cost, $deliver_id_muti);
-			}
+			}*/
 			
 			if($loans){
 				foreach($loans as $loan){
@@ -1938,17 +1954,12 @@ class Sales_model extends CI_Model
 							$this->db->update('deposits', array('amount' => $deposit_balance), array('company_id' => $deposit_customer_id));
 						}
 					}
-						
-						//$this->calculateSaleTotals($data['sale_id'], $return_id, $data['surcharge'], $payment_status);
 						$this->calculateSaleTotals($sale_id, $return_id, NULL, $payment_status);
 					}
 					$this->site->syncQuantity(NULL, NULL, $sale_items);
 				}
 			}
-
-			//$this->site->syncQuantity($sale_id);
 			$this->erp->update_award_points($data['grand_total'], $data['customer_id'], $data['created_by'], NULL ,$data['saleman_by']);
-			//return true;
 			return $sale_id;
 		}
 		return false;
@@ -2198,6 +2209,7 @@ class Sales_model extends CI_Model
 	
     public function updateSale($id, $data, $items = array(), $sale_data)
     {
+		
 		if ($data['sale_status'] == 'completed') {
 			$this->site->costing($items);
 		}
@@ -2265,10 +2277,28 @@ class Sales_model extends CI_Model
                             $this->db->insert('costing', $item_cost);
                         }
                     }
+					
+					$purchase_items = array(
+                        'product_id' 		=> $item['product_id'],
+                        'product_code' 		=> $item['product_code'],
+                        'product_name' 		=> $item['product_name'],
+                        'option_id' 		=> $item['option_id'],
+                        'quantity' 			=> $item['quantity'],
+                        'quantity_balance' 	=> (-1) * $item['quantity_balance'],
+                        'warehouse_id' 		=> $item['warehouse_id'],
+                        'expiry' 			=> $item['expiry'],
+                        'date' 				=> date('Y-m-d', strtotime($data['date'])),
+                        'status' 			=> ( $data['sale_status'] == 'completed' ? 'received' : ''),
+                        'transaction_type' 	=> 'SALE',
+                        'transaction_id' 	=> $sale_item_id,
+                        'product_type' 		=> $item['product_type']
+                    );
+					
+                    $this->site->syncSalePurchaseItems($purchase_items);
                 }
 				$i++;
             }
-			//echo $data['paid'];exit;
+			
 			if($data['payment_status'] == 'paid' || $data['payment_status'] == 'partial'){
 				$this->db->update('payments', array('amount' => $data['paid']), array('sale_id' => $id));
 				$total_balance = $data['grand_total'] - $data['paid'];
@@ -2282,13 +2312,10 @@ class Sales_model extends CI_Model
 
 				
 			}
-			//if($data['payment_status'] == 'paid')
-			
-			
             if ($data['sale_status'] == 'completed') {
 				$this->site->syncSalePayments($id);
-				$cost = $this->site->costing($items);
-                $this->site->syncPurchaseItems($cost);
+				//$cost = $this->site->costing($items);
+                //$this->site->syncPurchaseItems($cost);
             }
             $this->site->syncQuantity($id);
             $this->erp->update_award_points($data['grand_total'], $data['customer_id'], $data['created_by'], null, $data['saleman_by']);
