@@ -6486,7 +6486,289 @@ class Reports extends MY_Controller
             echo $this->datatables->generate();
         }
     }
-	function getSalesReportByProID($pdf = NULL, $xls = NULL)
+    function getSalesReportByProID($pdf = NULL, $xls = NULL)
+    {
+        $customer = $this->input->get('customer');
+        $datt =$this->reports_model->getLastDate("sales","date");
+        if ($this->input->get('product')) {
+            $product = $this->input->get('product');
+        } else {
+            $product = NULL;
+        }
+        if ($this->input->get('product_type')) {
+            $product_type = $this->input->get('product_type');
+        } else {
+            $product_type = NULL;
+        }
+        if ($this->input->get('biller_id')) {
+            $biller_id = $this->input->get('biller_id');
+        } else {
+            $biller_id = NULL;
+        }
+
+        if ($this->input->get('user')) {
+            $user = $this->input->get('user');
+        } else {
+            $user = NULL;
+        }
+        if ($this->input->get('customer')) {
+            $customer = $this->input->get('customer');
+        } else {
+            $customer = NULL;
+        }
+        if ($this->input->get('biller')) {
+            $biller = $this->input->get('biller');
+        } else {
+            $biller = NULL;
+        }
+        if ($this->input->get('warehouse')){
+            $warehouse = $this->input->get('warehouse');
+        } else {
+            $warehouse = NULL;
+        }
+        if ($this->input->get('reference_no')) {
+            $reference_no = $this->input->get('reference_no');
+        } else {
+            $reference_no = NULL;
+        }
+        if($this->input->get("customer_group")){
+            $customer_group = $this->input->get("customer_group");
+        }else {
+            $customer_group = NULL;
+        }
+
+        if ($this->input->get('start_date')) {
+            $start_date = $this->erp->fsd($this->input->get('start_date'));
+        } else {
+            $start_date = NULL;
+        }
+        if ($this->input->get('end_date')) {
+            $end_date = $this->erp->fsd($this->input->get('end_date'));
+        } else {
+            $end_date = NULL;
+        }
+        if ($this->input->get('serial')) {
+            $serial = $this->input->get('serial');
+        } else {
+            $serial = NULL;
+        }
+
+        if ($this->input->get('types')) {
+            $types = $this->input->get('types');
+        } else {
+            $types = NULL;
+        }
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+        
+        
+        if ($pdf || $xls) {
+            $this->db
+                ->select("sale_items.id as id, sales.date, sales.reference_no, sale_items.product_name, sales.grand_total, sales.paid, (erp_sales.grand_total - erp_sales.paid) as balacne,erp_sales.note")
+                ->from('sales')
+                ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
+                ->join('products', 'products.id = sale_items.product_id', 'left')
+                ->join('companies', 'companies.id=sales.customer_id','left')
+                ->join('users', 'sales.saleman_by = users.id', 'left')
+                ->where('sales.customer_id', $customer)
+                ->where('sales.sale_status <> "returned"')
+                ->group_by('sales.reference_no');
+            $q = $this->db->get();
+
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = NULL;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('sales_report'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('reference_no'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('grand_total'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('paid'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('balance'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('note'));
+
+                $row = 2;
+                $total = 0;
+                $paid = 0;
+                $balance = 0;
+                foreach ($data as $data_row) {
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data_row->date));
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->reference_no);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->product_name);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->grand_total);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->paid);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, ($data_row->grand_total - $data_row->paid));
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, strip_tags($data_row->note));
+                    $total += $data_row->grand_total;
+                    $paid += $data_row->paid;
+                    $balance += ($data_row->grand_total - $data_row->paid);
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle("D" . $row . ":F" . $row)->getBorders()
+                    ->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $total);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $paid);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $balance);
+
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+
+                $filename = 'sales_report';
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                if ($pdf) {
+                    $styleArray = array(
+                        'borders' => array(
+                            'allborders' => array(
+                                'style' => PHPExcel_Style_Border::BORDER_THIN
+                            )
+                        )
+                    );
+                    $this->excel->getDefaultStyle()->applyFromArray($styleArray);
+                    $this->excel->getActiveSheet()->getStyle('F2:F' . $row)->getAlignment()->applyFromArray(
+                        array(
+                            'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_RIGHT
+                        ));
+                    $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
+                    require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
+                    $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+                    $rendererLibrary = 'MPDF';
+                    $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
+                    if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
+                        die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
+                            PHP_EOL . ' as appropriate for your directory structure');
+                    }
+
+                    header('Content-Type: application/pdf');
+                    header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
+                    header('Cache-Control: max-age=0');
+
+                    $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
+                    $objWriter->save('php://output');
+                    exit();
+                }
+                if ($xls) {
+                    $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                    $this->excel->getActiveSheet()->getStyle('F2:F' . $row)->getAlignment()->applyFromArray(
+                        array(
+                            'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_RIGHT,
+                            'wrap'       => true
+                        ));
+                    ob_clean();
+                    header('Content-Type: application/vnd.ms-excel');
+                    header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+                    header('Cache-Control: max-age=0');
+                    ob_clean();
+                    $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+                    $objWriter->save('php://output');
+                    exit();
+                }
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER["HTTP_REFERER"]);
+
+        } else {
+            $this->load->library('datatables');
+            if($product_type == "combo" || $product_type == "service"){
+                $this->datatables
+                ->select("
+                erp_sales.id, 
+                erp_sales.date, 
+                reference_no, 
+                biller, 
+                customer,
+                erp_sale_items.quantity,                
+                erp_units.name as unit_name,                
+                erp_sale_items.subtotal as total_price,
+                (erp_sale_items.unit_cost * erp_sale_items.quantity) as total_cost,
+                (erp_sale_items.subtotal - (erp_sale_items.unit_cost * erp_sale_items.quantity)) as profit", FALSE)
+                ->from('sales')
+                ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
+                ->join('products', 'products.id = sale_items.product_id', 'left')
+                ->join('units', 'units.id = products.unit', 'left')
+                ->join('purchase_items', 'purchase_items.transaction_id = sale_items.id', 'left')
+                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+                ->join('companies', 'companies.id=sales.customer_id','left')
+                ->join('customer_groups','customer_groups.id=companies.customer_group_id','left')
+                ->where('sales.sale_status <> "returned"')
+                ->where('sale_items.product_id', $product)
+                ->group_by('sales.id');
+            }else{
+                $this->datatables
+                ->select("
+                erp_sales.id, 
+                erp_sales.date, 
+                reference_no, 
+                biller, 
+                customer,
+                abs(erp_purchase_items.quantity_balance),
+                units.name as unit_name,
+                IF(erp_sale_items.product_type = 'combo',
+                    erp_products.price * abs(erp_purchase_items.quantity_balance),
+                    erp_sale_items.subtotal
+                ) as total_price,
+                IF(erp_sale_items.product_type = 'combo',
+                    erp_products.cost * abs(erp_purchase_items.quantity_balance),
+                    erp_sale_items.unit_cost * abs(erp_purchase_items.quantity_balance)
+                ) as total_cost,
+                IF(erp_sale_items.product_type = 'combo',
+                    (erp_products.price * abs(erp_purchase_items.quantity_balance)) - (erp_products.cost * abs(erp_purchase_items.quantity_balance)),
+                    (erp_sale_items.subtotal) - (erp_sale_items.unit_cost * abs(erp_purchase_items.quantity_balance))
+                ) as profit", FALSE)
+                ->from('purchase_items')
+                ->join('sale_items', 'sale_items.id = purchase_items.transaction_id', 'left')
+                ->join('sales', 'sales.id = sale_items.sale_id', 'left')
+                ->join('products', 'products.id = purchase_items.product_id', 'left')
+                ->join('units', 'units.id = products.unit', 'left')
+                ->where('sales.sale_status <> "returned"')
+                ->where(array('purchase_items.product_id' => $product, 'purchase_items.transaction_type' => 'SALE'))
+                ->group_by('purchase_items.id');
+            }            
+
+            if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+                if ($this->session->userdata('user_id')) {
+                    $this->datatables->where('sales.created_by', $this->session->userdata('user_id'));
+                }
+            }
+            
+            if ($user) {
+                $this->datatables->where('sales.created_by', $user);
+            }
+            if ($biller_id) {
+                $this->datatables->where('sales.biller_id', $biller_id);
+            }
+            if ($biller) {
+                $this->datatables->where('sales.biller_id', $biller);
+            }
+            if ($customer) {
+                $this->datatables->where('sales.customer_id', $customer);
+            }
+            if ($warehouse) {
+                $this->datatables->where('sales.warehouse_id', $warehouse);
+            }
+            if ($reference_no) {
+                $this->datatables->like('sales.reference_no', $reference_no, 'both');
+            }
+            if ($start_date) {
+                $this->datatables->where('date_format('.$this->db->dbprefix('sales').'.date,"%Y-%m-%d") BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+            echo $this->datatables->generate();
+        }
+    }
+	function getSalesReportByProID2($pdf = NULL, $xls = NULL)
     {
 		$customer = $this->input->get('customer');
         $datt =$this->reports_model->getLastDate("sales","date");
@@ -6682,7 +6964,8 @@ class Reports extends MY_Controller
 
         } else {
             $this->load->library('datatables');
-			if($product_type == "combo" || $product_type == "service"){
+            $product_type=$this->site->getProductType($product);
+			if($product_type != "combo" || $product_type != "service"){
 				$this->datatables
                 ->select("
 				erp_sales.id, 
