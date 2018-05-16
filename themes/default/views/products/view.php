@@ -971,7 +971,7 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"bSortable": false, "mRender": checkbox},{"mRender": fld}, null, null, null,null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}],
+                    "aoColumns": [{"mRender": fld}, null, null, null,null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}],
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var gtotal = 0, tpaid = 0, tbalance = 0,tqty=0;
                         for (var i = 0; i < aaData.length; i++) {
@@ -987,12 +987,12 @@ if ($Owner || $Admin ){ ?>
 						 nCells[9].innerHTML = currencyFormat(parseFloat(tbalance));
                     }
                 }).fnSetFilteringDelay().dtFilter([
-                    {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
-                    {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-                    {column_number: 3, filter_default_label: "[<?=lang('warehouse');?>]", filter_type: "text", data: []},
-                    {column_number: 4, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
-					{column_number: 5, filter_default_label: "[<?=lang('product_name');?>]", filter_type: "text", data: []},
-                    {column_number: 10, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
+                    {column_number: 0, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
+                    {column_number: 1, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
+                    {column_number: 2, filter_default_label: "[<?=lang('warehouse');?>]", filter_type: "text", data: []},
+                    {column_number: 3, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
+					{column_number: 4, filter_default_label: "[<?=lang('product_name');?>]", filter_type: "text", data: []},
+                    {column_number: 9, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
                 ], "footer");
             });
         </script>
@@ -1030,9 +1030,7 @@ if ($Owner || $Admin ){ ?>
                             <table id="PoRData" class="table table-bordered table-hover table-striped table-condensed">
                                 <thead>
                                 <tr>
-								    <th style="min-width:30px; width: 30px; text-align: center;">
-										<input class="checkbox checkth" type="checkbox" name="check"/>
-									</th>
+								   
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("reference_no"); ?></th>
                                     <th><?= lang("warehouse"); ?></th>
@@ -1053,9 +1051,7 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
-								    <th style="min-width:30px; width: 30px; text-align: center;">
-										<input class="checkbox checkth" type="checkbox" name="check"/>
-									</th>
+								   
                                     <th></th>
                                     <th></th>
                                     <th></th>
@@ -1539,12 +1535,28 @@ if ($Owner || $Admin ){ ?>
         $(document).ready(function () {
             $('#pdf').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getSalesReport/pdf/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input:checkbox:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/exportSalesReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getSalesReport/0/xls/?v=1&product='.$product->id)?>";
+                    var invs=new Array();
+                $("input:checkbox:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/exportSalesReport/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#pdf1').click(function (event) {
