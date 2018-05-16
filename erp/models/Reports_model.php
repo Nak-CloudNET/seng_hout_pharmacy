@@ -5187,5 +5187,144 @@ ORDER BY
             }
             return false;
 	}
+	function convertQuantityUnit($_item_code = NULL, $_qty = NULL)
+	{
+		$_is_mulit_unit = 1;
+		$_if_under_0 = "";
+		if ($_is_mulit_unit == 0)
+		{
+			return $qty;
+
+			exit ();
+		}
+		$nu = 0;
+		if($_qty){
+			
+			if ($_qty < 0)
+			{
+				$nu = $_qty;
+				$_qty = abs ($_qty);
+			}
+		}
+
+		if ($_qty == 0) $_qty = "zero";
+
+		if ($_item_code == "" || $_qty === "")
+		{
+			//exit ("Warning! cannot call convert_unit_2_string($_item_code, $_qty) function.. missing argument, Error: bv00100");
+		}
+		else
+		{
+			if ($_qty == "zero") $_qty = 0;
+
+
+			$_item_code = trim ($_item_code);
+
+			$_units = array ();
+
+			$_select_all_units = $this->site->getUnitUOM($_item_code);
+			
+			$_max_unit = count($_select_all_units);
+
+			$_i = 0;
+			if (is_array($_select_all_units)){
+				foreach ($_select_all_units as $_get_unit)
+				{
+					$_unit_description 	= $_get_unit->name;
+					$_unit_qty 			= $_get_unit->qty_unit;
+
+					/*
+
+						Syntax:
+
+						A							B								C							D
+						10							5								1							568
+						D / A = AX					XA / B = BX						XB / C = CX
+						D - (AX * A) = XA			XA - (BX * B) = XB				XB - (CX * C) = XC
+
+						568 / 10 = 56 (8)			8 / 5 = 1 (4)					4 / 1 = 4 (0)
+						568 - (56 * 10) = 8			8 - (1 * 5) = 4					4 - (4 * 1) = 0
+
+																												7834663
+						7834663 / 50 = 156693
+						7834663 - (156693 * 50) = 13
+
+						13 / 10 = 1
+						13 - (10 * 1) = 3
+
+						3
+
+
+
+						10000 g = 10 kg
+						- unit = Ton = 1 000 000 g
+
+						- 10 000 / 1 000 000
+
+						if 10 000 < 1 000 000
+
+
+					*/
+
+					if ($_qty <= 0) break;
+
+					if ((($_qty) < $_unit_qty) || $_i == $_max_unit)
+					{
+						if ($_qty < $_unit_qty) continue;
+
+						$_units[] = "$_qty <span style='color: #178228;'>$_unit_description x</span>";
+
+						# break;
+					}
+					else
+					{
+						# D / A = AX
+						$_qtyx = (int) ($_qty / $_unit_qty);
+						$_units[] = "$_qtyx <span style='color: #178228;'>$_unit_description</span>";
+
+						# D - (AX * A) = XA
+						$_xqty = $_qty - ($_qtyx * $_unit_qty);
+
+						#
+						$_qty = $_xqty;
+					}
+				}
+			}
+			$_string_unit = $this->array_2_string(", ", $_units);
+			if(empty($_select_all_units)){
+				$_string_unit = '1  ' . $this->site->getUnitNameByProId($_item_code);
+			}
+			
+			$en = "";
+			if($_string_unit){
+				if ($nu < 0)
+				{
+					$_if_under_0 = " ( -";
+					$en = ")";
+				}else{
+					$_if_under_0 = "(";
+					$en = ")";
+				}
+			}
+			
+			return "$_if_under_0 $_string_unit $en";
+		}
+	}
+	function array_2_string($sep = "-", $_data, $_prefix = "", $_suffix = "")
+	{
+		if ($_prefix != "" AND $_suffix != "")
+		{
+			$_string = array ();
+
+			foreach ($_data AS $_value)
+			{
+				$_string[] = $_prefix . $_value . $_suffix;
+			}
+		}
+
+		else $_string = $_data;
+
+		return implode ("$sep", array_filter ($_string));
+	}
 
 }

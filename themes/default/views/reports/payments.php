@@ -355,7 +355,7 @@
                 <div class="clearfix"></div>
 
 
-                <!-- <div class="table-responsive"> -->
+                <div class="table-responsive">
                     <table id="PayRData"
                            class="table table-bordered table-hover table-striped table-condensed reports-table">
 
@@ -401,7 +401,7 @@
                         </tr>
                         </tfoot>
                     </table>
-                <!-- </div> -->
+                </div>
 
             </div>
         </div>
