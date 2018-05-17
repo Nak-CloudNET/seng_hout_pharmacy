@@ -3634,7 +3634,7 @@ ORDER BY
 	
 	public function getWarehousesInventoryValuation($wid, $warehouse_id, $category_id, $product_id,$stockType, $from_date, $to_date, $reference_no, $biller, $plan_id){
 		$this->db->select('warehouses.code, warehouses.name AS warehouse, warehouse_id, erp_inventory_valuation_details.expiry');
-		$this->db->join('warehouses', 'warehouses.id = warehouse_id');
+		$this->db->join('warehouses', 'warehouses.id = erp_inventory_valuation_details.warehouse_id', 'left');
 		if($warehouse_id){
 			$this->db->where("warehouse_id",$warehouse_id);
 		}else{

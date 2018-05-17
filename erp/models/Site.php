@@ -2851,7 +2851,7 @@ class Site extends CI_Model
         return FALSE;
     }
 
-    public function getProductComboItems($pid, $warehouse_id = NULL)
+    /*public function getProductComboItems($pid, $warehouse_id = NULL)
     {
         $this->db->select('products.id as id, combo_items.item_code as code, combo_items.quantity as qty, products.name as name, products.type as type, combo_items.unit_price as unit_price, warehouses_products.quantity as quantity')
             ->join('products', 'products.code=combo_items.item_code', 'left')
@@ -2867,6 +2867,37 @@ class Site extends CI_Model
             }
 
             return $data;
+        }
+        return FALSE;
+    }*/
+	public function getProductComboItems($pid, $warehouse_id = NULL)
+    {
+        $this->db->select('products.id as id, combo_items.item_code as code, combo_items.quantity as qty, products.name as name, products.type as type, combo_items.unit_price as unit_price, warehouses_products.quantity as quantity')
+            ->join('products', 'products.code=combo_items.item_code', 'left')
+            ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+            ->group_by('combo_items.id');
+        if($warehouse_id) {
+            $this->db->where('warehouses_products.warehouse_id', $warehouse_id);
+        }
+        $q = $this->db->get_where('combo_items', array('combo_items.product_id' => $pid));
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        return FALSE;
+    }
+	
+	public function getProductSmallVariant($product_id){
+        $this->db->select('*')
+                 ->where('product_id', $product_id)
+                 ->order_by('qty_unit', 'ASC')
+                 ->limit(1);
+        $q = $this->db->get('product_variants');
+        if ($q->num_rows() > 0) {
+            return $q->row();
         }
         return FALSE;
     }
@@ -4626,5 +4657,33 @@ class Site extends CI_Model
 		}
 		return false;
 	}
+	public function syncSalePurchaseItems($purchase_item)
+    {
+        if ($purchase_item['product_type'] == 'combo') {
+            $combo = $this->getProductComboItems($purchase_item['product_id']);
+            foreach ($combo as $combo_item) {
+				$p_var = $this->getProductSmallVariant($combo_item->id);
+                $pur_items = array(
+                    'product_id' 		=> $combo_item->id,
+                    'product_code' 		=> $combo_item->code,
+                    'product_name' 		=> $combo_item->name,
+                    'product_type' 		=> $combo_item->type,
+                    'option_id' 		=> $p_var ? $p_var->id : '',
+                    'quantity' 			=> $purchase_item['quantity'] * $combo_item->qty,
+                    'quantity_balance' 	=> $purchase_item['quantity_balance'] * $combo_item->qty,
+                    'warehouse_id' 		=> $purchase_item['warehouse_id'],
+                    'expiry' 			=> $purchase_item['expiry'],
+                    'date' 				=> date('Y-m-d', strtotime($purchase_item['date'])),
+                    'status' 			=> "received",
+                    'transaction_type' 	=> 'SALE',
+                    'transaction_id' 	=> $purchase_item['transaction_id']
+                );
+                $this->db->insert('purchase_items', $pur_items);
+            }
+        } else {
+            $this->db->insert('purchase_items', $purchase_item);
+        }
+        return FALSE;
+    }
 	
 }
