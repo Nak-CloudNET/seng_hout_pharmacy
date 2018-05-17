@@ -4964,7 +4964,12 @@ class Reports extends MY_Controller
     }
     function exportSalesReport($pdf = NULL, $xls = NULL)
     {
-        $invs=$this->input->get('invs');
+        if($this->input->get('invs'))
+        {
+            $invs=$this->input->get('invs');
+        }else{
+            $invs=NULL;
+        }
 
         $customer = $this->input->get('customer');
         $datt =$this->reports_model->getLastDate("sales","date");
