@@ -20364,11 +20364,13 @@ class Reports extends MY_Controller
         $this->page_construct('reports/product_test', $meta, $this->data);
     }
 	
-    function inventory($pdf, $excel,$reference,$wahouse_id,$product_id,$from_date,$to_date,$stockType,$cate_id,$biller)
+    function inventory($pdf,$excel,$reference,$wahouse_id,$product_id,$from_date,$to_date,$stockType,$cate_id,$biller)
 	{
 		$wid = $this->reports_model->getWareByUserID();        
         $this->erp->checkPermissions('inventory_valuation_detail', NULL, 'product_report');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $reference = str_replace('-', '/', $reference);
        
 		if ($pdf || $excel) {
                 $this->load->library('excel');
@@ -20392,6 +20394,7 @@ class Reports extends MY_Controller
                 $gtt = 0;
                 $gqty = 0;  
                 $warehouses = $this->reports_model->getWarehousesInventoryValuation($wid,$wahouse_id,$cate_id,$product_id,$stockType,$from_date,$to_date,$reference,$biller);
+
                 foreach($warehouses as $ware){
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, "Warehouse >> ".$ware->warehouse);
                     $this->excel->getActiveSheet()->mergeCells('A'.$row.':K'.$row);
