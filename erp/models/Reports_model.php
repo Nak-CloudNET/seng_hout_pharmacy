@@ -5371,7 +5371,6 @@ ORDER BY
     public function getStaffLoginsReportExportByID($id=null, $login_start_date=null, $login_end_date=null)
     {
         $this->db->select("login, ip_address, time");
-
         if ($login_start_date) {
             $this->db->where($this->db->dbprefix('payments').'.date BETWEEN "' . $login_start_date . '00:00:00" and "' . $login_end_date . '11:59:00"');
         }

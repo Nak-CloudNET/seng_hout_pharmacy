@@ -11797,7 +11797,6 @@ class Reports extends MY_Controller
             $login_start_date = $this->erp->fld($this->input->post('login_start_date'));
             $login_end_date = $this->erp->fld($this->input->post('login_end_date'));
 
-            //if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf') {
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
@@ -11922,10 +11921,6 @@ class Reports extends MY_Controller
                     }
                     redirect($_SERVER["HTTP_REFERER"]);
                 }
-            /*} else {
-                $this->session->set_flashdata('error', lang("no_staff_payments_record_selected"));
-                redirect($_SERVER["HTTP_REFERER"]);
-            }*/
         } else {
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER["HTTP_REFERER"]);

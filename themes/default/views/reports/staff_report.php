@@ -715,7 +715,6 @@
         <div class="box">
             <div class="box-header">
                 <h2 class="blue"><i class="fa-fw fa fa-file-text nb"></i> <?= lang('staff_logins_report'); ?></h2>
-
                 <div class="box-icon">
                     <ul class="btn-tasks">
                         <li class="dropdown"><a href="#" class="logintoggle_up tip" title="<?= lang('hide_form') ?>"><i
@@ -1185,7 +1184,7 @@
             event.preventDefault();
             html2canvas(box, {
                 onrendered: function (canvas) {
-                    var img = canvas.toDataURL()
+                    var img = canvas.toDataURL();
                     window.open(img);
                 }
             });
