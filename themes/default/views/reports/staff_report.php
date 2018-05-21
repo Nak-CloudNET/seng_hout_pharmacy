@@ -493,12 +493,19 @@
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"mRender": fld}, null, null, null, null, null, null,{"mRender": paid_by}, {"mRender": currencyFormat}, {"mRender": row_status}],
+                    "aoColumns": [
+                        {"bSortable": false, "mRender": checkbox},
+                        {"mRender": fld},
+                        null, null, null, null, null, null,
+                        {"mRender": paid_by},
+                        {"mRender": currencyFormat},
+                        {"mRender": row_status}
+                        ],
                     'fnRowCallback': function (nRow, aData, iDisplayIndex) {
                         var oSettings = oTable.fnSettings();
-                        if (aData[9] == 'sent') {
+                        if (aData[10] == 'sent') {
                             nRow.className = "warning";
-                        } else if (aData[9] == 'returned') {
+                        } else if (aData[10] == 'returned') {
                             nRow.className = "danger";
                         }
                         return nRow;
@@ -506,29 +513,29 @@
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var total = 0;
                         for (var i = 0; i < aaData.length; i++) {
-                            if (aaData[aiDisplay[i]][9] == 'sent' || aaData[aiDisplay[i]][9] == 'returned')
-								total -= Math.abs(parseFloat(aaData[aiDisplay[i]][8]));
+                            if (aaData[aiDisplay[i]][10] == 'sent' || aaData[aiDisplay[i]][10] == 'returned')
+								total -= Math.abs(parseFloat(aaData[aiDisplay[i]][9]));
 							else
-								total += parseFloat(aaData[aiDisplay[i]][8]);
+								total += parseFloat(aaData[aiDisplay[i]][9]);
                         }
                         var nCells = nRow.getElementsByTagName('th');
-                        nCells[8].innerHTML = currencyFormat(parseFloat(total));
+                        nCells[9].innerHTML = currencyFormat(parseFloat(total));
                     }
                 }).fnSetFilteringDelay().dtFilter([
-                    {column_number: 0, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
-                    {column_number: 1, filter_default_label: "[<?=lang('payment_ref');?>]", filter_type: "text", data: []},
-                    {column_number: 2, filter_default_label: "[<?=lang('sale_ref');?>]", filter_type: "text", data: []},
+                    {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
+                    {column_number: 2, filter_default_label: "[<?=lang('payment_ref');?>]", filter_type: "text", data: []},
+                    {column_number: 3, filter_default_label: "[<?=lang('sale_ref');?>]", filter_type: "text", data: []},
                     {
-                        column_number: 3,
+                        column_number: 4,
                         filter_default_label: "[<?=lang('purchase_ref');?>]",
                         filter_type: "text",
                         data: []
                     },
-					{column_number: 4, filter_default_label: "[<?=lang('group_area');?>]", filter_type: "text", data: []},
-					{column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-					{column_number: 6, filter_default_label: "[<?=lang('note');?>]", filter_type: "text", data: []},
-                    {column_number: 7, filter_default_label: "[<?=lang('paid_by');?>]", filter_type: "text", data: []},
-                    {column_number: 9, filter_default_label: "[<?=lang('type');?>]", filter_type: "text", data: []},
+					{column_number: 5, filter_default_label: "[<?=lang('group_area');?>]", filter_type: "text", data: []},
+					{column_number: 6, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
+					{column_number: 7, filter_default_label: "[<?=lang('note');?>]", filter_type: "text", data: []},
+                    {column_number: 8, filter_default_label: "[<?=lang('paid_by');?>]", filter_type: "text", data: []},
+                    {column_number: 10, filter_default_label: "[<?=lang('type');?>]", filter_type: "text", data: []},
                 ], "footer");
             });
         </script>
@@ -545,6 +552,14 @@
                 });
             });
         </script>
+        <?php
+            $area = $this->input->post('group_area');
+            $customer = $this->input->post('pcustomer');
+            $supplier = $this->input->post('psupplier');
+            $sdate = $this->input->post('pay_start_date');
+            $edate = $this->input->post('pay_end_date');
+            echo form_open('reports/staff_payments_report_action', 'id="action-form"');
+        ?>
         <div class="box">
             <div class="box-header">
                 <h2 class="blue"><i class="fa-fw fa fa-money nb"></i><?= lang('staff_payments_report'); ?> <?php
@@ -563,16 +578,25 @@
                 </div>
                 <div class="box-icon">
                     <ul class="btn-tasks">
-                        <li class="dropdown"><a href="#" id="pdf4" class="tip" title="<?= lang('download_pdf') ?>"><i
-                                    class="icon fa fa-file-pdf-o"></i></a></li>
-                        <li class="dropdown"><a href="#" id="xls4" class="tip" title="<?= lang('download_xls') ?>"><i
-                                    class="icon fa fa-file-excel-o"></i></a></li>
+                        <li class="dropdown"><a href="#" id="pdf" data-action="export_pdf" class="tip" title="<?= lang('export_pdf') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
+                        <li class="dropdown"><a href="#" id="excel" data-action="export_excel" class="tip" title="<?= lang('export_excel') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
+
                         <li class="dropdown"><a href="#" id="image4" class="tip image"
                                                 title="<?= lang('save_image') ?>"><i
                                     class="icon fa fa-file-picture-o"></i></a></li>
                     </ul>
                 </div>
             </div>
+            <div style="display: none;">
+                <input type="hidden" name="form_action" value="" id="form_action"/>
+                <input type="hidden" name="area" value="<?= $area ?>" id="area"/>
+                <input type="hidden" name="customer" value="<?= $customer ?>" id="customer"/>
+                <input type="hidden" name="supplier" value="<?= $supplier ?>" id="supplier"/>
+                <input type="hidden" name="sdate" value="<?= $sdate ?>" id="sdate"/>
+                <input type="hidden" name="edate" value="<?= $edate ?>" id="edate"/>
+                <?=form_submit('performAction', 'performAction', 'id="action-form-submit"')?>
+            </div>
+            <?= form_close()?>
             <div class="box-content">
                 <div class="row">
                     <div class="col-lg-12">
@@ -639,6 +663,9 @@
 
                                 <thead>
 									<tr>
+                                        <th style="min-width:30px; width: 30px; text-align: center;">
+                                            <input class="checkbox checkft" type="checkbox" name="check"/>
+                                        </th>
 										<th><?= lang("date"); ?></th>
 										<th><?= lang("payment_ref"); ?></th>
 										<th><?= lang("sale_ref"); ?></th>
@@ -653,12 +680,15 @@
                                 </thead>
                                 <tbody>
 									<tr>
-										<td colspan="7"
+										<td colspan="11"
 											class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
 									</tr>
                                 </tbody>
                                 <tfoot class="dtFilter">
 									<tr class="active">
+                                        <th style="min-width:30px; width: 30px; text-align: center;">
+                                            <input class="checkbox checkft" type="checkbox" name="check"/>
+                                        </th>
 										<th></th>
 										<th></th>
 										<th></th>
@@ -679,6 +709,9 @@
         </div>
     </div>
     <div id="logins-con" class="tab-pane fade in">
+        <?php
+        echo form_open('reports/staff_logins_action', 'id="action-form"');
+        ?>
         <div class="box">
             <div class="box-header">
                 <h2 class="blue"><i class="fa-fw fa fa-file-text nb"></i> <?= lang('staff_logins_report'); ?></h2>
@@ -694,16 +727,15 @@
                 </div>
                 <div class="box-icon">
                     <ul class="btn-tasks">
-                        <li class="dropdown"><a href="#" id="pdf5" class="tip" title="<?= lang('download_pdf') ?>"><i
-                                    class="icon fa fa-file-pdf-o"></i></a></li>
-                        <li class="dropdown"><a href="#" id="xls5" class="tip" title="<?= lang('download_xls') ?>"><i
-                                    class="icon fa fa-file-excel-o"></i></a></li>
-                        <li class="dropdown"><a href="#" id="image5" class="tip image"
-                                                title="<?= lang('save_image') ?>"><i
-                                    class="icon fa fa-file-picture-o"></i></a></li>
+                        <li class="dropdown"><a href="#" id="staff_login_pdf" data-action="export_pdf" class="tip" title="<?= lang('export_pdf') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
+                        <li class="dropdown"><a href="#" id="staff_login_excel" data-action="export_excel" class="tip" title="<?= lang('export_excel') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
                     </ul>
                 </div>
             </div>
+            <div style="display: none;">
+                <?=form_submit('performAction', 'performAction', 'id="action-form-submit"')?>
+            </div>
+            <?= form_close()?>
             <div class="box-content">
                 <div class="row">
                     <div class="col-lg-12">

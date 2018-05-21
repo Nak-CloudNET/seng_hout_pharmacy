@@ -5327,4 +5327,60 @@ ORDER BY
 		return implode ("$sep", array_filter ($_string));
 	}
 
+    public function getStaffPaymentsReportExportByID($id=null, $area=null, $customer=null, $supplier=null, $sdate=null, $edate=null)
+    {
+        $this->db
+            ->select(
+                $this->db->dbprefix('payments') . ".id as id,
+					" . $this->db->dbprefix('payments') . ".date,
+					" . $this->db->dbprefix('payments') . ".reference_no as payment_ref,
+					" . $this->db->dbprefix('sales') . ".reference_no as sale_ref, 
+					" . $this->db->dbprefix('purchases') . ".reference_no as purchase_ref,
+					erp_group_areas.areas_group as group_area_name,
+					erp_sales.customer as customer_name,
+					" . $this->db->dbprefix('payments') . ".note,
+					" . $this->db->dbprefix('payments') . ".paid_by,
+					erp_payments.amount,
+					" . $this->db->dbprefix('payments') . ".type")
+            ->join('sales', 'payments.sale_id=sales.id', 'left')
+            ->join('purchases', 'payments.purchase_id=purchases.id', 'left')
+            ->join('companies', 'companies.id = sales.customer_id', 'left')
+            ->join('group_areas', 'group_areas.areas_g_code = companies.group_areas_id', 'left')
+            ->group_by('payments.id');
+
+        if ($area) {
+            $this->db->where('companies.group_areas_id', $area);
+        }
+        if ($customer) {
+            $this->db->where('sales.customer_id', $customer);
+        }
+        if ($supplier) {
+            $this->db->where('purchases.supplier_id', $supplier);
+        }
+        if ($sdate) {
+            $this->db->where($this->db->dbprefix('payments').'.date BETWEEN "' . $sdate . '00:00:00" and "' . $edate . '11:59:00"');
+        }
+
+        $q = $this->db->get_where('payments', array('payments.id' => $id));
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return FALSE;
+    }
+
+    public function getStaffLoginsReportExportByID($id=null, $login_start_date=null, $login_end_date=null)
+    {
+        $this->db->select("login, ip_address, time");
+
+        if ($login_start_date) {
+            $this->db->where($this->db->dbprefix('payments').'.date BETWEEN "' . $login_start_date . '00:00:00" and "' . $login_end_date . '11:59:00"');
+        }
+
+        $q = $this->db->get('user_logins', array('user_id.id' => $id));
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return FALSE;
+    }
+
 }
