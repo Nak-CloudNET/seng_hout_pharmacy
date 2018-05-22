@@ -1,3 +1,15 @@
+<?php
+$v = "";
+if ($this->input->post('reference_no')) {
+    $v .= "&reference_no=" . $this->input->post('reference_no');
+}
+if ($this->input->post('product')) {
+    $v .= "&product=" . $this->input->post('product');
+}
+if ($this->input->post('category')) {
+    $v .= "&category=" . $this->input->post('category');
+}
+?>
 <script>
     $(document).ready(function () {
         var oTable = $('#TOData').dataTable({
@@ -5,16 +17,16 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-			//
-			"bStateSave": true,
-			"fnStateSave": function (oSettings, oData) {
-				localStorage.setItem('DataTables_' + window.location.pathname, JSON.stringify(oData));
-			},
-			"fnStateLoad": function (oSettings) {
-				var data = localStorage.getItem('DataTables_' + window.location.pathname);
-				return JSON.parse(data);
-			},
-            'sAjaxSource': '<?=site_url('transfers/getInTransfers' . ($warehouse_id ? '/' . $warehouse_id : '')) ?>',
+            //
+            "bStateSave": true,
+            "fnStateSave": function (oSettings, oData) {
+                localStorage.setItem('DataTables_' + window.location.pathname, JSON.stringify(oData));
+            },
+            "fnStateLoad": function (oSettings) {
+                var data = localStorage.getItem('DataTables_' + window.location.pathname);
+                return JSON.parse(data);
+            },
+            'sAjaxSource': '<?=site_url('transfers/getInTransfers' . ($warehouse_id ? '/' . $warehouse_id : '') . '/?v=1' . $v) ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -57,75 +69,134 @@
     });
 </script>
 <?php
-    echo form_open('transfers/transfer_actions/'.($warehouse_id ? $warehouse_id : ''), 'id="action-form"');
+echo form_open('transfers/transfer_actions/'.($warehouse_id ? $warehouse_id : ''), 'id="action-form"');
 ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('list_transfer'); ?></h2>
-
         <div class="box-icon">
             <ul class="btn-tasks">
-            <?php if ($Owner || $Admin || $GP['transfers-add'] || $GP['transfers-import'] || $GP['transfers-export'] || $GP['transfers-combine_pdf'] || $GP['transfers-delete']) { ?>
                 <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang("actions") ?>"></i>
+                    <a href="#" class="toggle_up tip" title="<?= lang('hide_form') ?>">
+                        <i class="icon fa fa-toggle-up"></i>
                     </a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <?php if ($Owner || $Admin || $GP['transfers-add']) { ?>
-							<li>
-								<a href="<?= site_url('transfers/add') ?>">
-									<i class="fa fa-plus-circle"></i> <?= lang('add_transfer') ?>
-								</a>
-							</li>
-						<?php } ?>
-						<?php if ($Owner || $Admin || $GP['transfers-import']) { ?>
-							<li>
-								<a href="<?= site_url('transfers/transfer_by_csv'); ?>">
-									<i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer_by_csv'); ?></span>
-								</a>
-							</li>
-                        <?php } ?>
-						<?php if($Owner || $Admin || $GP['transfers-export']) { ?>
-							<li>
-								<a href="#" id="excel" data-action="export_excel">
-									<i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
-								</a>
-							</li>
-							<li>
-								<a href="#" id="pdf" data-action="export_pdf">
-									<i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
-								</a>
-							</li>
-						<?php }?>
-						<?php if($Owner || $Admin || $GP['transfers-combine_pdf']) { ?>
-							<li>
-								<a href="#" id="combine" data-action="combine">
-									<i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
-								</a>
-							</li>
-						<?php }?>
-						<?php if ($Owner || $Admin || $GP['transfers-delete']) { ?>
-							<li class="divider"></li>
-							<li>
-								<a href="#" class="bpo" title="<?= $this->lang->line("delete_transfers") ?>"
-								 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
-								 data-html="true" data-placement="left">
-								 <i class="fa fa-trash-o"></i> <?= lang('delete_transfers') ?>
-								</a>
-							</li>
-						<?php } ?>
-                 </ul>
-             </li>
-            <?php } ?>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="toggle_down tip" title="<?= lang('show_form') ?>">
+                        <i class="icon fa fa-toggle-down"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <?php if ($Owner || $Admin || $GP['transfers-add'] || $GP['transfers-import'] || $GP['transfers-export'] || $GP['transfers-combine_pdf'] || $GP['transfers-delete']) { ?>
+                    <li class="dropdown">
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                            <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang("actions") ?>"></i>
+                        </a>
+                        <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                            <?php if ($Owner || $Admin || $GP['transfers-add']) { ?>
+                                <li>
+                                    <a href="<?= site_url('transfers/add') ?>">
+                                        <i class="fa fa-plus-circle"></i> <?= lang('add_transfer') ?>
+                                    </a>
+                                </li>
+                            <?php } ?>
+                            <?php if ($Owner || $Admin || $GP['transfers-import']) { ?>
+                                <li>
+                                    <a href="<?= site_url('transfers/transfer_by_csv'); ?>">
+                                        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer_by_csv'); ?></span>
+                                    </a>
+                                </li>
+                            <?php } ?>
+                            <?php if($Owner || $Admin || $GP['transfers-export']) { ?>
+                                <li>
+                                    <a href="#" id="excel" data-action="export_excel">
+                                        <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" id="pdf" data-action="export_pdf">
+                                        <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
+                                    </a>
+                                </li>
+                            <?php }?>
+                            <?php if($Owner || $Admin || $GP['transfers-combine_pdf']) { ?>
+                                <li>
+                                    <a href="#" id="combine" data-action="combine">
+                                        <i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
+                                    </a>
+                                </li>
+                            <?php }?>
+                            <?php if ($Owner || $Admin || $GP['transfers-delete']) { ?>
+                                <li class="divider"></li>
+                                <li>
+                                    <a href="#" class="bpo" title="<?= $this->lang->line("delete_transfers") ?>"
+                                       data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                       data-html="true" data-placement="left">
+                                        <i class="fa fa-trash-o"></i> <?= lang('delete_transfers') ?>
+                                    </a>
+                                </li>
+                            <?php } ?>
+                        </ul>
+                    </li>
+                <?php } ?>
             </ul>
         </div>
     </div>
+    <div style="display: none;">
+        <input type="hidden" name="form_action" value="" id="form_action"/>
+        <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
+    </div>
+    <?= form_close() ?>
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-				
-                <p class="introtext"><?= lang('list_results'); ?></p>
 
+                <p class="introtext"><?= lang('list_results'); ?></p>
+                <div id="form">
+                    <?php echo form_open("transfers/list_in_transfer"); ?>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="reference_no"><?= lang("reference_no"); ?></label>
+                                <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ""), 'class="form-control tip" id="reference_no"'); ?>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="product_id"><?= lang("product"); ?></label>
+                                <?php
+
+                                $pr[0] = $this->lang->line("all");;
+                                foreach ($products as $product) {
+                                    $pr[$product->id] = $product->name . " | " . $product->code;
+                                }
+                                echo form_dropdown('product', $pr, (isset($_POST['product']) ? $_POST['product'] : ""), 'class="form-control" id="product" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product") . '"');
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <?= lang("category", "category") ?>
+                                <?php
+                                $cat[0] = $this->lang->line("all");
+                                foreach ($categories as $category) {
+                                    $cat[$category->id] = $category->name;
+                                }
+                                echo form_dropdown('category', $cat, (isset($_POST['category']) ? $_POST['category'] : ''), 'class="form-control select" id="category" placeholder="' . lang("select") . " " . lang("category") . '" style="width:100%"')
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="controls"> <?php echo form_submit('submit_product', $this->lang->line("submit"), 'class="btn btn-primary"'); ?> </div>
+                    </div>
+                    <?php echo form_close(); ?>
+                </div>
+                <div class="clearfix"></div>
                 <div class="table-responsive">
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
                            class="table table-bordered table-condensed table-hover table-striped">
@@ -166,8 +237,14 @@
         </div>
     </div>
 </div>
-<div style="display: none;">
-    <input type="hidden" name="form_action" value="" id="form_action"/>
-    <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
-</div>
-<?= form_close() ?>
+<script>
+    $('#form').hide();
+    $('.toggle_down').click(function () {
+        $("#form").slideDown();
+        return false;
+    });
+    $('.toggle_up').click(function () {
+        $("#form").slideUp();
+        return false;
+    });
+</script>

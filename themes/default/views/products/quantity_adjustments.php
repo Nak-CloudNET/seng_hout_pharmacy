@@ -1,4 +1,17 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php
+$v = "";
+if ($this->input->post('reference_no')) {
+    $v .= "&reference_no=" . $this->input->post('reference_no');
+}
+if ($this->input->post('product')) {
+    $v .= "&product=" . $this->input->post('product');
+}
+if ($this->input->post('category')) {
+    $v .= "&category=" . $this->input->post('category');
+}
+?>
+
 <script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
 <script>
     $(document).ready(function () {
@@ -7,7 +20,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= site_url('products/getadjustments'.($warehouse_id ? '/'.$warehouse_id : '')) ?>',
+            'sAjaxSource': '<?= site_url('products/getadjustments' . ($warehouse_id ? '/' . $warehouse_id : '') . '/?v=1' . $v) ?>',
             // "sAjaxSource": "<?= site_url('products/getadjustments'); ?>",
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
@@ -116,6 +129,20 @@
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
+                    <a href="#" class="toggle_up tip" title="<?= lang('hide_form') ?>">
+                        <i class="icon fa fa-toggle-up"></i>
+                    </a>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="toggle_down tip" title="<?= lang('show_form') ?>">
+                        <i class="icon fa fa-toggle-down"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang("actions") ?>"></i>
                     </a>
@@ -125,7 +152,7 @@
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_adjustment') ?>
                             </a>
                         </li>
-						<!--
+                        <!--
                         <li>
                             <a href="<?= site_url('products/add_adjustment_by_csv') ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_adjustment_by_csv') ?>
@@ -134,26 +161,18 @@
 						-->
 
                         <?php if ($GP['products-export'] || $Owner || $Admin) { ?>
-                        <li>
-                            <a href="#" id="excel" data-action="export_excel">
-                                <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="pdf" data-action="export_pdf">
-                                <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
-                            </a>
-                        </li>
+                            <li>
+                                <a href="#" id="excel" data-action="export_excel">
+                                    <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" id="pdf" data-action="export_pdf">
+                                    <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
+                                </a>
+                            </li>
 
                         <?php } ?>
-                        <!-- <li>
-                        <li class="divider"></li>
-                            <a href="#" class="bpo" title="<b><?= $this->lang->line("delete_products") ?></b>"
-                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
-                                data-html="true" data-placement="left">
-                            <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
-                             </a>
-                         </li> -->
                     </ul>
                 </li>
                 <?php if (!empty($warehouses)) { ?>
@@ -173,11 +192,60 @@
             </ul>
         </div>
     </div>
+    <?php if ($Owner || $Admin || $GP['products-export']) { ?>
+        <div style="display: none;">
+            <input type="hidden" name="form_action" value="" id="form_action"/>
+            <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
+        </div>
+        <?= form_close() ?>
+    <?php }
+    ?>
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
                 <p class="introtext"><?= lang('list_results'); ?></p>
+                <div id="form">
+                    <?php echo form_open("products/quantity_adjustments"); ?>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="reference_no"><?= lang("reference_no"); ?></label>
+                                <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ""), 'class="form-control tip" id="reference_no"'); ?>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="product_id"><?= lang("product"); ?></label>
+                                <?php
 
+                                $pr[0] = $this->lang->line("all");;
+                                foreach ($products as $product) {
+                                    $pr[$product->id] = $product->name . " | " . $product->code;
+                                }
+                                echo form_dropdown('product', $pr, (isset($_POST['product']) ? $_POST['product'] : ""), 'class="form-control" id="product" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product") . '"');
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <?= lang("category", "category") ?>
+                                <?php
+                                $cat[0] = $this->lang->line("all");
+                                foreach ($categories as $category) {
+                                    $cat[$category->id] = $category->name;
+                                }
+                                echo form_dropdown('category', $cat, (isset($_POST['category']) ? $_POST['category'] : ''), 'class="form-control select" id="category" placeholder="' . lang("select") . " " . lang("category") . '" style="width:100%"')
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="controls"> <?php echo form_submit('submit_product', $this->lang->line("submit"), 'class="btn btn-primary"'); ?> </div>
+                    </div>
+                    <?php echo form_close(); ?>
+                </div>
+                <div class="clearfix"></div>
                 <div class="table-responsive">
                     <table id="dmpData" class="table table-bordered table-condensed table-hover table-striped">
                         <thead>
@@ -221,12 +289,14 @@
         </div>
     </div>
 </div>
-
-<?php if ($Owner || $Admin || $GP['products-export']) {?>
-    <div style="display: none;">
-        <input type="hidden" name="form_action" value="" id="form_action"/>
-        <?=form_submit('performAction', 'performAction', 'id="action-form-submit"')?>
-    </div>
-    <?=form_close()?>
-<?php }
-?>
+<script>
+    $('#form').hide();
+    $('.toggle_down').click(function () {
+        $("#form").slideDown();
+        return false;
+    });
+    $('.toggle_up').click(function () {
+        $("#form").slideUp();
+        return false;
+    });
+</script>
