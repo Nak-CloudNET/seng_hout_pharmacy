@@ -325,7 +325,9 @@
         </div>
     </div>
 </div>
-
+<?php
+    $reference1 = (str_replace('/', '-', $reference1));
+?>
 <script type="text/javascript">
     $('#form').hide();
     $('.toggle_down').click(function () {
@@ -361,9 +363,10 @@
                 return false;
         });
         $('#pdf').on('click', function (e) {
+
             e.preventDefault();
-                window.location.href = "<?= site_url('reports/inventory/pdf/0'.$reference1.'/'.$wahouse_id1.'/'.$product_id1.'/'.trim($from_date1).'/'.trim($to_date1).'/'.$stockType1.'/'.$cate_id1.'/'.$biller1) ?>";
-                return false;  
+            window.location.href = "<?= site_url('reports/inventory/xls/0/'.$reference1.'/'.$wahouse_id1.'/'.$product_id1.'/'.$from_date1.'/'.$to_date1.'/'.$stockType1.'/'.$cate_id1.'/'.$biller1) ?>";
+            return false;
         });
 	});
 </script>

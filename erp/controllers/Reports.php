@@ -10529,7 +10529,8 @@ class Reports extends MY_Controller
             $this->load->library('datatables');
             $this->datatables
                 ->select(
-					$this->db->dbprefix('payments') . ".date,
+					$this->db->dbprefix('payments') . ".id as id,
+					" . $this->db->dbprefix('payments') . ".date,
 					" . $this->db->dbprefix('payments') . ".reference_no as payment_ref,
 					" . $this->db->dbprefix('sales') . ".reference_no as sale_ref, 
 					" . $this->db->dbprefix('purchases') . ".reference_no as purchase_ref,
@@ -11586,6 +11587,344 @@ class Reports extends MY_Controller
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('staff_report')));
         $meta = array('page_title' => lang('staff_report'), 'bc' => $bc);
         $this->page_construct('reports/staff_report', $meta, $this->data);
+    }
+
+    function staff_payments_report_action()
+    {
+        $this->form_validation->set_rules('form_action', lang("form_action"), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $area = $this->input->post('area');
+            $customer = $this->input->post('customer');
+            $supplier = $this->input->post('supplier');
+            $sdate = $this->erp->fld($this->input->post('sdate'));
+            $edate = $this->erp->fld($this->input->post('edate'));
+
+            if (!empty($_POST['val'])) {
+                if ($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf') {
+                    $this->load->library('excel');
+                    $this->excel->setActiveSheetIndex(0);
+                    $this->excel->getActiveSheet()->setTitle(lang('staff_payments_report'));
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('staff_payments_report'));
+                    $this->excel->setActiveSheetIndex(0)->mergeCells('A1:J1');
+                    $this->excel->getActiveSheet()->getStyle('A1')->getFont()
+                        ->setName('Verdana')
+                        ->setSize(16)
+                        ->setBold(true);
+                        $herder = array(
+                            'font'  => array(
+                                'bold'  => true,
+                                'name'  => 'Verdana',
+                                'color' => array('rgb' => 'FFFFFF'),
+                                'size'  => 10,
+                            ),
+                            'fill' => array(
+                                'type' => PHPExcel_Style_Fill::FILL_SOLID,
+                                'color' => array('rgb' => '428BCA')
+                            )
+                        );
+
+                    $this->excel->getActiveSheet()->getStyle('A2:J2')->applyFromArray($herder);
+                    $this->excel->getActiveSheet()->getRowDimension(1)->setRowHeight(40);
+                    $this->excel->getActiveSheet()->getRowDimension(2)->setRowHeight(25);
+                    $this->excel->getActiveSheet()->getStyle('A1')->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('A2:J2')->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('A2:J2')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+                    if($this->input->post('form_action') == 'export_pdf') {
+                        $styleArray = array(
+                            'borders' => array(
+                                'allborders' => array(
+                                    'style' => PHPExcel_Style_Border::BORDER_THIN
+                                )
+                            )
+                        );
+
+                        $this->excel->getActiveSheet()->getStyle('A2:J2')->applyFromArray($styleArray);
+                    }
+
+                        $this->excel->getActiveSheet()->SetCellValue('A2', lang('date'));
+                        $this->excel->getActiveSheet()->SetCellValue('B2', lang('payment_ref'));
+                        $this->excel->getActiveSheet()->SetCellValue('C2', lang('sale_ref'));
+                        $this->excel->getActiveSheet()->SetCellValue('D2', lang('purchase_ref'));
+                        $this->excel->getActiveSheet()->SetCellValue('E2', lang('group_area'));
+                        $this->excel->getActiveSheet()->SetCellValue('F2', lang('customer'));
+                        $this->excel->getActiveSheet()->SetCellValue('G2', lang('note'));
+                        $this->excel->getActiveSheet()->SetCellValue('H2', lang('paid_by'));
+                        $this->excel->getActiveSheet()->SetCellValue('I2', lang('amount'));
+                        $this->excel->getActiveSheet()->SetCellValue('J2', lang('type'));
+
+                        $row = 3;
+                        $sum_amount = 0;
+                        foreach ($_POST['val'] as $id) {
+                            $data = $this->reports_model->getStaffPaymentsReportExportByID($id, $area, $customer, $supplier, $sdate, $edate);
+                            $sum_amount += $data->amount;
+                            $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data->date));
+                            $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data->payment_ref." ");
+                            $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data->sale_ref." ");
+                            $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data->purchase_ref." ");
+                            $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data->group_area_name);
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data->customer_name);
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data->note);
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data->paid_by);
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $data->amount);
+                            $this->excel->getActiveSheet()->SetCellValue('J' . $row, $data->type);
+                            $new_row = $row+1;
+
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatMoney($sum_amount));
+
+                            $warning_background = array(
+                                'fill' => array(
+                                    'type' => PHPExcel_Style_Fill::FILL_SOLID,
+                                    'color' => array('rgb' => 'F0E1A0')
+                                )
+                            );
+                            $danger_background = array(
+                                'fill' => array(
+                                    'type' => PHPExcel_Style_Fill::FILL_SOLID,
+                                    'color' => array('rgb' => 'f2dede')
+                                )
+                            );
+                            $this->excel->getActiveSheet()->getRowDimension($row)->setRowHeight(25);
+                            if($data->type == 'sent') {
+                                $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->applyFromArray($warning_background);
+                            } elseif($data->type == 'returned') {
+                                $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->applyFromArray($danger_background);
+                            }
+                            $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                            $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+                            if($this->input->post('form_action') == 'export_pdf') {
+                                $styleArray = array(
+                                    'borders' => array(
+                                        'allborders' => array(
+                                            'style' => PHPExcel_Style_Border::BORDER_THIN
+                                        )
+                                    )
+                                );
+
+                                $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->applyFromArray($styleArray);
+                            }
+
+                            $row++;
+                        }
+                    $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getFont()
+                        ->setName('Times New Roman')
+                        ->setSize(12)
+                        ->setBold(true);
+                    $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                    if($this->input->post('form_action') == 'export_pdf') {
+                        $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getBorders()->getBottom()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                    }
+
+                    $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(20);
+                    $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+
+                    $filename = 'sales_' . date('Y_m_d_H_i_s');
+                    if($this->input->post('form_action') == 'export_pdf' || $this->input->post('form_action') == 'export_excel') {
+                        $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_PORTRAIT);
+                        $this->excel->getActiveSheet()->getPageSetup()->setPaperSize(PHPExcel_Worksheet_PageSetup::PAPERSIZE_A4);
+                        $this->excel->getActiveSheet()->getPageSetup()->setFitToPage(true);
+                        $this->excel->getActiveSheet()->getPageSetup()->setFitToWidth(1);
+                        $this->excel->getActiveSheet()->getPageSetup()->setFitToHeight(1);
+
+                        //Margins:
+                        $this->excel->getActiveSheet()->getPageMargins()->setTop(0.25);
+                        $this->excel->getActiveSheet()->getPageMargins()->setRight(0.25);
+                        $this->excel->getActiveSheet()->getPageMargins()->setLeft(0.35);
+                        $this->excel->getActiveSheet()->getPageMargins()->setBottom(0.25);
+                    }
+                    if ($this->input->post('form_action') == 'export_pdf') {
+                        require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
+                        $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+                        $rendererLibrary = 'MPDF';
+                        $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
+                        if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
+                            die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
+                                PHP_EOL . ' as appropriate for your directory structure');
+                        }
+
+                        header('Content-Type: application/pdf');
+                        header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
+                        header('Cache-Control: max-age=0');
+
+                        $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
+                        return $objWriter->save('php://output');
+                    }
+
+                    if ($this->input->post('form_action') == 'export_excel') {
+                        header('Content-Type: application/vnd.ms-excel');
+                        header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+                        header('Cache-Control: max-age=0');
+                        $styleArray = array(
+                            'font'  => array(
+                                'bold'  => true,
+                            )
+                        );
+                        $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+                        return $objWriter->save('php://output');
+                    }
+                    redirect($_SERVER["HTTP_REFERER"]);
+                }
+            } else {
+                $this->session->set_flashdata('error', lang("no_staff_payments_record_selected"));
+                redirect($_SERVER["HTTP_REFERER"]);
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER["HTTP_REFERER"]);
+        }
+    }
+
+    function staff_logins_action()
+    {
+        $this->erp->print_arrays('111');
+        $this->form_validation->set_rules('form_action', lang("form_action"), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $login_start_date = $this->erp->fld($this->input->post('login_start_date'));
+            $login_end_date = $this->erp->fld($this->input->post('login_end_date'));
+
+                if ($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf') {
+                    $this->load->library('excel');
+                    $this->excel->setActiveSheetIndex(0);
+                    $this->excel->getActiveSheet()->setTitle(lang('staff_logins_report'));
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('staff_logins_report'));
+                    $this->excel->setActiveSheetIndex(0)->mergeCells('A1:C1');
+                    $this->excel->getActiveSheet()->getStyle('A1')->getFont()
+                        ->setName('Verdana')
+                        ->setSize(16)
+                        ->setBold(true);
+                    $herder = array(
+                        'font'  => array(
+                            'bold'  => true,
+                            'name'  => 'Verdana',
+                            'color' => array('rgb' => 'FFFFFF'),
+                            'size'  => 10,
+                        ),
+                        'fill' => array(
+                            'type' => PHPExcel_Style_Fill::FILL_SOLID,
+                            'color' => array('rgb' => '428BCA')
+                        )
+                    );
+
+                    $this->excel->getActiveSheet()->getStyle('A2:C2')->applyFromArray($herder);
+                    $this->excel->getActiveSheet()->getRowDimension(1)->setRowHeight(40);
+                    $this->excel->getActiveSheet()->getRowDimension(2)->setRowHeight(25);
+                    $this->excel->getActiveSheet()->getStyle('A1')->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('A2:C2')->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('A2:C2')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+                    if($this->input->post('form_action') == 'export_pdf') {
+                        $styleArray = array(
+                            'borders' => array(
+                                'allborders' => array(
+                                    'style' => PHPExcel_Style_Border::BORDER_THIN
+                                )
+                            )
+                        );
+
+                        $this->excel->getActiveSheet()->getStyle('A2:C2')->applyFromArray($styleArray);
+                    }
+
+                    $this->excel->getActiveSheet()->SetCellValue('A2', lang('email'));
+                    $this->excel->getActiveSheet()->SetCellValue('B2', lang('ip_address'));
+                    $this->excel->getActiveSheet()->SetCellValue('C2', lang('time'));
+
+                    $row = 3;
+                    foreach ($_POST['val'] as $id) {
+                        $data = $this->reports_model->getStaffLoginsReportExportByID($id, $login_start_date, $login_end_date);
+
+                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data->date));
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data->payment_ref." ");
+                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data->sale_ref." ");
+
+                        $this->excel->getActiveSheet()->getRowDimension($row)->setRowHeight(25);
+                        $this->excel->getActiveSheet()->getStyle('A'.$row.':C'.$row)->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                        $this->excel->getActiveSheet()->getStyle('A'.$row.':C'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+                        if($this->input->post('form_action') == 'export_pdf') {
+                            $styleArray = array(
+                                'borders' => array(
+                                    'allborders' => array(
+                                        'style' => PHPExcel_Style_Border::BORDER_THIN
+                                    )
+                                )
+                            );
+
+                            $this->excel->getActiveSheet()->getStyle('A'.$row.':C'.$row)->applyFromArray($styleArray);
+                        }
+
+                        $row++;
+                    }
+
+                    $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(33);
+                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(33);
+                    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(33);
+
+                    $filename = 'sales_' . date('Y_m_d_H_i_s');
+                    if($this->input->post('form_action') == 'export_pdf' || $this->input->post('form_action') == 'export_excel') {
+                        $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_PORTRAIT);
+                        $this->excel->getActiveSheet()->getPageSetup()->setPaperSize(PHPExcel_Worksheet_PageSetup::PAPERSIZE_A4);
+                        $this->excel->getActiveSheet()->getPageSetup()->setFitToPage(true);
+                        $this->excel->getActiveSheet()->getPageSetup()->setFitToWidth(1);
+                        $this->excel->getActiveSheet()->getPageSetup()->setFitToHeight(1);
+
+                        //Margins:
+                        $this->excel->getActiveSheet()->getPageMargins()->setTop(0.25);
+                        $this->excel->getActiveSheet()->getPageMargins()->setRight(0.25);
+                        $this->excel->getActiveSheet()->getPageMargins()->setLeft(0.35);
+                        $this->excel->getActiveSheet()->getPageMargins()->setBottom(0.25);
+                    }
+                    if ($this->input->post('form_action') == 'export_pdf') {
+                        require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
+                        $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+                        $rendererLibrary = 'MPDF';
+                        $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
+                        if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
+                            die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
+                                PHP_EOL . ' as appropriate for your directory structure');
+                        }
+
+                        header('Content-Type: application/pdf');
+                        header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
+                        header('Cache-Control: max-age=0');
+
+                        $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
+                        return $objWriter->save('php://output');
+                    }
+
+                    if ($this->input->post('form_action') == 'export_excel') {
+                        header('Content-Type: application/vnd.ms-excel');
+                        header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+                        header('Cache-Control: max-age=0');
+                        $styleArray = array(
+                            'font'  => array(
+                                'bold'  => true,
+                            )
+                        );
+                        $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+                        return $objWriter->save('php://output');
+                    }
+                    redirect($_SERVER["HTTP_REFERER"]);
+                }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER["HTTP_REFERER"]);
+        }
     }
 
     function getUserLogins($id = NULL, $pdf = NULL, $xls = NULL)
@@ -20364,11 +20703,13 @@ class Reports extends MY_Controller
         $this->page_construct('reports/product_test', $meta, $this->data);
     }
 	
-    function inventory($pdf, $excel,$reference,$wahouse_id,$product_id,$from_date,$to_date,$stockType,$cate_id,$biller)
+    function inventory($pdf,$excel,$reference,$wahouse_id,$product_id,$from_date,$to_date,$stockType,$cate_id,$biller)
 	{
 		$wid = $this->reports_model->getWareByUserID();        
         $this->erp->checkPermissions('inventory_valuation_detail', NULL, 'product_report');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $reference = str_replace('-', '/', $reference);
        
 		if ($pdf || $excel) {
                 $this->load->library('excel');
@@ -20392,6 +20733,7 @@ class Reports extends MY_Controller
                 $gtt = 0;
                 $gqty = 0;  
                 $warehouses = $this->reports_model->getWarehousesInventoryValuation($wid,$wahouse_id,$cate_id,$product_id,$stockType,$from_date,$to_date,$reference,$biller);
+                $this->erp->print_arrays($reference);
                 foreach($warehouses as $ware){
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, "Warehouse >> ".$ware->warehouse);
                     $this->excel->getActiveSheet()->mergeCells('A'.$row.':K'.$row);
