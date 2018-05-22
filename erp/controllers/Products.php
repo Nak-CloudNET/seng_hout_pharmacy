@@ -2060,6 +2060,8 @@ class Products extends MY_Controller
         $this->erp->checkPermissions('adjustments');
         $data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+        $this->data['products'] = $this->site->getProducts();
+        $this->data['categories'] = $this->site->getAllCategories();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -2099,6 +2101,23 @@ class Products extends MY_Controller
         $this->erp->checkPermissions('adjustments');
         $warehouse_ids = explode('-', $warehouse_id);
 
+        if ($this->input->get('reference_no')) {
+            $reference_no = $this->input->get('reference_no');
+        } else {
+            $reference_no = NULL;
+        }
+
+        if ($this->input->get('product')) {
+            $product = $this->input->get('product');
+        } else {
+            $product = NULL;
+        }
+        if ($this->input->get('category')) {
+            $category = $this->input->get('category');
+        } else {
+            $category = NULL;
+        }
+
         $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line("delete_adjustment") . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . site_url('products/delete_adjustment/$1') . "'>"
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
@@ -2116,6 +2135,9 @@ class Products extends MY_Controller
                 ->from('adjustments')
                 ->join('warehouses', 'warehouses.id=adjustments.warehouse_id', 'left')
                 ->join('users', 'users.id=adjustments.created_by', 'left')
+                ->join('adjustment_items', 'adjustment_items.adjust_id = adjustments.id', 'left')
+                ->join('products', 'adjustment_items.product_id = products.id', 'left')
+                ->join('categories', 'products.category_id = categories.id', 'left')
                 ->group_by("adjustments.id");
 
                 if (count($warehouse_ids) > 1) {
@@ -2136,11 +2158,23 @@ class Products extends MY_Controller
                 ->join('warehouses', 'warehouses.id=adjustments.warehouse_id', 'left')
                 ->join('users', 'users.id=adjustments.created_by', 'left')
                 ->join('adjustment_items', 'adjustment_items.adjust_id = adjustments.id', 'left')
+                ->join('products', 'adjustment_items.product_id = products.id', 'left')
+                ->join('categories', 'products.category_id = categories.id', 'left')
                 ->group_by("adjustments.id");
         }
 
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('adjustments.created_by', $this->session->userdata('user_id'));
+        }
+
+        if ($reference_no) {
+            $this->datatables->where($this->db->dbprefix('adjustments') . ".reference_no", $reference_no);
+        }
+        if ($product) {
+            $this->datatables->where($this->db->dbprefix('adjustment_items') . ".product_id", $product);
+        }
+        if ($category) {
+            $this->datatables->where($this->db->dbprefix('products') . ".category_id", $category);
         }
 
         $this->datatables->add_column("Actions", "<div class='text-center'><a href='" . site_url('products/edit_multi_adjustment/$1') . "' class='tip' title='" . lang("edit_adjustment") . "'><i class='fa fa-edit'></i></a></div>", "id");

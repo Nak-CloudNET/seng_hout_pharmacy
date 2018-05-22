@@ -93,6 +93,23 @@ class Transfers extends MY_Controller
             $warehouse_ids = explode('-', $warehouse_id);
         }
 
+        if ($this->input->get('reference_no')) {
+            $reference_no = $this->input->get('reference_no');
+        } else {
+            $reference_no = NULL;
+        }
+
+        if ($this->input->get('product')) {
+            $product = $this->input->get('product');
+        } else {
+            $product = NULL;
+        }
+        if ($this->input->get('category')) {
+            $category = $this->input->get('category');
+        } else {
+            $category = NULL;
+        }
+
         $detail_link = anchor('transfers/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('transfer_details'), 'data-toggle="modal" data-target="#myModal"');
 		$transfer_back = anchor('transfers/transfer_back/$1', '<i class="fa fa-refresh"></i> ' . lang('transfer_back'));
 		$view_document = anchor('transfers/view_document/$1', '<i class="fa fa-chain"></i> ' . lang('view_document'), 'data-toggle="modal" data-target="#myModal"'); 
@@ -146,6 +163,8 @@ class Transfers extends MY_Controller
                 ->from('transfers')
                 ->join('transfer_items', 'transfers.id = transfer_items.transfer_id', 'left')
     			->join($ltrans,'erp_tran.product_id = transfer_items.product_id AND erp_tran.transfer_id = transfer_items.transfer_id','left')
+                ->join('products', 'transfer_items.product_id = products.id', 'left')
+                ->join('categories', 'products.category_id = categories.id', 'left')
                 ->edit_column("fname", "$1 ($2)", "fname, fcode")
                 ->edit_column("tname", "$1 ($2)", "tname, tcode")
                 ->where('transfers.biller_id', $biller_id)
@@ -163,6 +182,8 @@ class Transfers extends MY_Controller
                 ->from('transfers')
                 ->join('transfer_items', 'transfers.id = transfer_items.transfer_id', 'left')
                 ->join($ltrans,'erp_tran.product_id = transfer_items.product_id AND erp_tran.transfer_id = transfer_items.transfer_id','left')
+                ->join('products', 'transfer_items.product_id = products.id', 'left')
+                ->join('categories', 'products.category_id = categories.id', 'left')
                 ->edit_column("fname", "$1 ($2)", "fname, fcode")
                 ->edit_column("tname", "$1 ($2)", "tname, tcode")
                 ->group_by('transfers.transfer_no');
@@ -170,6 +191,16 @@ class Transfers extends MY_Controller
 
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('transfers.created_by', $this->session->userdata('user_id'));
+        }
+
+        if ($reference_no) {
+            $this->datatables->where($this->db->dbprefix('transfers') . ".transfer_no", $reference_no);
+        }
+        if ($product) {
+            $this->datatables->where($this->db->dbprefix('transfer_items') . ".product_id", $product);
+        }
+        if ($category) {
+            $this->datatables->where($this->db->dbprefix('products') . ".category_id", $category);
         }
 
         $this->datatables->add_column("Actions", $action, "id")
@@ -1595,6 +1626,8 @@ class Transfers extends MY_Controller
 		$this->erp->checkPermissions('index',null, 'transfers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+        $this->data['products'] = $this->site->getProducts();
+        $this->data['categories'] = $this->site->getAllCategories();
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['warehouse_id'] = $warehouse_id;
