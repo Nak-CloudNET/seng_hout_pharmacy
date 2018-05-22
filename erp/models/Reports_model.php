@@ -3890,11 +3890,11 @@ ORDER BY
 		$this->db->join('products', 'products.id = inventory_valuation_details.product_id', 'left');
 		$this->db->join('project_plan', 'project_plan.id = inventory_valuation_details.plan_id', 'left');
 
-		if ($this->Settings->product_expiry == 1) {
+		/*if ($this->Settings->product_expiry == 1) {
 			$this->db->select('SUM(COALESCE(erp_inventory_valuation_details.quantity,0)) as quantity');
 			$this->db->group_by('inventory_valuation_details.expiry');
 			$this->db->group_by('inventory_valuation_details.type');
-		}
+		}*/
 
 		if($category_id){
 			$this->db->where('inventory_valuation_details.category_id', $category_id);
