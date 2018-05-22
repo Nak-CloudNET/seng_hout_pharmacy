@@ -204,7 +204,7 @@
 							$total_on_hand = 0;
 							$total_asset_val = 0;
 							$unit_name = "";
-							$prDetails = $this->reports_model->getProductsInventoryValuationByProduct($warehouse->warehouse_id,($cate_id1?$cate_id1:$category->category_id),($product_id1?$product_id1:$product->product_id),$stockType1,$from_date1,$to_date1,$reference1,$biller1);
+							$prDetails = $this->reports_model->getProductsInventoryValuationByProduct($warehouse->warehouse_id, ($cate_id1 ? $cate_id1 : $category->category_id), ($product_id1 ? $product_id1 : $product->product_id), $stockType1, $from_date1, $to_date1, $reference1, $biller1);
 							foreach($prDetails as $pr)
 							{
 								$p_cost = 0;
