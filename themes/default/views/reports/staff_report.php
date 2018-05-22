@@ -899,7 +899,6 @@
             $category = $this->input->post('category') ? $this->input->post('category') : 0;
             $start_date = trim($this->erp->fld($this->input->post('start_date')));
             $end_date = trim($this->erp->fld($this->input->post('end_date')));
-
         }
         ?>
         <script>
