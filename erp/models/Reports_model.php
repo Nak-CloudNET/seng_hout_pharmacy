@@ -5368,16 +5368,66 @@ ORDER BY
         return FALSE;
     }
 
-    public function getStaffLoginsReportExportByID($id=null, $login_start_date=null, $login_end_date=null)
+    public function getStaffLoginsReportExportByID($user_id, $login_start_date = null, $login_end_date = null)
     {
-        $this->db->select("login, ip_address, time");
-        if ($login_start_date) {
-            $this->db->where($this->db->dbprefix('payments').'.date BETWEEN "' . $login_start_date . '00:00:00" and "' . $login_end_date . '11:59:00"');
+        $this->db->select("login, ip_address, time")
+            ->where('user_id', $user_id)
+            ->order_by('time', desc);
+
+        if ($login_start_date > 0) {
+            $this->db->where($this->db->dbprefix('user_logins') . '.time BETWEEN "' . $login_start_date . '" and "' . $login_end_date . '"');
         }
 
-        $q = $this->db->get('user_logins', array('user_id.id' => $id));
+        $q = $this->db->get('user_logins');
         if ($q->num_rows() > 0) {
-            return $q->row();
+            return $q->result();
+        }
+        return FALSE;
+    }
+
+    public function getStaffSaleProductReportExportByID($user_id, $product = null, $category = null, $start_date = null, $end_date = null)
+    {
+        $this->db
+            ->select("
+						erp_products.image,
+						erp_sales.date,
+						erp_sales.reference_no,
+						erp_sale_items.product_code,
+						erp_sale_items.product_name,
+						erp_categories.name as category_name,
+						erp_sale_items.quantity,
+						COALESCE(erp_return_items.quantity, 0) as quantity_returned,
+						(COALESCE(erp_sale_items.quantity, 0) - COALESCE(erp_return_items.quantity, 0)) as qty_balance,
+						IF(erp_sale_items.option_id > 0,
+							erp_product_variants.NAME,
+							erp_units.name
+						) as unit,
+						erp_sale_items.net_unit_price as unit_price,
+						(erp_sale_items.net_unit_price * (COALESCE(erp_sale_items.quantity, 0) - COALESCE(erp_return_items.quantity, 0))) AS TotalPrice
+					")
+            ->from("erp_sales")
+            ->join('erp_sale_items', 'erp_sale_items.sale_id = erp_sales.id', 'left')
+            ->join('return_items', 'return_items.sale_item_id = erp_sale_items.id', 'left')
+            ->join('erp_products', 'erp_sale_items.product_id = erp_products.id', 'left')
+            ->join('erp_categories', 'erp_categories.id = erp_products.category_id', 'left')
+            ->join('erp_units', 'erp_units.id = erp_products.unit', 'left')
+            ->join('erp_product_variants', 'erp_sale_items.option_id = erp_product_variants.id', 'left')
+            ->where('erp_sales.saleman_by', $user_id)
+            ->order_by('sales.reference_no', desc);
+
+        if ($product) {
+            $this->db->where('erp_sale_items.product_id', $product);
+        }
+        if ($category) {
+            $this->db->where('erp_products.category_id', $category);
+        }
+        if ($start_date) {
+            $this->db->where('date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+        }
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->result();
         }
         return FALSE;
     }

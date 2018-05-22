@@ -251,3 +251,5 @@ $lang['hide']						= "Hide";
 $lang['project_plan']				= "Project Plan";
 $lang['using']						= "Using";
 $lang['no_staff_payments_record_selected']						= "No Staff Payments Record Selected!!!";
+$lang['ip_address'] = "IP Address";
+$lang['time'] = "Time";

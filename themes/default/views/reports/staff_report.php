@@ -709,16 +709,81 @@
         </div>
     </div>
     <div id="logins-con" class="tab-pane fade in">
-        <?php
-        echo form_open('reports/staff_logins_action', 'id="action-form"');
+        <?php $l = '';
+        if ($this->input->post('submit_login_report')) {
+            if ($this->erp->fld($this->input->post('login_start_date'))) {
+                $l .= "&start_date=" . $this->erp->fld($this->input->post('login_start_date'));
+            }
+            if ($this->erp->fld($this->input->post('login_end_date'))) {
+                $l .= "&end_date=" . $this->erp->fld($this->input->post('login_end_date'));
+            }
+        }
+        $login_start_date = $this->erp->fld($this->input->post('login_start_date'));
+        $login_end_date = $this->erp->fld($this->input->post('login_end_date'));
+        //echo $login_start_date.' ###############';exit();
         ?>
+        <script>
+            $(document).ready(function () {
+                $('#LGTable').dataTable({
+                    "aaSorting": [[2, "desc"]],
+                    "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
+                    "iDisplayLength": <?= $Settings->rows_per_page ?>,
+                    'bProcessing': true, 'bServerSide': true,
+                    'sAjaxSource': '<?= site_url('reports/getUserLogins/' . $user_id . '/?v=1' . $l); ?>',
+                    'fnServerData': function (sSource, aoData, fnCallback) {
+                        aoData.push({
+                            "name": "<?= $this->security->get_csrf_token_name(); ?>",
+                            "value": "<?= $this->security->get_csrf_hash() ?>"
+                        });
+                        $.ajax({
+                            'dataType': 'json',
+                            'type': 'POST',
+                            'url': sSource,
+                            'data': aoData,
+                            'success': fnCallback
+                        });
+                    },
+                    "aoColumns": [null, null, {"mRender": fld}]
+                }).fnSetFilteringDelay().dtFilter([
+                    {
+                        column_number: 0,
+                        filter_default_label: "[<?=lang('email');?>]",
+                        filter_type: "text", data: []
+                    },
+                    {
+                        column_number: 1,
+                        filter_default_label: "[<?=lang('ip_address');?>]",
+                        filter_type: "text", data: []
+                    },
+                    {
+                        column_number: 2,
+                        filter_default_label: "[<?=lang('time');?> (yyyy-mm-dd HH:mm)]",
+                        filter_type: "text", data: []
+                    },
+                ], "footer");
+            });
+
+        </script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $('#loginform').hide();
+                $('.logintoggle_down').click(function () {
+                    $("#loginform").slideDown();
+                    return false;
+                });
+                $('.logintoggle_up').click(function () {
+                    $("#loginform").slideUp();
+                    return false;
+                });
+            });
+        </script>
         <div class="box">
             <div class="box-header">
                 <h2 class="blue"><i class="fa-fw fa fa-file-text nb"></i> <?= lang('staff_logins_report'); ?></h2>
                 <div class="box-icon">
                     <ul class="btn-tasks">
                         <li class="dropdown"><a href="#" class="logintoggle_up tip" title="<?= lang('hide_form') ?>"><i
-                                    class="icon fa fa-toggle-up"></i></a></li>
+                                        class="icon fa fa-toggle-up"></i></a></li>
                         <li class="dropdown"><a href="#" class="logintoggle_down tip"
                                                 title="<?= lang('show_form') ?>"><i class="icon fa fa-toggle-down"></i></a>
                         </li>
@@ -726,23 +791,32 @@
                 </div>
                 <div class="box-icon">
                     <ul class="btn-tasks">
-                        <li class="dropdown"><a href="#" id="staff_login_pdf" data-action="export_pdf" class="tip" title="<?= lang('export_pdf') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
-                        <li class="dropdown"><a href="#" id="staff_login_excel" data-action="export_excel" class="tip" title="<?= lang('export_excel') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
+                        <li class="dropdown"><a href="#" id="pdf_login" data-action="export_pdf" class="tip"
+                                                title="<?= lang('export_pdf') ?>"><i class="icon fa fa-file-pdf-o"></i></a>
+                        </li>
+                        <li class="dropdown"><a href="#" id="excel_login" data-action="export_excel" class="tip"
+                                                title="<?= lang('export_excel') ?>"><i
+                                        class="icon fa fa-file-pdf-o"></i></a></li>
                     </ul>
                 </div>
             </div>
-            <div style="display: none;">
-                <?=form_submit('performAction', 'performAction', 'id="action-form-submit"')?>
-            </div>
-            <?= form_close()?>
+            <script>
+                $('#excel_login').click(function (e) {
+                    e.preventDefault();
+                    window.location.href = "<?= site_url('reports/staff_logins_action/0/xls/' . $user_id . '/' . $login_start_date) ?>";
+                    return false;
+                });
+                $('#pdf_login').click(function (e) {
+                    e.preventDefault();
+                    window.location.href = "<?= site_url('reports/staff_logins_action/pdf/0/' . $user_id . '/' . $login_end_date) ?>";
+                    return false;
+                });
+            </script>
             <div class="box-content">
                 <div class="row">
                     <div class="col-lg-12">
-
                         <p class="introtext"><?= lang("staff_logins_report") ?></p>
-
                         <div id="loginform">
-
                             <?= form_open("reports/staff_report/" . $user_id . '#logins-con'); ?>
                             <div class="row">
                                 <div class="col-sm-4">
@@ -760,78 +834,13 @@
                             </div>
                             <div class="form-group">
                                 <div
-                                    class="controls"> <?= form_submit('submit_login_report', lang("submit"), 'class="btn btn-primary"'); ?> </div>
+                                        class="controls"> <?= form_submit('submit_login_report', lang("submit"), 'class="btn btn-primary"'); ?> </div>
                             </div>
                             <?= form_close(); ?>
 
                         </div>
                         <div class="clearfix"></div>
                         <div>
-                            <?php $l = '';
-                            if ($this->input->post('submit_login_report')) {
-                                if ($this->input->post('login_start_date')) {
-                                    $l .= "&start_date=" . $this->input->post('login_start_date');
-                                }
-                                if ($this->input->post('login_end_date')) {
-                                    $l .= "&end_date=" . $this->input->post('login_end_date');
-                                }
-                            }
-                            ?>
-                            <script>
-                                $(document).ready(function () {
-                                    $('#LGTable').dataTable({
-                                        "aaSorting": [[2, "desc"]],
-                                        "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
-                                        "iDisplayLength": <?= $Settings->rows_per_page ?>,
-                                        'bProcessing': true, 'bServerSide': true,
-                                        'sAjaxSource': '<?= site_url('reports/getUserLogins/' . $user_id.'/?v=1'.$l); ?>',
-                                        'fnServerData': function (sSource, aoData, fnCallback) {
-                                            aoData.push({
-                                                "name": "<?= $this->security->get_csrf_token_name(); ?>",
-                                                "value": "<?= $this->security->get_csrf_hash() ?>"
-                                            });
-                                            $.ajax({
-                                                'dataType': 'json',
-                                                'type': 'POST',
-                                                'url': sSource,
-                                                'data': aoData,
-                                                'success': fnCallback
-                                            });
-                                        },
-                                        "aoColumns": [null, null, {"mRender": fld}]
-                                    }).fnSetFilteringDelay().dtFilter([
-                                        {
-                                            column_number: 0,
-                                            filter_default_label: "[<?=lang('email');?>]",
-                                            filter_type: "text", data: []
-                                        },
-                                        {
-                                            column_number: 1,
-                                            filter_default_label: "[<?=lang('ip_address');?>]",
-                                            filter_type: "text", data: []
-                                        },
-                                        {
-                                            column_number: 2,
-                                            filter_default_label: "[<?=lang('time');?> (yyyy-mm-dd HH:mm)]",
-                                            filter_type: "text", data: []
-                                        },
-                                    ], "footer");
-                                });
-
-                            </script>
-                            <script type="text/javascript">
-                                $(document).ready(function () {
-                                    $('#loginform').hide();
-                                    $('.logintoggle_down').click(function () {
-                                        $("#loginform").slideDown();
-                                        return false;
-                                    });
-                                    $('.logintoggle_up').click(function () {
-                                        $("#loginform").slideUp();
-                                        return false;
-                                    });
-                                });
-                            </script>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="table-responsive">
@@ -871,6 +880,115 @@
 
     <!-- staff salling product -->
     <div id="sale_pro" class="tab-pane fade in">
+        <?php
+        $sp = '';
+        if ($this->input->post('submit_SaleProduct_report')) {
+            if ($this->input->post('start_date')) {
+                $sp .= "&start_date=" . $this->input->post('start_date');
+            }
+            if ($this->input->post('end_date')) {
+                $sp .= "&end_date=" . $this->input->post('end_date');
+            }
+            if ($this->input->post('product_id')) {
+                $sp .= "&product_id=" . $this->input->post('product_id');
+            }
+            if ($this->input->post('category')) {
+                $sp .= "&category=" . $this->input->post('category');
+            }
+            $product = $this->input->post('product_id') ? $this->input->post('product_id') : 0;
+            $category = $this->input->post('category') ? $this->input->post('category') : 0;
+            $start_date = trim($this->erp->fld($this->input->post('start_date')));
+            $end_date = trim($this->erp->fld($this->input->post('end_date')));
+
+        }
+        ?>
+        <script>
+            $(document).ready(function () {
+                $('#SPTable').dataTable({
+                    "aaSorting": [[2, "desc"]],
+                    "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
+                    "iDisplayLength": <?= $Settings->rows_per_page ?>,
+                    'bProcessing': true, 'bServerSide': true,
+                    'sAjaxSource': '<?= site_url('reports/getSaleProduct/' . $user_id . '/?v=1' . $sp); ?>',
+                    'fnServerData': function (sSource, aoData, fnCallback) {
+                        aoData.push({
+                            "name": "<?= $this->security->get_csrf_token_name(); ?>",
+                            "value": "<?= $this->security->get_csrf_hash() ?>"
+                        });
+                        $.ajax({
+                            'dataType': 'json',
+                            'type': 'POST',
+                            'url': sSource,
+                            'data': aoData,
+                            'success': fnCallback
+                        });
+                    },
+                    "aoColumns": [{
+                        "bSortable": false,
+                        "mRender": img_hl
+                    }, {"mRender": fld}, null, null, null, null, {"mRender": formatQuantity}, {"mRender": formatQuantity}, {"mRender": formatQuantity}, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}
+                    ],
+                    "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
+                        var am = 0, pr = 0, qty = 0, qty_return = 0, qty_balance = 0;
+                        for (var i = 0; i < aaData.length; i++) {
+                            qty += parseFloat(aaData[aiDisplay[i]][6]);
+                            qty_return += parseFloat(aaData[aiDisplay[i]][7]);
+                            qty_balance += parseFloat(aaData[aiDisplay[i]][8]);
+                            pr += parseFloat(aaData[aiDisplay[i]][10]);
+                            am += parseFloat(aaData[aiDisplay[i]][11]);
+                        }
+                        var nCells = nRow.getElementsByTagName('th');
+                        nCells[6].innerHTML = formatQuantity(parseFloat(qty));
+                        nCells[7].innerHTML = formatQuantity(parseFloat(qty_return));
+                        nCells[8].innerHTML = formatQuantity(parseFloat(qty_balance));
+                        nCells[9].innerHTML = currencyFormat(parseFloat(pr));
+                        nCells[11].innerHTML = currencyFormat(parseFloat(am));
+
+                    }
+                }).fnSetFilteringDelay().dtFilter([
+                    {column_number: 1, filter_default_label: "[<?=lang('date');?>]", filter_type: "text", data: []},
+                    {
+                        column_number: 2,
+                        filter_default_label: "[<?=lang('reference_no');?>]",
+                        filter_type: "text",
+                        data: []
+                    },
+                    {
+                        column_number: 3,
+                        filter_default_label: "[<?=lang('product_code');?>]",
+                        filter_type: "text",
+                        data: []
+                    },
+                    {
+                        column_number: 4,
+                        filter_default_label: "[<?=lang('product_name');?>]",
+                        filter_type: "text",
+                        data: []
+                    },
+                    {
+                        column_number: 5,
+                        filter_default_label: "[<?=lang('categories');?>]",
+                        filter_type: "text",
+                        data: []
+                    },
+                    {column_number: 9, filter_default_label: "[<?=lang('unit');?>]", filter_type: "text", data: []},
+                ], "footer");
+            });
+
+        </script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $('#saleProduct').hide();
+                $('.sale_pro_toggle_down').click(function () {
+                    $("#saleProduct").slideDown();
+                    return false;
+                });
+                $('.sale_pro_toggle_up').click(function () {
+                    $("#saleProduct").slideUp();
+                    return false;
+                });
+            });
+        </script>
         <div class="box">
             <div class="box-header">
                 <h2 class="blue"><i class="fa-fw fa fa-file-text nb"></i> <?= lang('sale_prodcut_report'); ?></h2>
@@ -878,7 +996,7 @@
                 <div class="box-icon">
                     <ul class="btn-tasks">
                         <li class="dropdown"><a href="#" class="sale_pro_toggle_up tip" title="<?= lang('hide_form') ?>"><i
-                                    class="icon fa fa-toggle-up"></i></a></li>
+                                        class="icon fa fa-toggle-up"></i></a></li>
                         <li class="dropdown"><a href="#" class="sale_pro_toggle_down tip"
                                                 title="<?= lang('show_form') ?>"><i class="icon fa fa-toggle-down"></i></a>
                         </li>
@@ -886,15 +1004,26 @@
                 </div>
                 <div class="box-icon">
                     <ul class="btn-tasks">
-                        <li class="dropdown"><a href="#" id="pdf6" class="tip" title="<?= lang('download_pdf') ?>"><i
-                                    class="icon fa fa-file-pdf-o"></i></a></li>
-                        <li class="dropdown"><a href="#" id="xls6" class="tip" title="<?= lang('download_xls') ?>"><i
-                                    class="icon fa fa-file-excel-o"></i></a></li>
-                        <li class="dropdown"><a href="#" id="image6" class="tip image"
-                                                title="<?= lang('save_image') ?>"><i
-                                    class="icon fa fa-file-picture-o"></i></a></li>
+                        <li class="dropdown"><a href="#" id="pdf_pro" data-action="export_pdf" class="tip"
+                                                title="<?= lang('export_pdf') ?>"><i class="icon fa fa-file-pdf-o"></i></a>
+                        </li>
+                        <li class="dropdown"><a href="#" id="excel_pro" data-action="export_excel" class="tip"
+                                                title="<?= lang('export_excel') ?>"><i
+                                        class="icon fa fa-file-pdf-o"></i></a></li>
                     </ul>
                 </div>
+                <script>
+                    $('#excel_pro').click(function (e) {
+                        e.preventDefault();
+                        window.location.href = "<?= site_url('reports/staff_sale_product_action/0/xls/' . $user_id . '/' . $product . '/' . $category . '/' . $start_date . '/' . $end_date) ?>";
+                        return false;
+                    });
+                    $('#pdf_pro').click(function (e) {
+                        e.preventDefault();
+                        window.location.href = "<?= site_url('reports/staff_sale_product_action/pdf/0/' . $user_id . '/' . $product . '/' . $category . '/' . $start_date . '/' . $end_date) ?>";
+                        return false;
+                    });
+                </script>
             </div>
             <div class="box-content">
                 <div class="row">
@@ -906,30 +1035,30 @@
 
                             <?= form_open("reports/staff_report/" . $user_id . '#sale_pro'); ?>
                             <div class="row">
-								<div class="col-sm-4">
-									<div class="form-group">
-										<label class="control-label" for="product_id"><?= lang("product"); ?></label>
-										<?php
-										$pr[""] = "";
-										foreach ($products as $product) {
-											$pr[$product->id] = $product->name . " | " . $product->code ;
-										}
-										echo form_dropdown('product_id', $pr, (isset($_POST['product_id']) ? $_POST['product_id'] : ""), 'class="form-control" id="product_id" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product") . '"');
-										?>
-									</div>
-								</div>
-								<div class="col-sm-4">
-									<div class="form-group">
-										<?= lang("category", "category") ?>
-										<?php
-										$cat[0] = $this->lang->line("all");
-										foreach ($categories as $category) {
-											$cat[$category->id] = $category->name;
-										}
-										echo form_dropdown('category', $cat, (isset($_POST['category']) ? $_POST['category'] : ''), 'class="form-control select" id="category" placeholder="' . lang("select") . " " . lang("category") . '" style="width:100%"')
-										?>
-									</div>
-								</div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label" for="product_id"><?= lang("product"); ?></label>
+                                        <?php
+                                        $pr[""] = "";
+                                        foreach ($products as $product) {
+                                            $pr[$product->id] = $product->name . " | " . $product->code;
+                                        }
+                                        echo form_dropdown('product_id', $pr, (isset($_POST['product_id']) ? $_POST['product_id'] : ""), 'class="form-control" id="product_id" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product") . '"');
+                                        ?>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <?= lang("category", "category") ?>
+                                        <?php
+                                        $cat[0] = $this->lang->line("all");
+                                        foreach ($categories as $category) {
+                                            $cat[$category->id] = $category->name;
+                                        }
+                                        echo form_dropdown('category', $cat, (isset($_POST['category']) ? $_POST['category'] : ''), 'class="form-control select" id="category" placeholder="' . lang("select") . " " . lang("category") . '" style="width:100%"')
+                                        ?>
+                                    </div>
+                                </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <?= lang("start_date", "start_date"); ?>
@@ -945,94 +1074,13 @@
                             </div>
                             <div class="form-group">
                                 <div
-                                    class="controls"> <?= form_submit('submit_SaleProduct_report', lang("submit"), 'class="btn btn-primary"'); ?> </div>
+                                        class="controls"> <?= form_submit('submit_SaleProduct_report', lang("submit"), 'class="btn btn-primary"'); ?> </div>
                             </div>
                             <?= form_close(); ?>
 
                         </div>
                         <div class="clearfix"></div>
                         <div>
-                            <?php 
-                                $sp = '';
-                            if ($this->input->post('submit_SaleProduct_report')) {
-                                if ($this->input->post('start_date')) {
-                                    $sp .= "&start_date=" .$this->input->post('start_date');
-                                }
-                                if ($this->input->post('end_date')) {
-                                    $sp .= "&end_date=" .$this->input->post('end_date');
-                                }
-								if ($this->input->post('product_id')) {
-                                    $sp .= "&product_id=" .$this->input->post('product_id');
-                                }
-								if ($this->input->post('category')) {
-                                    $sp .= "&category=" .$this->input->post('category');
-                                }
-                            }
-                            ?>
-                            <script>
-                                $(document).ready(function () {
-                                    $('#SPTable').dataTable({
-                                        "aaSorting": [[2, "desc"]],
-                                        "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
-                                        "iDisplayLength": <?= $Settings->rows_per_page ?>,
-                                        'bProcessing': true, 'bServerSide': true,
-                                        'sAjaxSource': '<?= site_url('reports/getSaleProduct/' . $user_id.'/?v=1'.$sp); ?>',
-                                        'fnServerData': function (sSource, aoData, fnCallback) {
-                                            aoData.push({
-                                                "name": "<?= $this->security->get_csrf_token_name(); ?>",
-                                                "value": "<?= $this->security->get_csrf_hash() ?>"
-                                            });
-                                            $.ajax({
-                                                'dataType': 'json',
-                                                'type': 'POST',
-                                                'url': sSource,
-                                                'data': aoData,
-                                                'success': fnCallback
-                                            });
-                                        },
-                                        "aoColumns": [{"bSortable": false,"mRender": img_hl}, {"mRender": fld},null,null, null, null,{"mRender": formatQuantity}, {"mRender": formatQuantity}, {"mRender": formatQuantity} ,null, {"mRender": currencyFormat},{"mRender": currencyFormat}
-                                        ],
-                                        "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-                                            var am = 0, pr = 0, qty = 0, qty_return = 0, qty_balance = 0;
-                                            for (var i = 0; i < aaData.length; i++) {
-                                                qty += parseFloat(aaData[aiDisplay[i]][6]);
-                                                qty_return += parseFloat(aaData[aiDisplay[i]][7]);
-                                                qty_balance += parseFloat(aaData[aiDisplay[i]][8]);
-                                                pr += parseFloat(aaData[aiDisplay[i]][10]); 
-                                                am += parseFloat(aaData[aiDisplay[i]][11]);
-                                            }
-                                            var nCells = nRow.getElementsByTagName('th');
-                                            nCells[6].innerHTML = formatQuantity(parseFloat(qty)); 
-                                            nCells[7].innerHTML = formatQuantity(parseFloat(qty_return)); 
-                                            nCells[8].innerHTML = formatQuantity(parseFloat(qty_balance)); 
-                                            nCells[9].innerHTML = currencyFormat(parseFloat(pr));
-                                            nCells[11].innerHTML = currencyFormat(parseFloat(am));
-                                            
-                                        }
-                                    }).fnSetFilteringDelay().dtFilter([
-                                        {column_number: 1, filter_default_label: "[<?=lang('date');?>]", filter_type: "text", data: []},
-                                        {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-                                        {column_number: 3, filter_default_label: "[<?=lang('product_code');?>]", filter_type: "text", data: []},
-                                        {column_number: 4, filter_default_label: "[<?=lang('product_name');?>]", filter_type: "text", data: []},
-                                        {column_number: 5, filter_default_label: "[<?=lang('categories');?>]", filter_type: "text", data: []},
-                                        {column_number: 9, filter_default_label: "[<?=lang('unit');?>]", filter_type: "text", data: []},
-                                    ], "footer");
-                                });
-
-                            </script>
-                            <script type="text/javascript">
-                                $(document).ready(function () {
-                                    $('#saleProduct').hide();
-                                    $('.sale_pro_toggle_down').click(function () {
-                                        $("#saleProduct").slideDown();
-                                        return false;
-                                    });
-                                    $('.sale_pro_toggle_up').click(function () {
-                                        $("#saleProduct").slideUp();
-                                        return false;
-                                    });
-                                });
-                            </script>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="table-responsive">
