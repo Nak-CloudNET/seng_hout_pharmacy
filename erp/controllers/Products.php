@@ -2922,6 +2922,7 @@ class Products extends MY_Controller
         $this->data['products'] = $this->site->getProducts();
         //$this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['billers'] = $this->site->getAllCompanies('biller');
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
 
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('products'), 'page' => lang('products')), array('link' => '#', 'page' => $pr_details->name));
         $meta = array('page_title' => $pr_details->name, 'bc' => $bc);
