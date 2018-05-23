@@ -354,12 +354,12 @@
 										<span style="padding-right: 35px;"><?= lang('sale_order_alerts') ?></span>
 									</a>
 								</li>
-								<li>
+							<!--	<li>
 									<a href="<?= site_url('sales/delivery_alerts/') ?>" class="">
 										<span class="label label-danger pull-right" style="margin-top:3px;"><?= $deliveries_alert_num; ?></span>
 										<span style="padding-right: 35px;"><?= lang('delivery_alerts') ?></span>
 									</a>
-								</li>
+								</li> -->
 							</ul>
 						</li>
                         <?php if (POS) { ?>
@@ -602,7 +602,7 @@
 											</a>
                                         </li>
                                         
-										<li id="sales_deliveries">
+									<!--	<li id="sales_deliveries">
                                             <a class="submenu" href="<?= site_url('sales/deliveries'); ?>">
                                                 <i class="fa fa-truck"></i>
                                                 <span class="text"> <?= lang('list_deliveries'); ?></span>
@@ -613,7 +613,7 @@
                                                 <i class="fa fa-plus-circle"></i>
                                                 <span class="text"> <?= lang('add_deliveries'); ?></span>
                                             </a>
-                                        </li>
+                                        </li> -->
 										<li id="sales_customer_balance">
                                             <a class="submenu" href="<?= site_url('sales/customer_balance'); ?>">
                                                 <i class="fa fa-money"></i>
@@ -1629,7 +1629,7 @@
 																<i class="fa fa-gift"></i><span class="text"> <?= lang('sales_discount_report'); ?></span>
 															</a>
 														</li>                                                                
-														<li id="reports_deliveries">
+													<!--	<li id="reports_deliveries">
 															<a href="<?= site_url('reports/deliveries') ?>">
 																<i class="fa fa-heart"></i><span class="text"> <?= lang('sale_by_delivery_person'); ?></span>
 															</a>
@@ -1639,7 +1639,7 @@
 																<i class="fa fa-heart"></i><span class="text"> <?= lang('Sales_Delivery_Detail'); ?></span>
 															</a>
 														</li>
-													<!--	<li id="reports_suspend_report" <?=($this->uri->segment(2) === 'suspends' ? 'class="active"' : '')?> >
+														<li id="reports_suspend_report" <?=($this->uri->segment(2) === 'suspends' ? 'class="active"' : '')?> >
 															<a href="<?= site_url('reports/suspends') ?>">
 																<i class="fa fa-heart"></i><span class="text"> <?= lang('suspend_report'); ?></span>
 															</a>
@@ -1982,19 +1982,19 @@
 											</li>
 										<?php }
 										if ($GP['sales-deliveries']) { ?>
-										<li id="sales_deliveries">
+									<!--	<li id="sales_deliveries">
 											<a class="submenu" href="<?= site_url('sales/deliveries'); ?>">
 												<i class="fa fa-truck"></i><span class="text"> <?= lang('list_deliveries'); ?></span>
 											</a>
-										</li>
+										</li> -->
 										<?php } 
 										if ($GP['sales-add_delivery']) { ?>
-											<li id="sales_add_deliveries">
+											<!-- <li id="sales_add_deliveries">
 												<a class="submenu" href="<?= site_url('sales/add_deliveries'); ?>">
 													<i class="fa fa-plus-circle"></i>
 													<span class="text"> <?= lang('add_deliveries'); ?></span>
 												</a>
-											</li>
+											</li> -->
 										<?php }
 										if ($GP['customers_balance']) { ?>
 											<li id="sales_customer_balance">
@@ -2858,18 +2858,18 @@
 													</li>
 												<?php } ?>
 												<?php if($GP['sale_report-by_delivery_person']){ ?>
-													<li id="reports_deliveries">
+													<!-- <li id="reports_deliveries">
 														<a href="<?= site_url('reports/deliveries') ?>">
 															<i class="fa fa-heart"></i><span class="text"> <?= lang('sale_by_delivery_person'); ?></span>
 														</a>
-													</li>
+													</li> -->
 												<?php } ?>
                                                 <?php if($GP['sale_report-delivery_detail']){ ?>
-                                                <li id="reports_sales_detail_delivery">
+                                                <!-- <li id="reports_sales_detail_delivery">
                                                     <a href="<?= site_url('reports/sales_detail_delivery') ?>">
                                                         <i class="fa fa-heart"></i><span class="text"> <?= lang('Sales_Delivery_Detail'); ?></span>
                                                     </a>
-                                                </li>
+                                                </li> -->
                                                 <?php } ?>
 												<?php if($GP['sale_report-room_table']){ ?>
 												<!--	<li id="reports_suspend_report" <?=($this->uri->segment(2) === 'suspends' ? 'class="active"' : '')?> >
