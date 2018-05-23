@@ -10578,7 +10578,7 @@ class Reports extends MY_Controller
                 $this->datatables->like('purchases.reference_no', $purchase_ref, 'both');
             }
             if ($start_date) {
-                $this->datatables->where($this->db->dbprefix('payments').'.date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+                $this->datatables->where($this->db->dbprefix('payments') . '.date BETWEEN "' . $start_date . '00:00:00" and "' . $end_date . '23:59:59"');
             }
 
             echo $this->datatables->generate();

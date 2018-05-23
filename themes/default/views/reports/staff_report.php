@@ -450,6 +450,7 @@
             if ($this->input->post('pay_end_date')) {
                 $p .= "&end_date=" . $this->input->post('pay_end_date');
             }
+            //$this->erp->print_arrays($p);
         }
         ?>
         <script>
