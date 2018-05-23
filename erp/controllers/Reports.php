@@ -10387,6 +10387,7 @@ class Reports extends MY_Controller
             $start_date = $this->erp->fld($start_date);
             $end_date = $this->erp->fld($end_date);
         }
+        //$this->erp->print_arrays($start_date);
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $user = $this->session->userdata('user_id');
         }
@@ -11693,7 +11694,10 @@ class Reports extends MY_Controller
                                 $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->applyFromArray($danger_background);
                             }
                             $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
-                            $this->excel->getActiveSheet()->getStyle('A'.$row.':J'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                            $this->excel->getActiveSheet()->getStyle('A' . $row . ':G' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
+                            $this->excel->getActiveSheet()->getStyle('I' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
+                            $this->excel->getActiveSheet()->getStyle('H' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                            $this->excel->getActiveSheet()->getStyle('J' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
                             if($this->input->post('form_action') == 'export_pdf') {
                                 $styleArray = array(
@@ -11714,7 +11718,7 @@ class Reports extends MY_Controller
                         ->setSize(12)
                         ->setBold(true);
                     $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
-                    $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                    $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                     $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
                     if($this->input->post('form_action') == 'export_pdf') {
                         $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getBorders()->getBottom()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
@@ -11788,11 +11792,8 @@ class Reports extends MY_Controller
         }
     }
 
-    function staff_logins_action($pdf, $xls, $user_id)
+    function staff_logins_action($pdf, $xls, $user_id, $login_start_date, $login_end_date)
     {
-        $login_start_date = $this->erp->fld($this->input->post('login_start_date'));
-        $login_end_date = $this->erp->fld($this->input->post('login_end_date'));
-
         if ($pdf || $xls) {
             $this->load->library('excel');
             $this->excel->setActiveSheetIndex(0);
@@ -11841,6 +11842,7 @@ class Reports extends MY_Controller
             $this->excel->getActiveSheet()->SetCellValue('C2', lang('time'));
 
             $row = 3;
+
             $staff_login_data = $this->reports_model->getStaffLoginsReportExportByID($user_id, $login_start_date, $login_end_date);
             foreach ($staff_login_data as $data) {
 
@@ -12298,7 +12300,7 @@ class Reports extends MY_Controller
             $tQtyBalance = 0;
             $tUnitPrice = 0;
             $gtPrice = 0;
-
+            //$this->erp->print_arrays($category);
             $staff_sale_product_data = $this->reports_model->getStaffSaleProductReportExportByID($user_id, $product, $category, $start_date, $end_date);
             foreach ($staff_sale_product_data as $data) {
                 $tQty += $data->quantity;
@@ -12352,14 +12354,14 @@ class Reports extends MY_Controller
             $this->excel->getActiveSheet()->getStyle('F' . $new_row . ':H' . $new_row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
             $this->excel->getActiveSheet()->getStyle('J' . $new_row . ':K' . $new_row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
             $this->excel->getActiveSheet()->getStyle('F' . $new_row . ':K' . $new_row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-            $this->excel->getActiveSheet()->getStyle('F' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-            $this->excel->getActiveSheet()->getStyle('G' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-            $this->excel->getActiveSheet()->getStyle('H' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-            $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-            $this->excel->getActiveSheet()->getStyle('J' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-            $this->excel->getActiveSheet()->getStyle('K' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
             if ($pdf) {
                 $this->excel->getActiveSheet()->getStyle('F' . $new_row . ':K' . $new_row)->getBorders()->getBottom()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->getStyle('F' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->getStyle('G' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->getStyle('H' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->getStyle('I' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->getStyle('J' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+                $this->excel->getActiveSheet()->getStyle('K' . $new_row)->getBorders()->getRight()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
             }
 
             $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(25);
@@ -20970,7 +20972,7 @@ class Reports extends MY_Controller
                                 $p_cost = $this->erp->formatDecimal($getpro->cost);
                                 $avg_cost = $getpro->avg_cost;
                                 $this->db->select("cost")->where("erp_products.id",$getpro->product_id);
-                                $cost = $this->erp->formatDecimal($this->db->get_where("erp_products",array("id"=>$pro->product_id),1)->row()->cost);
+                               $cost = $this->erp->formatDecimal($this->db->get_where("erp_products", array("id" => $pro->product_id), 1)->row()->cost, 4);
                                 $asset_value = $cost * $qty_on_hand;
 
                                 $this->excel->getActiveSheet()->SetCellValue('B' .$row, $getpro->type);
@@ -20982,7 +20984,8 @@ class Reports extends MY_Controller
                                 $this->excel->getActiveSheet()->SetCellValue('H' .$row, $p_cost);
                                 $this->excel->getActiveSheet()->SetCellValue('I' .$row, $qty_on_hand);
                                 $this->excel->getActiveSheet()->SetCellValue('J' .$row, $cost);
-                                $this->excel->getActiveSheet()->SetCellValue('K' .$row, $asset_value);
+                               $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->erp->formatMoney($asset_value));
+                               $this->excel->getActiveSheet()->getStyle('K' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                                 $total_on_hand = $qty_on_hand;
                                 $total_asset_val = $asset_value;
                                 
@@ -20993,8 +20996,9 @@ class Reports extends MY_Controller
                             $this->excel->getActiveSheet()->getStyle('A' .$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                             $this->excel->getActiveSheet()->getStyle('A'. $row.':K'. $row)->getFont()->setBold(true);
                             $this->excel->getActiveSheet()->SetCellValue('I' .$row, $total_on_hand);
-                            $this->excel->getActiveSheet()->SetCellValue('K' .$row, $total_asset_val);
+                            $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->erp->formatMoney($total_asset_val));
 							$this->excel->getActiveSheet()->getStyle('I'.$row. ':K'.$row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
+                            $this->excel->getActiveSheet()->getStyle('K' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 
                             $total_qoh_per_warehouse += $total_on_hand;
                             $total_assetVal_per_warehouse += $total_asset_val;
@@ -21007,8 +21011,9 @@ class Reports extends MY_Controller
                         $this->excel->getActiveSheet()->getStyle('A' .$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                         $this->excel->getActiveSheet()->getStyle('A'. $row.':K'. $row)->getFont()->setBold(true);
                         $this->excel->getActiveSheet()->SetCellValue('I' .$row, $total_qoh_per_warehouse);
-                        $this->excel->getActiveSheet()->SetCellValue('K' .$row, $total_assetVal_per_warehouse);
+                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->erp->formatMoney($total_assetVal_per_warehouse));
                         $this->excel->getActiveSheet()->getStyle('I'.$row. ':K'.$row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
+                        $this->excel->getActiveSheet()->getStyle('K' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 
                             $total_qoh_per_warehouse_cat +=$total_qoh_per_warehouse;
                             $total_assetVal_per_warehouse_cat +=$total_assetVal_per_warehouse;

@@ -5357,7 +5357,8 @@ ORDER BY
         if ($supplier) {
             $this->db->where('purchases.supplier_id', $supplier);
         }
-        if ($sdate) {
+
+        if ($sdate > 0) {
             $this->db->where($this->db->dbprefix('payments').'.date BETWEEN "' . $sdate . '00:00:00" and "' . $edate . '11:59:00"');
         }
 
@@ -5375,7 +5376,7 @@ ORDER BY
             ->order_by('time', desc);
 
         if ($login_start_date > 0) {
-            $this->db->where($this->db->dbprefix('user_logins') . '.time BETWEEN "' . $login_start_date . '" and "' . $login_end_date . '"');
+            $this->db->where($this->db->dbprefix('user_logins') . '.time BETWEEN "' . $login_start_date . ' 00:00:00" and "' . $login_end_date . ' 23:59:59"');
         }
 
         $q = $this->db->get('user_logins');

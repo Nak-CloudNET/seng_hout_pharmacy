@@ -718,8 +718,8 @@
                 $l .= "&end_date=" . $this->erp->fld($this->input->post('login_end_date'));
             }
         }
-        $login_start_date = $this->erp->fld($this->input->post('login_start_date'));
-        $login_end_date = $this->erp->fld($this->input->post('login_end_date'));
+        $login_start_date = trim($this->erp->fld($this->input->post('login_start_date')));
+        $login_end_date = trim($this->erp->fld($this->input->post('login_end_date')));
         //echo $login_start_date.' ###############';exit();
         ?>
         <script>
@@ -803,12 +803,12 @@
             <script>
                 $('#excel_login').click(function (e) {
                     e.preventDefault();
-                    window.location.href = "<?= site_url('reports/staff_logins_action/0/xls/' . $user_id . '/' . $login_start_date) ?>";
+                    window.location.href = "<?= site_url('reports/staff_logins_action/0/xls/' . $user_id . '/' . $login_start_date . '/' . $login_end_date) ?>";
                     return false;
                 });
                 $('#pdf_login').click(function (e) {
                     e.preventDefault();
-                    window.location.href = "<?= site_url('reports/staff_logins_action/pdf/0/' . $user_id . '/' . $login_end_date) ?>";
+                    window.location.href = "<?= site_url('reports/staff_logins_action/pdf/0/' . $user_id . '/' . $login_end_date . '/' . $login_end_date) ?>";
                     return false;
                 });
             </script>
@@ -897,8 +897,8 @@
             }
             $product = $this->input->post('product_id') ? $this->input->post('product_id') : 0;
             $category = $this->input->post('category') ? $this->input->post('category') : 0;
-            $start_date = trim($this->erp->fld($this->input->post('start_date')));
-            $end_date = trim($this->erp->fld($this->input->post('end_date')));
+            $start_date = trim($this->erp->fld($this->input->post('start_date'))) > 0 ? trim($this->erp->fld($this->input->post('start_date'))) : 0;
+            $end_date = trim($this->erp->fld($this->input->post('end_date'))) > 0 ? trim($this->erp->fld($this->input->post('end_date'))) : 0;
         }
         ?>
         <script>
