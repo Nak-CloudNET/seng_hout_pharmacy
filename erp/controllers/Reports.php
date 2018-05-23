@@ -11660,7 +11660,7 @@ class Reports extends MY_Controller
                         $sum_amount = 0;
                         foreach ($_POST['val'] as $id) {
                             $data = $this->reports_model->getStaffPaymentsReportExportByID($id, $area, $customer, $supplier, $sdate, $edate);
-                            $sum_amount += $data->amount;
+
                             $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data->date));
                             $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data->payment_ref." ");
                             $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data->sale_ref." ");
@@ -11672,6 +11672,12 @@ class Reports extends MY_Controller
                             $this->excel->getActiveSheet()->SetCellValue('I' . $row, $data->amount);
                             $this->excel->getActiveSheet()->SetCellValue('J' . $row, $data->type);
                             $new_row = $row+1;
+
+                            if ($data->type == 'sent' || $data->type == 'returned') {
+                                $sum_amount -= $data->amount;
+                            } else {
+                                $sum_amount += $data->amount;
+                            }
 
                             $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatMoney($sum_amount));
 
