@@ -21360,7 +21360,6 @@ class Reports extends MY_Controller
         $this->page_construct('reports/inventory_valuation_detail', $meta, $this->data);
     }
 	
-	
 	function customer_products($id = NULL)
     {
 		if($this->input->post('id')){
@@ -21545,11 +21544,9 @@ class Reports extends MY_Controller
         $this->data['billers'] = $this->site->getAllCompanies('biller');
 			
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
-		
 		$this->data['date'] = $date;
-		
         $this->data['user_id'] = $user_id;
-		//$this->erp->print_arrays($user_id);
+
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('customers_report')));
         $meta = array('page_title' => lang('customers_report'), 'bc' => $bc);
         $this->page_construct('reports/customer_product_report', $meta, $this->data);
