@@ -21131,7 +21131,7 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->mergeCells('A'.$row.':H'.$row);
                     $this->excel->getActiveSheet()->SetCellValue('A' .$row, lang('total').">>".$ware->warehouse);
                     $this->excel->getActiveSheet()->SetCellValue('I' .$row, $total_qoh_per_warehouse_cat);
-                    $this->excel->getActiveSheet()->SetCellValue('K' .$row, $total_assetVal_per_warehouse_cat);
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->erp->formatMoney($total_assetVal_per_warehouse_cat));
 
                 $gtt +=$total_qoh_per_warehouse_cat;
                     $gqty +=$total_assetVal_per_warehouse_cat;
@@ -21161,6 +21161,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->getStyle('A' . $row . ':K' . $row)->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
                 $this->excel->getActiveSheet()->getStyle('I' . $row . ':K' . $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
                 $this->excel->getActiveSheet()->getStyle('A' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
+                $this->excel->getActiveSheet()->getStyle('K' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                 $this->excel->getActiveSheet()->getStyle('A' . $row . ':K' . $row)->getFont()->setBold(true);
 
                     $row++;
