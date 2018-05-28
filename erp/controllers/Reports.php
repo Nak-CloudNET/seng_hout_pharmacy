@@ -22165,13 +22165,45 @@ class Reports extends MY_Controller
 		$post = $this->input->get();
 		$datt = $this->reports_model->getLastDate("sales", "date");
 
-		if ($post['reference_no']) {
-            $reference_no 				= $post['reference_no'];
-            $this->data['reference_no'] = $post['reference_no'];
-			$str .="&reference_no=".$reference_no;
+        if ($post['product_id']) {
+            $product_id = $post['product_id'];
+            $this->data['product_id'] = $post['product_id'];
+            $str .= "&product_id=" . $product_id;
         }else{
-			$reference_no = null;
-        } 
+            $product_id = null;
+        }
+
+        if ($post['category']) {
+            $category = $post['category'];
+            $this->data['category'] = $post['category'];
+            $str .= "&category=" . $category;
+        } else {
+            $category = null;
+        }
+
+        if ($post['saleman']) {
+            $saleman = $post['saleman'];
+            $this->data['saleman'] = $post['saleman'];
+            $str .= "&saleman=" . $saleman;
+        } else {
+            $saleman = null;
+        }
+
+        if ($post['group_area']) {
+            $group_area = $post['group_area'];
+            $this->data['group_area'] = $post['group_area'];
+            $str .= "&group_area=" . $group_area;
+        } else {
+            $group_area = null;
+        }
+
+        if ($post['reference_no']) {
+            $reference_no = $post['reference_no'];
+            $this->data['reference_no'] = $post['reference_no'];
+            $str .= "&reference_no=" . $reference_no;
+        } else {
+            $reference_no = null;
+        }
 		
 		if ($post['customer']) {
             $customer 				= $post['customer'];
@@ -22264,7 +22296,7 @@ class Reports extends MY_Controller
 		}else{
 			$this->data['billers'] = $this->site->getAllCompanies('biller');
 		}
-		
+
 		if(isset($this->data['reference_no']) && $this->data['reference_no'] !=''){
 			$this->db->where("reference_no", $this->data['reference_no']);
 		}
@@ -22357,10 +22389,16 @@ class Reports extends MY_Controller
 					erp_sales.customer,
 					erp_sales.customer_id,
 					erp_sales.created_by,
-					erp_sales.pos
+					erp_sales.pos,
+					erp_sale_items.product_id,
+					erp_products.category_id,
+					erp_sales.saleman_by,
+					erp_companies.group_areas_id
 				FROM
 					`erp_sales`
 				INNER JOIN erp_sale_items ON erp_sales.id = erp_sale_items.sale_id
+				LEFT JOIN erp_products ON erp_sale_items.product_id = erp_products.id
+				LEFT JOIN erp_companies ON erp_sales.customer_id = erp_companies.id
 				WHERE erp_sales.opening_ar = 0
 				GROUP BY
 					erp_sales.id,reference_no";
@@ -22385,16 +22423,38 @@ class Reports extends MY_Controller
 					erp_return_sales.customer,
 					erp_return_sales.customer_id,
 					erp_return_sales.created_by,
-					0 as pos
+					0 as pos,
+					erp_return_items.product_id,
+					erp_products.category_id,
+					erp_return_sales.created_by,
+					erp_companies.group_areas_id
 				FROM
 					erp_return_sales
 				INNER JOIN erp_return_items ON erp_return_sales.id = erp_return_items.return_id
+				LEFT JOIN erp_products ON erp_return_items.product_id = erp_products.id
+				LEFT JOIN erp_companies ON erp_return_sales.customer_id = erp_companies.id
 				GROUP BY
 					erp_return_sales.id,reference_no";	
 			
         $sql3 = "";
 		$sqls = "";
-		
+
+        if ($product_id) {
+            $sql3 .= " AND product_id = '{$this->data['product_id']}'";
+            $sqls .= " AND product_id = '{$this->data['product_id']}'";
+        }
+        if ($category) {
+            $sql3 .= " AND category_id = '{$this->data['category']}'";
+            $sqls .= " AND category_id = '{$this->data['category']}'";
+        }
+        if ($saleman) {
+            $sql3 .= " AND saleman_by = '{$this->data['saleman']}'";
+            $sqls .= " AND saleman_by = '{$this->data['saleman']}'";
+        }
+        if ($group_area) {
+            $sql3 .= " AND group_areas_id = '{$this->data['group_area']}'";
+            $sqls .= " AND group_areas_id = '{$this->data['group_area']}'";
+        }
 		if($reference_no){
             $sql3 .= " AND reference_no = '{$this->data['reference_no']}'";
 			$sqls .= " AND reference_no = '{$this->data['reference_no']}'";
@@ -22476,6 +22536,10 @@ class Reports extends MY_Controller
 				$this->data['warehouse'] = $this->session->userdata('warehouse_id') ? $this->products_model->getUserWarehouses() : NULL;
 			}
         }
+        $this->data['products'] = $this->site->getProducts();
+        $this->data['areas'] = $this->site->getArea();
+        $this->data['agencies'] = $this->site->getAllUsers();
+        $this->data['categories'] = $this->site->getAllCategories();
 		$this->data['customer_groups'] 	= $this->companies_model->getAllCustomerGroups();
 		$this->data['customers'] 		= $this->site->getCustomers();
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('sales_detail_report')));

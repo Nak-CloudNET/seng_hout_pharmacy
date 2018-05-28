@@ -1,7 +1,18 @@
 <?php
 
 	$v = "";
-	
+if ($this->input->post('product_id')) {
+    $v .= "&product_id=" . $this->input->post('product_id');
+}
+if ($this->input->post('category')) {
+    $v .= "&category=" . $this->input->post('category');
+}
+if ($this->input->post('group_area')) {
+    $v .= "&group_area=" . $this->input->post('group_area');
+}
+if ($this->input->post('saleman')) {
+    $v .= "&saleman=" . $this->input->post('saleman');
+}
 	if ($this->input->post('reference_no')) {
 		$v .= "&reference_no=" . $this->input->post('reference_no');
 	}
@@ -68,7 +79,7 @@
                 }
             },
 			$('#customer').val(<?= $this->input->post('customer') ?>);
-        });
+    })
 
         <?php } ?>
         $('.toggle_down').click(function () {
@@ -130,6 +141,54 @@
 
 					<?php echo form_open('reports/sales_detail', 'id="action-form" method="GET"'); ?>
                     <div class="row">
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="control-label" for="product_id"><?= lang("product"); ?></label>
+                                <?php
+                                $pr[""] = "";
+                                foreach ($products as $product) {
+                                    $pr[$product->id] = $product->name . " | " . $product->code;
+                                }
+                                echo form_dropdown('product_id', $pr, (isset($_GET['product_id']) ? $_GET['product_id'] : ""), 'class="form-control" id="product_id" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product") . '"');
+                                ?>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <?= lang("category", "category") ?>
+                                <?php
+                                $cat[0] = $this->lang->line("all");
+                                foreach ($categories as $category) {
+                                    $cat[$category->id] = $category->name;
+                                }
+                                echo form_dropdown('category', $cat, (isset($_GET['category']) ? $_GET['category'] : ''), 'class="form-control select" id="category" placeholder="' . lang("select") . " " . lang("category") . '" style="width:100%"')
+                                ?>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <?= lang("saleman", "saleman"); ?>
+                                <?php
+                                $salemans['0'] = lang("all");
+                                foreach ($agencies as $agency) {
+                                    $salemans[$agency->id] = $agency->username;
+                                }
+                                echo form_dropdown('saleman', $salemans, (isset($_GET['saleman']) ? $_GET['saleman'] : ""), 'id="saleman" class="form-control saleman"');
+                                ?>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="control-label" for="group_area"><?= lang("group_area"); ?></label>
+                                <?php
+                                $garea[""] = "";
+                                foreach ($areas as $area) {
+                                    $garea[$area->areas_g_code] = $area->areas_group;
+                                }
+                                echo form_dropdown('group_area', $garea, (isset($_GET['group_area']) ? $_GET['group_area'] : ""), 'class="form-control" id="group_area" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
+                                ?>
+                            </div>
+                        </div>
                         <div class="col-sm-3">
                             <div class="form-group">
                                 <label class="control-label" for="reference_no"><?= lang("reference_no"); ?></label>
@@ -650,7 +709,7 @@
             event.preventDefault();
             html2canvas($('.box'), {
                 onrendered: function (canvas) {
-                    var img = canvas.toDataURL()
+                    var img = canvas.toDataURL();
                     window.open(img);
                 }
             });
@@ -674,7 +733,6 @@
 		
 	}
 	table .info-foot{
-		text-transform: uppercase; 
-		font-weight:100px;
+        text-transform: uppercase;
 	}
 </style>
