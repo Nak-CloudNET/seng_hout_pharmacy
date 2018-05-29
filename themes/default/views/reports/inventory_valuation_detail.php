@@ -143,19 +143,19 @@
                 <div class="table-responsive">
                     <table id="PRData" class="table table-bordered table-hover table-striped table-condensed">
                         <thead>
-                        <tr class="primary">
-                            <th style="wi"></th>
-							<th ><?= lang("type") ?></th>
-							<th><?= lang("date") ?></th>
-							<th ><?= lang("name") ?></th>
-							<th ><?= lang("reference") ?></th>
-							<th ><?= lang("biller") ?></th>
-							<th ><?= lang("qty") ?></th>
-							<th ><?= lang("cost") ?></th>
-							<th ><?= lang("on_hand") ?></th>
-							<th><?= lang("avg_cost") ?></th>
-							<th ><?= lang("asset_value") ?></th>
-                        </tr>
+							<tr class="primary">
+								<th style="wi"></th>
+								<th ><?= lang("type") ?></th>
+								<th><?= lang("date") ?></th>
+								<th ><?= lang("name") ?></th>
+								<th ><?= lang("reference") ?></th>
+								<th ><?= lang("biller") ?></th>
+								<th ><?= lang("qty") ?></th>
+								<th ><?= lang("cost") ?></th>
+								<th ><?= lang("on_hand") ?></th>
+								<th><?= lang("avg_cost") ?></th>
+								<th ><?= lang("asset_value") ?></th>
+							</tr>
                         </thead>
                         <tbody>
 							<?php 
