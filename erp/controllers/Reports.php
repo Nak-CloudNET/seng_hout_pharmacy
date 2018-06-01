@@ -6024,7 +6024,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = NULL;
+            $warehouse = $this->session->userdata('warehouse_id');
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -6207,7 +6207,7 @@ class Reports extends MY_Controller
             redirect($_SERVER["HTTP_REFERER"]);
 
         } else {
-
+            
             $this->load->library('datatables');
 
             $this->datatables->select("
@@ -6247,7 +6247,7 @@ class Reports extends MY_Controller
             }
 			
             if ($warehouse) {
-                $this->datatables->where('purchases.warehouse_id', $warehouse);
+                $this->datatables->where('purchases.warehouse_id IN ('.$warehouse.')');
             }
             if ($reference_no) {
                 $this->datatables->like('purchases.reference_no', $reference_no, 'both');
@@ -6811,7 +6811,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')){
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = NULL;
+            $warehouse = $this->session->userdata('warehouse_id');
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -7026,7 +7026,7 @@ class Reports extends MY_Controller
                 ->group_by('purchase_items.id');
 			}            
 
-            if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+            if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')){
                 if ($this->session->userdata('user_id')) {
                     $this->datatables->where('sales.created_by', $this->session->userdata('user_id'));
                 }
@@ -7045,7 +7045,7 @@ class Reports extends MY_Controller
                 $this->datatables->where('sales.customer_id', $customer);
             }
             if ($warehouse) {
-                $this->datatables->where('sales.warehouse_id', $warehouse);
+                $this->datatables->where('sales.warehouse_id IN ('. $warehouse.')');
             }
             if ($reference_no) {
                 $this->datatables->like('sales.reference_no', $reference_no, 'both');
