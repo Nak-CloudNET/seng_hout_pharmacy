@@ -8098,7 +8098,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = $this->session->userdata('warehouse_id');
+            $warehouse = NULL;
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -8133,6 +8133,9 @@ class Reports extends MY_Controller
 					$this->db->where('quotes.created_by', $user);
 				}
 			}
+            if(!$this->Owner && !$this->Admin){
+                    $this->db->where('quotes.warehouse_id IN ('.$this->session->userdata('warehouse_id').')');
+            }
             if ($product) {
                 $this->db->like('quote_items.product_id', $product);
             }
