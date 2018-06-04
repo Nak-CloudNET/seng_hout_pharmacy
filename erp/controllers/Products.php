@@ -2950,11 +2950,14 @@ class Products extends MY_Controller
             ->join('users', 'users.id=adjustments.created_by', 'left')
             ->where('adjustment_items.product_id', $this->input->get('product'))
             ->group_by("adjustments.id");
-		if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+		if( !$this->session->userdata('view_right')){
 			if ($this->session->userdata('user_id')) {
 				$this->datatables->where('adjustments.created_by', $this->session->userdata('user_id'));
 			}
 		}
+        if(!$this->Owner && !$this->Admin){
+            $this->datatables->where('adjustments.warehouse_id', $this->session->userdata('warehouse_id'));
+        }
 
         echo $this->datatables->generate();
 

@@ -5007,7 +5007,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')){
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = NULL;
+            $warehouse = $this->session->userdata('warehouse_id');
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -5112,6 +5112,9 @@ class Reports extends MY_Controller
             }
             if($invs){
                 $this->db->where('sales.id IN ('.$invs.')');
+            }
+            if($warehouse){
+                $this->db->where('sales.warehouse_id IN ('.$warehouse.')');
             }
             $q = $this->db->get();
 
@@ -6024,7 +6027,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = $this->session->userdata('warehouse_id');
+            $warehouse = NULL;
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -6241,7 +6244,9 @@ class Reports extends MY_Controller
                     $this->datatables->where('purchases.created_by', $user);
                 }
             }
-			
+			if(!$this->Owner && !$this->Admin){
+                $this->datatables->where('purchases.warehouse_id IN('.$this->session->userdata('warehouse_id').')');
+            }
             if ($supplier) {
                 $this->datatables->where('purchases.supplier_id', $supplier);
             }
@@ -6811,7 +6816,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')){
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = $this->session->userdata('warehouse_id');
+            $warehouse = NULL;
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -7030,6 +7035,9 @@ class Reports extends MY_Controller
                 if ($this->session->userdata('user_id')) {
                     $this->datatables->where('sales.created_by', $this->session->userdata('user_id'));
                 }
+            }
+            if(!$this->Owner && !$this->Admin){
+                 $this->datatables->where('sales.warehouse_id IN('.$this->session->userdata('warehouse_id').')');
             }
 			
             if ($user) {
@@ -8003,7 +8011,7 @@ class Reports extends MY_Controller
 
         } else {
             $this->load->library('datatables');
-			if($product_type == 'combo' || $product_type == 'service'){
+			if($product_type != 'combo' || $product_type != 'service'){
 				$this->datatables
                 ->select("date, 
 						  reference_no, 
@@ -8016,6 +8024,7 @@ class Reports extends MY_Controller
                 ->join('quote_items', 'quote_items.quote_id=quotes.id', 'left')
 				->where('quote_items.product_id', $product)
                 ->group_by('quotes.id');
+
 			}else{
 				$this->datatables
                 ->select("date, 
@@ -8033,10 +8042,13 @@ class Reports extends MY_Controller
                 ->group_by('quote_items.id');
 			}            
 		
-			if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+			if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')){
                 if ($this->session->userdata('user_id')) {
                     $this->datatables->where('quotes.created_by', $this->session->userdata('user_id'));
                 }
+            }
+            if(!$this->Owner && !$this->Admin){
+                $this->datatables->where('quotes.warehouse_id IN('.$this->session->userdata('warehouse_id').')');
             }
 			
             if ($biller) {
@@ -8046,7 +8058,7 @@ class Reports extends MY_Controller
                 $this->datatables->where('quotes.customer_id', $customer);
             }
             if ($warehouse) {
-                $this->datatables->where('quotes.warehouse_id', $warehouse);
+                $this->datatables->where('quotes.warehouse_id IN('.$warehouse.')');
             }
             if ($reference_no) {
                 $this->datatables->like('quotes.reference_no', $reference_no, 'both');
@@ -8086,7 +8098,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = NULL;
+            $warehouse = $this->session->userdata('warehouse_id');
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -8712,10 +8724,14 @@ class Reports extends MY_Controller
             if ($product) {
                 $this->datatables->where(" (({$this->db->dbprefix('purchase_items')}.product_id = {$product}) OR ({$this->db->dbprefix('transfer_items')}.product_id = {$product})) ", NULL, FALSE);
             }
-			if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+			if(!$this->session->userdata('view_right')){
                 if ($this->session->userdata('user_id')) {
                     $this->datatables->where('transfers.created_by', $this->session->userdata('user_id'));
                 }
+            }
+            if(!$this->Owner && $this->Admin){
+                $this->datatables->where('transfers.from_warehouse_id IN ('.$this->session->userdata('warehouse_id').')');
+                 $this->datatables->or_where('transfers.from_warehouse_id IN ('.$this->session->userdata('warehouse_id').')');
             }
             $this->datatables->edit_column("fname", "$1 ($2)", "fname, fcode")
                 ->edit_column("tname", "$1 ($2)", "tname, tcode")
@@ -8748,6 +8764,9 @@ class Reports extends MY_Controller
                 ->group_by('return_sales.id')->order_by('return_sales.date desc');
             if ($product) {
                 $this->db->like($this->db->dbprefix('return_items') . ".product_id", $product);
+            }
+            if(!$this->Owner && !$this->Admin){
+                $this->db->where($this->db->dbprefix('sales') . ".warehouse_id IN (".$this->session->userdata('warehouse_id').")");
             }
 
             $q = $this->db->get();
@@ -8859,6 +8878,151 @@ class Reports extends MY_Controller
         }
     }
 	
+    function getAdjustmentReport($pdf = NULL, $xls = NULL)
+    {
+        if ($this->input->get('product')) {
+            $product = $this->input->get('product');
+        } else {
+            $product = NULL;
+        }
+        
+        if ($this->input->get('customer')) {
+            $customer = $this->input->get('customer');
+        } else {
+            $customer = NULL;
+        }
+
+        if ($pdf || $xls) {
+            $this->db
+                ->select("adjustments.date, adjustments.reference_no, products.code as pcode, products.name as pcode, adjustment_items.quantity, units.name as pvaraint, warehouses.name, adjustment_items.type")
+                ->from('adjustments')
+                ->join('adjustment_items', 'adjustments.id = adjustment_items.adjust_id', 'left')
+                ->join('product_variants', 'adjustment_items.option_id = product_variants.id', 'left')
+                ->join('products', 'adjustment_items.product_id = products.id', 'left')
+                ->join('units', 'units.id = products.unit', 'left')
+                ->join('warehouses', 'warehouses.id=adjustments.warehouse_id', 'left')
+                ->join('users', 'users.id=adjustments.created_by', 'left')
+                ->where('adjustment_items.product_id', $this->input->get('product'))
+                ->group_by("adjustments.id");
+                if($product){
+                    $this->db->where('products.id',$product);
+                }
+                if( !$this->session->userdata('view_right')){
+                    if ($this->session->userdata('user_id')) {
+                        $this->db->where('adjustments.created_by', $this->session->userdata('user_id'));
+                    }
+                }
+                if(!$this->Owner && !$this->Admin){
+                    $this->db->where('adjustments.warehouse_id', $this->session->userdata('warehouse_id'));
+                }
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = NULL;
+            }
+
+            if (!empty($data)) {
+
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('sales_return_report'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('reference_no'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('product_variants'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('warehouse'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('type'));
+
+                $row = 2;
+                foreach ($data as $data_row) {
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data_row->date));
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->reference_no);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->pcode);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->pcode);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->quantity);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->pvaraint);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->type);
+                    $row++;
+                }
+
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
+                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+                $filename = 'sales_return_report';
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                if ($pdf) {
+                    $styleArray = array(
+                        'borders' => array(
+                            'allborders' => array(
+                                'style' => PHPExcel_Style_Border::BORDER_THIN
+                            )
+                        )
+                    );
+                    $this->excel->getDefaultStyle()->applyFromArray($styleArray);
+                    $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
+                    require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
+                    $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+                    $rendererLibrary = 'MPDF';
+                    $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
+                    if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
+                        die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
+                            PHP_EOL . ' as appropriate for your directory structure');
+                    }
+
+                    header('Content-Type: application/pdf');
+                    header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
+                    header('Cache-Control: max-age=0');
+
+                    $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
+                    $objWriter->save('php://output');
+                    exit();
+                }
+                if ($xls) {
+                    $this->excel->getActiveSheet()->getStyle('F2:F' . $row)->getAlignment()->setWrapText(true);
+                    ob_clean();
+                    header('Content-Type: application/vnd.ms-excel');
+                    header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+                    header('Cache-Control: max-age=0');
+                    ob_clean();
+                    $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+                    $objWriter->save('php://output');
+                    exit();
+                }
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER["HTTP_REFERER"]);
+
+        } else {
+
+            $this->load->library('datatables');
+            $this->datatables
+                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".reference_no as ref, " . $this->db->dbprefix('sales') . ".reference_no as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('return_items') . ".product_name, '__', " . $this->db->dbprefix('return_items') . ".quantity) SEPARATOR '___') as iname, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id", FALSE)
+                ->from('return_sales')
+                ->join('sales', 'sales.id=return_sales.sale_id', 'left')
+                ->join('return_items', 'return_items.return_id=return_sales.id', 'left')
+                ->group_by('return_sales.id');
+            if ($customer) {
+                $this->datatables->where($this->db->dbprefix('return_sales') . ".customer_id", $customer);
+            }
+            
+            if ($product) {
+                $this->datatables->like($this->db->dbprefix('return_items') . ".product_id", $product);
+            }
+            
+            echo $this->datatables->generate();
+        }
+    }
 	function getReturnsReportByID($pdf = NULL, $xls = NULL)
     {
         if ($this->input->get('product')) {
@@ -9018,10 +9182,13 @@ class Reports extends MY_Controller
 			if ($customer) {
                 $this->datatables->where($this->db->dbprefix('return_sales') . ".customer_id", $customer);
             }
-			if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+			if($this->session->userdata('view_right') == 0){
                 if ($this->session->userdata('user_id')) {
                     $this->datatables->where('return_sales.created_by', $this->session->userdata('user_id'));
                 }
+            }
+            if(!$this->Owner && !$this->Admin){
+                $this->datatables->where('return_sales.warehouse_id IN ('.$this->session->userdata('warehouse_id').')');
             }
             echo $this->datatables->generate();
         }
@@ -9358,7 +9525,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = NULL;
+            $warehouse = $this->session->userdata('warehouse_id');
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -9414,8 +9581,9 @@ class Reports extends MY_Controller
             if ($supplier) {
                 $this->db->where('purchases.supplier_id', $supplier);
             }
+
             if ($warehouse) {
-                $this->db->where('purchases.warehouse_id', $warehouse);
+                $this->db->where('purchases.warehouse_id IN('.$warehouse.')');
             }
             if ($reference_no) {
                 $this->db->like('purchases.reference_no', $reference_no, 'both');

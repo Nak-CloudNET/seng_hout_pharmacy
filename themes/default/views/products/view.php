@@ -1714,12 +1714,12 @@ if ($Owner || $Admin ){ ?>
             });
             $('#pdf4').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('products/getadjustments/pdf/?v=1&product='.$product->id)?>";
+                window.location.href = "<?=site_url('reports/getAdjustmentReport/pdf/?v=1&product='.$product->id)?>";
                 return false;
             });
             $('#xls4').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('products/getadjustments/0/xls/?v=1&product='.$product->id)?>";
+                window.location.href = "<?=site_url('reports/getAdjustmentReport/0/xls/?v=1&product='.$product->id)?>";
                 return false;
             });
             $('#pdf5').click(function (event) {
