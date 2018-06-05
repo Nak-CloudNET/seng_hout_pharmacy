@@ -6062,8 +6062,8 @@ class Reports extends MY_Controller
 
             $this->db
                 ->select($this->db->dbprefix('purchases') . ".id, purchases.date, reference_no, " .
-                    $this->db->dbprefix('warehouses') . ".name as wname, 
-				 supplier, 
+                    $this->db->dbprefix('warehouses') . ".name as wname,".
+				 $this->db->dbprefix('companies').".name as supplier,
 				 (SELECT GROUP_CONCAT(pi.product_name SEPARATOR '<br/>') FROM " . $this->db->dbprefix('purchase_items') . " pi WHERE pi.purchase_id = " . $this->db->dbprefix('purchase_items') . ".purchase_id) AS iname,  
 				 GROUP_CONCAT(ROUND(" . $this->db->dbprefix('purchase_items') . ".quantity) SEPARATOR '<br/>') as iqty, 
 				 grand_total, 
@@ -6072,7 +6072,7 @@ class Reports extends MY_Controller
                 ->from('purchases')
                 ->join('purchase_items', 'purchase_items.purchase_id=purchases.id', 'left')
                 ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left')
-                ->join('companies', 'companies.id = purchase_items.supplier_id', 'left')
+                ->join('companies', 'companies.id = purchases.supplier_id', 'left')
                 ->group_by('purchases.id')
                 ->order_by('purchases.date desc');
 
