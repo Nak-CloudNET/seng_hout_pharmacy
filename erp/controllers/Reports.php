@@ -5113,9 +5113,12 @@ class Reports extends MY_Controller
             if($invs){
                 $this->db->where('sales.id IN ('.$invs.')');
             }
-            if($warehouse){
+            if(!$this->Owner && !$this->Admin){
+               if($warehouse){
                 $this->db->where('sales.warehouse_id IN ('.$warehouse.')');
+            }  
             }
+           
             $q = $this->db->get();
 
             if ($q->num_rows() > 0) {
@@ -6007,7 +6010,11 @@ class Reports extends MY_Controller
         } else {
             $product = NULL;
         }
-
+        if ($this->input->get('invs')) {
+            $invs = $this->input->get('invs');
+        } else {
+            $invs = NULL;
+        }
         if ($this->input->get('biller_id')) {
             $biller_id = $this->input->get('biller_id');
         } else {
@@ -6054,7 +6061,7 @@ class Reports extends MY_Controller
         if ($pdf || $xls) {
 
             $this->db
-                ->select($this->db->dbprefix('purchases') . ".id, date, reference_no, " .
+                ->select($this->db->dbprefix('purchases') . ".id, purchases.date, reference_no, " .
                     $this->db->dbprefix('warehouses') . ".name as wname, 
 				 supplier, 
 				 (SELECT GROUP_CONCAT(pi.product_name SEPARATOR '<br/>') FROM " . $this->db->dbprefix('purchase_items') . " pi WHERE pi.purchase_id = " . $this->db->dbprefix('purchase_items') . ".purchase_id) AS iname,  
@@ -6069,12 +6076,17 @@ class Reports extends MY_Controller
                 ->group_by('purchases.id')
                 ->order_by('purchases.date desc');
 
-			if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right') == 0){
+			if(!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')){
                 if ($this->session->userdata('user_id')) {
-                    $this->datatables->where('purchases.created_by', $this->session->userdata('user_id'));
+                    $this->db->where('purchases.created_by', $this->session->userdata('user_id'));
                 }
             }
-			
+            if(!$this->Owner && !$this->Admin){
+                  $this->db->where('purchases.warehouse_id IN('.$this->session->userdata('warehouse_id').')');
+            }
+			if($invs){
+                $this->db->where('purchases.id IN ('.$invs.')');
+            }
             if ($biller_id) {
                 $this->db->where('purchases.biller_id', $biller_id);
             }
@@ -6214,7 +6226,7 @@ class Reports extends MY_Controller
             $this->load->library('datatables');
 
             $this->datatables->select("
-				
+				purchases.id,
 				purchases.date, 
 				reference_no, 
 				warehouses.name as wname, 
@@ -6479,7 +6491,9 @@ class Reports extends MY_Controller
             $this->load->library('datatables');
 
             $this->datatables->select(
-                'purchase_items.date,
+                '
+                purchase_items.id,
+                purchase_items.date,
                 warehouses.name,
                 products.name as product_name,
                 purchase_items.quantity,
@@ -6787,6 +6801,11 @@ class Reports extends MY_Controller
         } else {
             $product = NULL;
         }
+        if ($this->input->get('invs')) {
+            $invs = $this->input->get('invs');
+        } else {
+            $invs = NULL;
+        }
 		if ($this->input->get('product_type')) {
             $product_type = $this->input->get('product_type');
         } else {
@@ -6854,18 +6873,43 @@ class Reports extends MY_Controller
             $user = $this->session->userdata('user_id');
         }
 		
-        
         if ($pdf || $xls) {
-			$this->db
-                ->select("sale_items.id as id, sales.date, sales.reference_no, sale_items.product_name, sales.grand_total, sales.paid, (erp_sales.grand_total - erp_sales.paid) as balacne,erp_sales.note")
+            $this->db
+                ->select("
+                    sale_items.id as id, 
+                    sales.date, sales.reference_no,
+                    sale_items.product_name, 
+                    sale_items.quantity, 
+                    units.name as unit, 
+                    erp_sale_items.unit_price as price,
+                    (erp_sale_items.unit_price*erp_sale_items.quantity) as total_price,
+                    IF(erp_sale_items.product_type = 'combo',
+                    erp_products.cost * abs(erp_purchase_items.quantity_balance),
+                    erp_sale_items.unit_cost * abs(erp_purchase_items.quantity_balance)
+                    ) as total_cost,
+                 ")
                 ->from('sales')
                 ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
                 ->join('products', 'products.id = sale_items.product_id', 'left')
+                ->join('units', 'products.unit = units.id', 'left')
                 ->join('companies', 'companies.id=sales.customer_id','left')
                 ->join('users', 'sales.saleman_by = users.id', 'left')
-                ->where('sales.customer_id', $customer)
+                ->join('purchase_items', 'purchase_items.transaction_id = sale_items.id', 'left')
                 ->where('sales.sale_status <> "returned"')
                 ->group_by('sales.reference_no');
+            if($product)
+            {
+                $this->db->where('sale_items.product_id',$product);
+            }
+            if($invs){
+                $this->db->where('sales.id IN ('.$invs.')');
+            }
+            if(!$this->Owner && !$this->Admin){
+               if($warehouse){
+                $this->db->where('sales.warehouse_id IN ('.$warehouse.')');
+            }  
+            }
+           
             $q = $this->db->get();
 
             if ($q->num_rows() > 0) {
@@ -6880,44 +6924,65 @@ class Reports extends MY_Controller
                 $this->load->library('excel');
                 $this->excel->setActiveSheetIndex(0);
                 $this->excel->getActiveSheet()->setTitle(lang('sales_report'));
-                $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
-                $this->excel->getActiveSheet()->SetCellValue('B1', lang('reference_no'));
-                $this->excel->getActiveSheet()->SetCellValue('C1', lang('product_name'));
-                $this->excel->getActiveSheet()->SetCellValue('D1', lang('grand_total'));
-                $this->excel->getActiveSheet()->SetCellValue('E1', lang('paid'));
-                $this->excel->getActiveSheet()->SetCellValue('F1', lang('balance'));
-                $this->excel->getActiveSheet()->SetCellValue('G1', lang('note'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('No'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('date'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('reference_no'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('unit'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('price'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('sub_total'));
+                $this->excel->getActiveSheet()->SetCellValue('I1', lang('cost'));
+                $this->excel->getActiveSheet()->SetCellValue('J1', lang('profit'));
 
-                $row = 2;
-                $total = 0;
-                $paid = 0;
-                $balance = 0;
+                $row            = 2;
+                $total_quantity = 0;
+                $total_price    = 0;
+                $total_cost     = 0;
+                $total_profit   = 0;
+                $total          = 0;
+                $paid           = 0;
+                $balance        = 0;
+                $n=1;
                 foreach ($data as $data_row) {
-                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data_row->date));
-                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->reference_no);
-                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->product_name);
-                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->grand_total);
-                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->paid);
-                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, ($data_row->grand_total - $data_row->paid));
-                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, strip_tags($data_row->note));
-                    $total += $data_row->grand_total;
-                    $paid += $data_row->paid;
-                    $balance += ($data_row->grand_total - $data_row->paid);
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $n);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $this->erp->hrld($data_row->date));
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->reference_no);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->product_name);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->unit);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->quantity);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, ($data_row->price));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->total_price));
+                    $this->excel->getActiveSheet()->SetCellValue('I' . $row, strip_tags($data_row->total_cost));
+                    $profit=$data_row->total_price-$data_row->total_cost;
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, strip_tags($profit));
+                    $total          += $data_row->grand_total;
+                    $total_quantity +=$data_row->quantity;
+                    $total_price +=$data_row->total_price;
+                    $total_cost     +=$data_row->total_cost;
+                    $total_profit   += $profit;
+                    $paid           += $data_row->paid;
+                    $balance        += ($data_row->grand_total - $data_row->paid);
                     $row++;
+                    $n++;
                 }
                 $this->excel->getActiveSheet()->getStyle("D" . $row . ":F" . $row)->getBorders()
-                    ->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $total);
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $paid);
-                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $balance);
+                    ->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_NONE);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $total_quantity);
+                  $this->excel->getActiveSheet()->SetCellValue('H' . $row, $total_price);
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, $total_cost);
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $total_profit);
 
-                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(5);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(30);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(30);
                 $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(15);
 
                 $filename = 'sales_report';
                 $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
@@ -6972,7 +7037,8 @@ class Reports extends MY_Controller
             $this->session->set_flashdata('error', lang('nothing_found'));
             redirect($_SERVER["HTTP_REFERER"]);
 
-        } else {
+        } 
+        else {
             $this->load->library('datatables');
             $product_type=$this->site->getProductType($product);
 			if($product_type != "combo" || $product_type != "service"){
@@ -8013,7 +8079,8 @@ class Reports extends MY_Controller
             $this->load->library('datatables');
 			if($product_type != 'combo' || $product_type != 'service'){
 				$this->datatables
-                ->select("date, 
+                ->select("quotes.id,
+                          date, 
 						  reference_no, 
 						  biller, 
 						  customer, 
@@ -8027,7 +8094,7 @@ class Reports extends MY_Controller
 
 			}else{
 				$this->datatables
-                ->select("date, 
+                ->select("quotes.id,date, 
 						  reference_no, 
 						  biller, 
 						  customer, 
@@ -8085,6 +8152,11 @@ class Reports extends MY_Controller
         } else {
             $user = NULL;
         }
+        if ($this->input->get('invs')) {
+            $invs = $this->input->get('invs');
+        } else {
+            $invs = NULL;
+        }
         if ($this->input->get('customer')) {
             $customer = $this->input->get('customer');
         } else {
@@ -8098,7 +8170,7 @@ class Reports extends MY_Controller
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
         } else {
-            $warehouse = $this->session->userdata('warehouse_id');
+            $warehouse = NULL;
         }
         if ($this->input->get('reference_no')) {
             $reference_no = $this->input->get('reference_no');
@@ -8122,7 +8194,7 @@ class Reports extends MY_Controller
         if ($pdf || $xls) {
 
             $this->db
-                ->select("date, reference_no, biller, customer, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('quote_items') . ".product_name, ' (', " . $this->db->dbprefix('quote_items') . ".quantity, ')') SEPARATOR '<br>') as iname, grand_total, status", FALSE)
+                ->select("date, reference_no, biller, customer,quantity, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('quote_items') . ".product_name, ' (', " . $this->db->dbprefix('quote_items') . ".quantity, ')') SEPARATOR '<br>') as iname, grand_total, status", FALSE)
                 ->from('quotes')
                 ->join('quote_items', 'quote_items.quote_id=quotes.id', 'left')
                 ->join('warehouses', 'warehouses.id=quotes.warehouse_id', 'left')
@@ -8133,6 +8205,12 @@ class Reports extends MY_Controller
 					$this->db->where('quotes.created_by', $user);
 				}
 			}
+            if(!$this->Owner && !$this->Admin){
+                    $this->db->where('quotes.warehouse_id IN ('.$this->session->userdata('warehouse_id').')');
+            }
+            if($invs){
+                $this->db->where('quotes.id IN ('.$invs.')');
+            }
             if ($product) {
                 $this->db->like('quote_items.product_id', $product);
             }
@@ -8175,6 +8253,8 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('G1', lang('status'));
 
                 $row = 2;
+                $total_quantity=0;
+                $total=0;
                 foreach ($data as $data_row) {
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data_row->date));
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->reference_no);
@@ -8184,8 +8264,11 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->grand_total);
                     $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->status);
                     $row++;
+                    $total_quantity+=$data_row->quantity;
+                    $total+=$data_row->grand_total;
                 }
-
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $total_quantity);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $total);
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
@@ -8491,6 +8574,11 @@ class Reports extends MY_Controller
         } else {
             $product = NULL;
         }
+        if ($this->input->get('invs')) {
+            $invs = $this->input->get('invs');
+        } else {
+            $invs = NULL;
+        }
 
         if ($pdf || $xls) {
 
@@ -8499,10 +8587,14 @@ class Reports extends MY_Controller
                 ->from('transfers')
                 ->join('transfer_items', 'transfer_items.transfer_id=transfers.id', 'left')
                 ->join('purchase_items', 'purchase_items.transfer_id=transfers.id', 'left')
-                ->group_by('transfers.id')->order_by('transfers.date desc');
+                ->group_by('transfers.id')
+                ->order_by('transfers.date desc');
             if ($product) {
-                $this->db->where($this->db->dbprefix('purchase_items') . ".product_id", $product);
+                //$this->db->where($this->db->dbprefix('purchase_items') . ".product_id", $product);
                 $this->db->or_where($this->db->dbprefix('transfer_items') . ".product_id", $product);
+            }
+            if($invs){
+                $this->db->where('transfers.id IN ('.$invs.')');
             }
 
             $q = $this->db->get();
@@ -8716,7 +8808,8 @@ class Reports extends MY_Controller
         } else {
             $this->load->library('datatables');
             $this->datatables
-                ->select($this->db->dbprefix('transfers') . ".date, transfer_no, (CASE WHEN " . $this->db->dbprefix('transfers') . ".status = 'completed' THEN  erp_purchase_items.quantity ELSE erp_transfer_items.quantity END) as iname, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, grand_total, " . $this->db->dbprefix('transfers') . ".status", FALSE)
+                ->select($this->db->dbprefix('transfers').".id,".
+                    $this->db->dbprefix('transfers') . ".date, transfer_no, (CASE WHEN " . $this->db->dbprefix('transfers') . ".status = 'completed' THEN  erp_purchase_items.quantity ELSE erp_transfer_items.quantity END) as iname, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, grand_total, " . $this->db->dbprefix('transfers') . ".status", FALSE)
                 ->from('transfers')
                 ->join('transfer_items', 'transfer_items.transfer_id=transfers.id', 'left')
                 ->join('purchase_items', 'purchase_items.transfer_id=transfers.id', 'left')
@@ -8754,10 +8847,14 @@ class Reports extends MY_Controller
         } else {
             $customer = NULL;
         }
-
+        if ($this->input->get('invs')) {
+            $invs = $this->input->get('invs');
+        } else {
+            $invs = NULL;
+        }
         if ($pdf || $xls) {
             $this->db
-                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".reference_no as ref, " . $this->db->dbprefix('sales') . ".reference_no as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('return_items') . ".product_name, ' (', " . $this->db->dbprefix('return_items') . ".quantity, ')') SEPARATOR '<br>') as iname, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id", FALSE)
+                ->select($this->db->dbprefix('return_sales') . ".date as date, " . $this->db->dbprefix('return_sales') . ".reference_no as ref, " . $this->db->dbprefix('sales') . ".reference_no as sal_ref, " . $this->db->dbprefix('return_sales') . ".biller, " . $this->db->dbprefix('return_sales') . ".customer,quantity, GROUP_CONCAT(CONCAT(" . $this->db->dbprefix('return_items') . ".product_name, ' (', " . $this->db->dbprefix('return_items') . ".quantity, ')') SEPARATOR '<br>') as iname, " . $this->db->dbprefix('return_sales') . ".surcharge, " . $this->db->dbprefix('return_sales') . ".grand_total, " . $this->db->dbprefix('return_sales') . ".id as id", FALSE)
                 ->join('sales', 'sales.id=return_sales.sale_id', 'left')
                 ->from('return_sales')
                 ->join('return_items', 'return_items.return_id=return_sales.id', 'left')
@@ -8767,6 +8864,9 @@ class Reports extends MY_Controller
             }
             if(!$this->Owner && !$this->Admin){
                 $this->db->where($this->db->dbprefix('sales') . ".warehouse_id IN (".$this->session->userdata('warehouse_id').")");
+            }
+            if($invs){
+                $this->db->where('return_sales.id IN ('.$invs.')');
             }
 
             $q = $this->db->get();
@@ -8789,10 +8889,13 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('D1', lang('biller'));
                 $this->excel->getActiveSheet()->SetCellValue('E1', lang('customer'));
                 $this->excel->getActiveSheet()->SetCellValue('F1', lang('product_qty'));
-                $this->excel->getActiveSheet()->SetCellValue('G1', lang('grand_total'));
-                $this->excel->getActiveSheet()->SetCellValue('H1', lang('status'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('surcharge'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('grand_total'));
 
                 $row = 2;
+                $total=0;
+                $surcharge=0;
+                $total_quantity=0;
                 foreach ($data as $data_row) {
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data_row->date));
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->ref);
@@ -8802,9 +8905,15 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->iname);
                     $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->surcharge);
                     $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->grand_total);
+                    $total+=$data_row->grand_total;
+                    $total_quantity+=$data_row->quantity;
+                    $surcharge+=$data_row->surcharge;
+
                     $row++;
                 }
-
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $total_quantity);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $surcharge);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $total);
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
@@ -8891,6 +9000,11 @@ class Reports extends MY_Controller
         } else {
             $customer = NULL;
         }
+        if ($this->input->get('invs')) {
+            $invs = $this->input->get('invs');
+        } else {
+            $invs = NULL;
+        }
 
         if ($pdf || $xls) {
             $this->db
@@ -8914,6 +9028,9 @@ class Reports extends MY_Controller
                 }
                 if(!$this->Owner && !$this->Admin){
                     $this->db->where('adjustments.warehouse_id', $this->session->userdata('warehouse_id'));
+                }
+                if($invs){
+                    $this->db->where('adjustments.id IN ('.$invs.')');
                 }
             $q = $this->db->get();
             if ($q->num_rows() > 0) {
@@ -8939,6 +9056,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('H1', lang('type'));
 
                 $row = 2;
+                $total_qty=0;
                 foreach ($data as $data_row) {
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->erp->hrld($data_row->date));
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->reference_no);
@@ -8949,8 +9067,9 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->name);
                     $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->type);
                     $row++;
+                    $total_qty+=$data_row->quantity;
                 }
-
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $total_qty);
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
@@ -9146,7 +9265,9 @@ class Reports extends MY_Controller
 			
 			if($product_type == 'combo' || $product_type == 'service'){
 				$this->datatables
-                ->select($this->db->dbprefix('return_sales') . ".date as date,
+                ->select(
+                        $this->db->dbprefix('return_sales') .".id ,".
+                        $this->db->dbprefix('return_sales') . ".date as date,
 						" . $this->db->dbprefix('return_sales') . ".reference_no as ref, 
 						" . $this->db->dbprefix('sales') . ".reference_no as sal_ref, 
 						" . $this->db->dbprefix('return_sales') . ".biller, 
@@ -9162,7 +9283,9 @@ class Reports extends MY_Controller
                 ->group_by('return_sales.id');
 			}else{
 				$this->datatables
-                ->select($this->db->dbprefix('return_sales') . ".date as date,
+                ->select(
+                        $this->db->dbprefix('return_sales') .".id ,".
+                        $this->db->dbprefix('return_sales') . ".date as date,
 						" . $this->db->dbprefix('return_sales') . ".reference_no as ref, 
 						" . $this->db->dbprefix('sales') . ".reference_no as sal_ref, 
 						" . $this->db->dbprefix('return_sales') . ".biller, 
@@ -9576,15 +9699,17 @@ class Reports extends MY_Controller
                 $this->db->where('purchases.biller_id', $biller_id);
             }
             if ($product) {
-                $this->db->like('purchase_items.product_id', $product);
+                $this->db->where('purchase_items.product_id', $product);
             }
             if ($supplier) {
                 $this->db->where('purchases.supplier_id', $supplier);
             }
-
-            if ($warehouse) {
-                $this->db->where('purchases.warehouse_id IN('.$warehouse.')');
+            if(!$this->Owner && !$this->Admin){
+                if ($warehouse) {
+                    $this->db->where('purchases.warehouse_id IN('.$warehouse.')');
+                }
             }
+           
             if ($reference_no) {
                 $this->db->like('purchases.reference_no', $reference_no, 'both');
             }

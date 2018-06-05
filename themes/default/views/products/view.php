@@ -649,7 +649,7 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"bSortable": false, "mRender": checkbox},{"mRender": fld}, null, null, null, {"mRender": formatQuantity}, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}],
+                    "aoColumns": [{"bSortable": false, "mRender": checkboxsale},{"mRender": fld}, null, null, null, {"mRender": formatQuantity}, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}],
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var tprice = 0, tqty=0, tcost=0, tprofit=0;
                         for (var i = 0; i < aaData.length; i++) {
@@ -798,7 +798,7 @@ if ($Owner || $Admin ){ ?>
                                 <thead>
                                 <tr>
 								    <th style="min-width:30px; width: 30px; text-align: center;">
-										<input class="checkbox checkth" type="checkbox" name="check"/>
+										<input class="checkbox checkth" type="checkbox" name="checksale[]"/>
 									</th>
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("reference_no"); ?></th>
@@ -820,7 +820,7 @@ if ($Owner || $Admin ){ ?>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
 								    <th style="min-width:30px; width: 30px; text-align: center;">
-                                       <input class="checkbox checkth" type="checkbox" name="check"/>
+                                       <input class="checkbox checkth" type="checkbox" name="checksale[]"/>
                                     </th>
                                     <th></th>
                                     <th></th>
@@ -862,23 +862,23 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"mRender": fld}, null, null, null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": row_status}],
+                    "aoColumns": [{"bSortable": false, "mRender": checkboxquote},{"mRender": fld}, null, null, null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": row_status}],
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var gtotal = 0, tqty=0;
                         for (var i = 0; i < aaData.length; i++) {
-							tqty    += parseFloat(aaData[aiDisplay[i]][4]);
-                            gtotal  += parseFloat(aaData[aiDisplay[i]][5]);
+							tqty    += parseFloat(aaData[aiDisplay[i]][5]);
+                            gtotal  += parseFloat(aaData[aiDisplay[i]][6]);
                         }
                         var nCells = nRow.getElementsByTagName('th');
-						nCells[4].innerHTML = formatQuantity(parseFloat(tqty));
-                        nCells[5].innerHTML = currencyFormat(parseFloat(gtotal));
+						nCells[5].innerHTML = formatQuantity(parseFloat(tqty));
+                        nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
                     }
                 }).fnSetFilteringDelay().dtFilter([
-                    {column_number: 0, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
-                    {column_number: 1, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-                    {column_number: 2, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
-                    {column_number: 3, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-                    {column_number: 6, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
+                    {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
+                    {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
+                    {column_number: 3, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
+                    {column_number: 4, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
+                    {column_number: 7, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
                 ], "footer");
             });
         </script>
@@ -916,6 +916,9 @@ if ($Owner || $Admin ){ ?>
                             <table id="QuRData" class="table table-bordered table-hover table-striped table-condensed">
                                 <thead>
                                 <tr>
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("reference_no"); ?></th>
                                     <th><?= lang("biller"); ?></th>
@@ -933,6 +936,9 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
@@ -1006,7 +1012,7 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"mRender": fld}, null, null, null,null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}],
+                    "aoColumns": [{"bSortable": false, "mRender": checkboxpurchase},{"mRender": fld}, null, null, null,null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}],
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var gtotal = 0, tpaid = 0, tbalance = 0,tqty=0;
                         for (var i = 0; i < aaData.length; i++) {
@@ -1153,7 +1159,9 @@ if ($Owner || $Admin ){ ?>
                             <table id="PoRData" class="table table-bordered table-hover table-striped table-condensed">
                                 <thead>
                                 <tr>
-								   
+								    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" />
+                                    </th>
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("reference_no"); ?></th>
                                     <th><?= lang("warehouse"); ?></th>
@@ -1174,7 +1182,9 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
-								   
+								    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox"/>
+                                    </th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
@@ -1216,7 +1226,7 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [null,null,null,{"mRender": currencyFormat},{"mRender": currencyFormat},{"mRender": currencyFormat}],
+                    "aoColumns": [{"bSortable": false, "mRender": checkbox},null,null,null,{"mRender": currencyFormat},{"mRender": currencyFormat},{"mRender": currencyFormat}],
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
 
                     }
@@ -1264,6 +1274,9 @@ if ($Owner || $Admin ){ ?>
                             <table id="OSRData" class="table table-bordered table-hover table-striped table-condensed">
                                 <thead>
                                 <tr>
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("warehouse"); ?></th>
                                     <th><?= lang("product_name"); ?></th>
@@ -1281,6 +1294,9 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
@@ -1318,14 +1334,14 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"mRender": fld}, null, {"mRender": formatQuantity}, null, null, {"mRender": currencyFormat}, {"mRender": row_status}],
+                    "aoColumns": [{"bSortable": false, "mRender": checkboxtransfer},{"mRender": fld}, null, {"mRender": formatQuantity}, null, null, {"mRender": currencyFormat}, {"mRender": row_status}],
 					"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var tqty = 0;
                         for (var i = 0; i < aaData.length; i++) {
-                            tqty += parseFloat(aaData[aiDisplay[i]][2]);
+                            tqty += parseFloat(aaData[aiDisplay[i]][3]);
                         }
                         var nCells = nRow.getElementsByTagName('th');
-                         nCells[2].innerHTML = formatQuantity(parseFloat(tqty));
+                         nCells[3].innerHTML = formatQuantity(parseFloat(tqty));
                     }
                 }).fnSetFilteringDelay().dtFilter([
                     {column_number: 0, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
@@ -1371,6 +1387,9 @@ if ($Owner || $Admin ){ ?>
                             <table id="TrRData" class="table table-bordered table-hover table-striped table-condensed">
                                 <thead>
                                 <tr>
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("reference_no"); ?></th>
                                     <th><?= lang("quantity"); ?></th>
@@ -1388,6 +1407,9 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
@@ -1425,15 +1447,15 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [
+                    "aoColumns": [{"bSortable": false, "mRender": checkboxadjustment},
                         {"mRender": fld}, null, null, null, {"mRender": formatQuantity}, null, null, {"bSortable": false}],
 					"fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var tqty = 0;
                         for (var i = 0; i < aaData.length; i++) {
-                            tqty += parseFloat(aaData[aiDisplay[i]][4]);
+                            tqty += parseFloat(aaData[aiDisplay[i]][5]);
                         }
                         var nCells = nRow.getElementsByTagName('th');
-                         nCells[4].innerHTML = formatQuantity(parseFloat(tqty));
+                         nCells[5].innerHTML = formatQuantity(parseFloat(tqty));
                     }
                 }).fnSetFilteringDelay().dtFilter([
                     {column_number: 0, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
@@ -1483,6 +1505,9 @@ if ($Owner || $Admin ){ ?>
                             <table id="dmpData" class="table table-bordered table-condensed table-hover table-striped">
                                 <thead>
                                 <tr>
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th><?= lang("date"); ?></th>
                                     <th><?= lang("reference_no"); ?></th>
                                     <th><?= lang("product_code"); ?></th>
@@ -1501,6 +1526,9 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
                                 <tr class="active">
+                                    <th style="min-width:30px; width: 30px; text-align: center;">
+                                        <input class="checkbox checkth" type="checkbox" name="check"/>
+                                    </th>
                                     <th></th>
                                     <th></th>
                                     <th></th>
@@ -1540,18 +1568,18 @@ if ($Owner || $Admin ){ ?>
                             'success': fnCallback
                         });
                     },
-                    "aoColumns": [{"mRender": fld}, null, null, null, null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": currencyFormat}],
+                    "aoColumns": [{"bSortable": false, "mRender": checkboxreturn},{"mRender": fld}, null, null, null, null, {"mRender": formatQuantity}, {"mRender": currencyFormat}, {"mRender": currencyFormat}],
                     "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                         var sc = 0, gtotal = 0, tqty = 0;
                         for (var i = 0; i < aaData.length; i++) {
-							tqty += parseFloat(aaData[aiDisplay[i]][5]);
-                            sc += parseFloat(aaData[aiDisplay[i]][6]);
-                            gtotal += parseFloat(aaData[aiDisplay[i]][7]);
+							tqty += parseFloat(aaData[aiDisplay[i]][6]);
+                            sc += parseFloat(aaData[aiDisplay[i]][7]);
+                            gtotal += parseFloat(aaData[aiDisplay[i]][8]);
                         }
                         var nCells = nRow.getElementsByTagName('th');
-                        nCells[5].innerHTML = formatQuantity(parseFloat(tqty));
-                        nCells[6].innerHTML = currencyFormat(parseFloat(sc));
-                        nCells[7].innerHTML = currencyFormat(parseFloat(gtotal));
+                        nCells[6].innerHTML = formatQuantity(parseFloat(tqty));
+                        nCells[7].innerHTML = currencyFormat(parseFloat(sc));
+                        nCells[8].innerHTML = currencyFormat(parseFloat(gtotal));
                     }
                 }).fnSetFilteringDelay().dtFilter([
                     {column_number: 0, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
@@ -1601,6 +1629,9 @@ if ($Owner || $Admin ){ ?>
                             <table id="PRESLData" class="table table-bordered table-hover table-striped">
                                 <thead>
 									<tr>
+                                        <th style="min-width:30px; width: 30px; text-align: center;">
+                                            <input class="checkbox checkth" type="checkbox" name="return"/>
+                                        </th>
 										<th><?= lang("date"); ?></th>
 										<th><?= lang("reference_no"); ?></th>
 										<th><?= lang("sale_reference"); ?></th>
@@ -1618,6 +1649,9 @@ if ($Owner || $Admin ){ ?>
                                 </tbody>
                                 <tfoot class="dtFilter">
 									<tr class="active">
+                                        <th style="min-width:30px; width: 30px; text-align: center;">
+                                            <input class="checkbox checkth" type="checkbox" name="return"/>
+                                        </th>
 										<th></th>
 										<th></th>
 										<th></th>
@@ -1659,77 +1693,157 @@ if ($Owner || $Admin ){ ?>
             $('#pdf').click(function (event) {
                 event.preventDefault();
                 var invs=new Array();
-                $("input:checkbox:checked").each(function(){
+                $("input[name='checkboxsale[]']:checked").each(function(){
                     if($.isNumeric($(this).val()))
                     {
                         invs.push($(this).val());
                     }
                     
                 });
-                window.location.href = "<?=site_url('reports/exportSalesReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
+                window.location.href = "<?=site_url('reports/getSalesReportByProID2/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls').click(function (event) {
                 event.preventDefault();
-                    var invs=new Array();
-                $("input:checkbox:checked").each(function(){
+                var invs=new Array();
+                $("input[name='checkboxsale[]']:checked").each(function(){
                     if($.isNumeric($(this).val()))
                     {
                         invs.push($(this).val());
                     }
                     
                 });
-                window.location.href = "<?=site_url('reports/exportSalesReport/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
+                window.location.href = "<?=site_url('reports/getSalesReportByProID2/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#pdf1').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getQuotesReport/pdf/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxquote[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getQuotesReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls1').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getQuotesReport/0/xls/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxquote[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getQuotesReport/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#pdf2').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getPurchasesReport/pdf/?v=1&product='.$product->id)?>";
+                 var invs=new Array();
+                $("input[name='checkboxpurchase[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getPurchasesReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls2').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getPurchasesReport/0/xls/?v=1&product='.$product->id)?>";
+                 var invs=new Array();
+                $("input[name='checkboxpurchase[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getPurchasesReportByProID/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#pdf3').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getTransfersReport/pdf/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxtransfer[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getTransfersReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls3').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getTransfersReport/0/xls/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxtransfer[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getTransfersReport/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#pdf4').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getAdjustmentReport/pdf/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxadjustment[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getAdjustmentReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls4').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getAdjustmentReport/0/xls/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxadjustment[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getAdjustmentReport/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#pdf5').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getReturnsReport/pdf/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxreturn[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getReturnsReport/pdf/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('#xls5').click(function (event) {
                 event.preventDefault();
-                window.location.href = "<?=site_url('reports/getReturnsReport/0/xls/?v=1&product='.$product->id)?>";
+                var invs=new Array();
+                $("input[name='checkboxreturn[]']:checked").each(function(){
+                    if($.isNumeric($(this).val()))
+                    {
+                        invs.push($(this).val());
+                    }
+                    
+                });
+                window.location.href = "<?=site_url('reports/getReturnsReport/0/xls/?v=1&product='.$product->id.'&invs=')?>"+invs;
                 return false;
             });
             $('.image').click(function (event) {

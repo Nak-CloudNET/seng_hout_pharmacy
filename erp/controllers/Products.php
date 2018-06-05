@@ -2940,7 +2940,7 @@ class Products extends MY_Controller
 
         $this->load->library('datatables');
         $this->datatables
-            ->select("adjustments.date, adjustments.reference_no, products.code as pcode, products.name as pname, adjustment_items.quantity, units.name as pvaraint, warehouses.name, adjustment_items.type")
+            ->select("adjustments.id,adjustments.date, adjustments.reference_no, products.code as pcode, products.name as pname, adjustment_items.quantity, units.name as pvaraint, warehouses.name, adjustment_items.type")
             ->from('adjustments')
             ->join('adjustment_items', 'adjustments.id = adjustment_items.adjust_id', 'left')
             ->join('product_variants', 'adjustment_items.option_id = product_variants.id', 'left')
