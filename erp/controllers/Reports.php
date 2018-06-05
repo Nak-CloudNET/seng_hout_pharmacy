@@ -6874,29 +6874,61 @@ class Reports extends MY_Controller
         }
 		
         if ($pdf || $xls) {
-            $this->db
+           if($product_type != "combo" || $product_type != "service"){
+                $this->db
                 ->select("
-                    sale_items.id as id, 
-                    sales.date, sales.reference_no,
-                    sale_items.product_name, 
-                    sale_items.quantity, 
-                    units.name as unit, 
-                    erp_sale_items.unit_price as price,
-                    (erp_sale_items.unit_price*erp_sale_items.quantity) as total_price,
-                    IF(erp_sale_items.product_type = 'combo',
-                    erp_products.cost * abs(erp_purchase_items.quantity_balance),
-                    erp_sale_items.unit_cost * abs(erp_purchase_items.quantity_balance)
-                    ) as total_cost,
-                 ")
+                erp_sales.id, 
+                erp_sales.date, 
+                reference_no, 
+                biller, 
+                customer,
+                erp_sale_items.quantity,                
+                erp_units.name as unit_name,                
+                erp_sale_items.subtotal as total_price,
+                (erp_sale_items.unit_cost * erp_sale_items.quantity) as total_cost,
+                (erp_sale_items.subtotal - (erp_sale_items.unit_cost * erp_sale_items.quantity)) as profit", FALSE)
                 ->from('sales')
                 ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
                 ->join('products', 'products.id = sale_items.product_id', 'left')
-                ->join('units', 'products.unit = units.id', 'left')
-                ->join('companies', 'companies.id=sales.customer_id','left')
-                ->join('users', 'sales.saleman_by = users.id', 'left')
+                ->join('units', 'units.id = products.unit', 'left')
                 ->join('purchase_items', 'purchase_items.transaction_id = sale_items.id', 'left')
+                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+                ->join('companies', 'companies.id=sales.customer_id','left')
+                ->join('customer_groups','customer_groups.id=companies.customer_group_id','left')
                 ->where('sales.sale_status <> "returned"')
-                ->group_by('sales.reference_no');
+                ->where('sale_items.product_id', $product)
+                ->group_by('sales.id');
+            }else{
+                $this->db
+                ->select("
+                erp_sales.id, 
+                erp_sales.date, 
+                reference_no, 
+                biller, 
+                customer,
+                abs(erp_purchase_items.quantity_balance),
+                units.name as unit_name,
+                IF(erp_sale_items.product_type = 'combo',
+                    erp_products.price * abs(erp_purchase_items.quantity_balance),
+                    erp_sale_items.subtotal
+                ) as total_price,
+                IF(erp_sale_items.product_type = 'combo',
+                    erp_products.cost * abs(erp_purchase_items.quantity_balance),
+                    erp_sale_items.unit_cost * abs(erp_purchase_items.quantity_balance)
+                ) as total_cost,
+                IF(erp_sale_items.product_type = 'combo',
+                    (erp_products.price * abs(erp_purchase_items.quantity_balance)) - (erp_products.cost * abs(erp_purchase_items.quantity_balance)),
+                    (erp_sale_items.subtotal) - (erp_sale_items.unit_cost * abs(erp_purchase_items.quantity_balance))
+                ) as profit", FALSE)
+                ->from('purchase_items')
+                ->join('sale_items', 'sale_items.id = purchase_items.transaction_id', 'left')
+                ->join('sales', 'sales.id = sale_items.sale_id', 'left')
+                ->join('products', 'products.id = purchase_items.product_id', 'left')
+                ->join('units', 'units.id = products.unit', 'left')
+                ->where('sales.sale_status <> "returned"')
+                ->where(array('purchase_items.product_id' => $product, 'purchase_items.transaction_type' => 'SALE'))
+                ->group_by('purchase_items.id');
+            } 
             if($product)
             {
                 $this->db->where('sale_items.product_id',$product);
