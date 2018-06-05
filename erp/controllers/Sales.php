@@ -9996,13 +9996,14 @@ class Sales extends MY_Controller
                 $row->option 			= $option;
 				
                 $pis 					= $this->sales_model->getPurchasedItems($row->id, $warehouse_id, $row->option);
-				
+				$quantity_warehouse 	= $this->sales_model->getWarehouseProductQuantity($warehouse_id, $row->id);
                 if($pis){
                     foreach ($pis as $pi) {
                         $row->quantity += $pi->quantity_balance;
-						$row->qoh +=$pi->quantity_balance;
                     }
-                }
+                }		
+				
+				$row->qoh = $quantity_warehouse->quantity;
 				
                 if ($options) {
                     $option_quantity = 0;
@@ -10342,11 +10343,13 @@ class Sales extends MY_Controller
                 }
                 $row->option = $option;
                 $pis = $this->sales_model->getPurchasedItems($row->id, $warehouse_id, $row->option);
+				$quantity_warehouse 	= $this->sales_model->getWarehouseProductQuantity($warehouse_id, $row->id);
                 if($pis){
                     foreach ($pis as $pi) {
                         $row->quantity += $pi->quantity_balance;
                     }
                 }
+				$row->qoh = $quantity_warehouse->quantity;
                 if ($options) {
                     $option_quantity = 0;
                     foreach ($options as $option) {
@@ -10374,15 +10377,13 @@ class Sales extends MY_Controller
 				}
 				
                 if ($opt->price != 0) {
-					if($customer_group->makeup_cost == 1){
-						//$row->price = $row->cost + (($row->cost * $customer_group->percent) / 100);
+					if($customer_group->makeup_cost == 1){						
 						$row->price = $row->cost + (($row->cost * (isset($percent->percent)?$percent->percent:0)) / 100);
 					}else{
 						$row->price = $opt->price + (($opt->price * $customer_group->percent) / 100);
 					}
                 } else {
-					if($customer_group->makeup_cost == 1){
-						//$row->price = $row->cost + (($row->cost * $customer_group->percent) / 100);
+					if($customer_group->makeup_cost == 1){						
 						$row->price = $row->cost + (($row->cost * (isset($percent->percent)?$percent->percent:0)) / 100);
 					}else{
 						$row->price = $row->price + (($row->price * $customer_group->percent) / 100);
@@ -10405,7 +10406,7 @@ class Sales extends MY_Controller
                 } else {
                     $pr[] = array('id' => str_replace(".", "", microtime(true)), 'item_id' => $row->id, 'label' => $row->name . " (" . $row->code . ")", 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => false, 'options' => $options, 'expdates'=>$expdates, 'group_prices'=>$group_prices, 'all_group_price' => $all_group_prices);
                 }
-            }
+            }			
             echo json_encode($pr);
         } else {
             echo json_encode(array(array('id' => 0, 'label' => lang('no_match_found'), 'value' => $term)));
