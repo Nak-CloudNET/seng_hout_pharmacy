@@ -6959,11 +6959,11 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('A1', lang('No'));
                 $this->excel->getActiveSheet()->SetCellValue('B1', lang('date'));
                 $this->excel->getActiveSheet()->SetCellValue('C1', lang('reference_no'));
-                $this->excel->getActiveSheet()->SetCellValue('D1', lang('product_name'));
-                $this->excel->getActiveSheet()->SetCellValue('E1', lang('unit'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('project'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('customer'));
                 $this->excel->getActiveSheet()->SetCellValue('F1', lang('quantity'));
-                $this->excel->getActiveSheet()->SetCellValue('G1', lang('price'));
-                $this->excel->getActiveSheet()->SetCellValue('H1', lang('sub_total'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('unit'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('total_price'));
                 $this->excel->getActiveSheet()->SetCellValue('I1', lang('cost'));
                 $this->excel->getActiveSheet()->SetCellValue('J1', lang('profit'));
 
@@ -6980,10 +6980,10 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $n);
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $this->erp->hrld($data_row->date));
                     $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->reference_no);
-                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->product_name);
-                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->unit);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->biller);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->customer);
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->quantity);
-                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, ($data_row->price));
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->unit_name);
                     $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->total_price));
                     $this->excel->getActiveSheet()->SetCellValue('I' . $row, strip_tags($data_row->total_cost));
                     $profit=$data_row->total_price-$data_row->total_cost;
@@ -7009,7 +7009,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(30);
                 $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(30);
-                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(30);
                 $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
                 $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
