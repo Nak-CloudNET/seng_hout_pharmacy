@@ -995,7 +995,24 @@ function pqFormatSaleReports(x) {
 function checkbox(x) {
     return '<center><input class="checkbox multi-select" type="checkbox" name="val[]" value="' + x + '" /></center>';
 }
-
+function checkboxsale(x) {
+    return '<center><input class="checkbox multi-select" type="checkbox" name="checkboxsale[]" value="' + x + '" /></center>';
+}
+function checkboxquote(x) {
+    return '<center><input class="checkbox multi-select" type="checkbox" name="checkboxquote[]" value="' + x + '" /></center>';
+}
+function checkboxpurchase(x) {
+    return '<center><input class="checkbox multi-select" type="checkbox" name="checkboxpurchase[]" value="' + x + '" /></center>';
+}
+function checkboxtransfer(x) {
+    return '<center><input class="checkbox multi-select" type="checkbox" name="checkboxtransfer[]" value="' + x + '" /></center>';
+}
+function checkboxadjustment(x) {
+    return '<center><input class="checkbox multi-select" type="checkbox" name="checkboxadjustment[]" value="' + x + '" /></center>';
+}
+function checkboxreturn(x) {
+    return '<center><input class="checkbox multi-select" type="checkbox" name="checkboxreturn[]" value="' + x + '" /></center>';
+}
 function attachments(x){
 	if(x == null){
 		return '';
