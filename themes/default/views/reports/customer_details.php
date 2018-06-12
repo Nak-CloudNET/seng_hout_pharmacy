@@ -173,10 +173,12 @@
 							<?php
 							$grand = 0 ;
 							$gqty = 0;
+							$gprice = 0;
 							$wid = $this->reports_model->getWareByUserID();
-							$this->db->select("erp_sales.customer_id, CONCAT(erp_sales.customer,' (',erp_companies.address,')') as customer, SUM(erp_sale_items.quantity) as qty")
+							$this->db->select("erp_sales.customer_id, CONCAT(erp_group_areas.areas_group, ' - ', erp_sales.customer,' (',erp_companies.address,')') as customer, SUM(erp_sale_items.quantity) as qty")
 							->join("erp_sale_items", "erp_sale_items.sale_id = erp_sales.id", "LEFT")
-							->join("erp_companies", "erp_companies.id = erp_sales.customer_id", "LEFT");
+							->join("erp_companies", "erp_companies.id = erp_sales.customer_id", "LEFT")
+							->join("erp_group_areas", "erp_group_areas.areas_g_code = erp_companies.group_areas_id", "LEFT");
 							if($customer){
 								$this->db->where("erp_sales.customer_id",$customer);
 							}
@@ -203,6 +205,7 @@
 								$this->db->join('erp_products', 'erp_products.id = erp_sale_items.product_id', 'left');
 								$this->db->where("erp_products.category_id", $category_id);
 							}
+							$this->db->order_by("erp_group_areas.areas_group");
 							$this->db->group_by("customer_id");
 							$customers = $this->db->get("erp_sales")->result();
 							if(is_array($customers)){
@@ -257,6 +260,7 @@
 									$sale_items = $this->db->get("erp_sale_items")->result();
 									$tqty = 0 ; 
 									$amount = 0 ;
+									$total_price = 0 ;
 									$vqty = 0;
 									$unit_name = "";
 									if(is_array($sale_items)){
@@ -290,23 +294,22 @@
 								<?php
 									$tqty+=$vqty;
 									$amount+=(abs($row1->quantity)*abs($row1->net_unit_price));
+									$total_price+=abs($row1->net_unit_price);
 										}
 									}
 									}
 								?>
 							<tr style="background:#F0F8FF;">
-								<td ><b>Total >> <?=$row->customer?></b></td>
-								<td ></td>
-                                <td></td>
-								<td ></td>
-								<td ></td>
+								<td colspan="4"></td>
+								<td class="text-center"><b>Total</b></td>
 								<td class="text-right"><b><?=$this->erp->formatQuantity($tqty)?></b></td>
-								<td ></td>
-								<td ></td>
+								<td></td>
+								<td class="text-right"><b><?=$this->erp->formatMoney($total_price)?></b></td>
 								<td class="text-right"><b><?=$this->erp->formatMoney($amount)?></b></td>
 							</tr>
 							<?php
 							$grand +=$amount;
+							$gprice +=$total_price;
 							$gqty+=$tqty;
 								}
 								}
@@ -321,7 +324,7 @@
 								<td style="background:#4682B4;color:white;"></td>
 								<td style="background:#4682B4;color:white;" class="text-right"><b><?=$this->erp->formatQuantity($gqty)?></b></td>
 								<td style="background:#4682B4;color:white;"></td>
-								<td style="background:#4682B4;color:white;"></td>
+								<td style="background:#4682B4;color:white;" class="text-right"><b><?=$this->erp->formatMoney($gprice)?></b></td>
 								<td style="background:#4682B4;color:white;" class="text-right"><b><?=$this->erp->formatMoney($grand)?></b></td>
 								
 							</tr>

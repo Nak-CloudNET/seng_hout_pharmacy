@@ -24264,10 +24264,12 @@ class Reports extends MY_Controller
 			$wid = $this->reports_model->getWareByUserID();
             $row = 2;
             $grand = 0 ;
+            $gprice = 0 ;
             $gqty = 0;
-            $this->db->select("customer_id,customer,SUM(erp_sale_items.quantity) as qty")
-			->join("erp_sale_items","erp_sale_items.sale_id=erp_sales.id","LEFT")
-			->join("erp_products","erp_products.id = erp_sale_items.product_id","LEFT");
+            $this->db->select("erp_sales.customer_id, CONCAT(erp_group_areas.areas_group, ' - ', erp_sales.customer,' (',erp_companies.address,')') as customer, SUM(erp_sale_items.quantity) as qty")
+			->join("erp_sale_items", "erp_sale_items.sale_id = erp_sales.id", "LEFT")
+			->join("erp_companies", "erp_companies.id = erp_sales.customer_id", "LEFT")
+			->join("erp_group_areas", "erp_group_areas.areas_g_code = erp_companies.group_areas_id", "LEFT");
             if($customer){
                 $this->db->where("erp_sales.customer_id",$customer);
             }
@@ -24278,7 +24280,6 @@ class Reports extends MY_Controller
 				$this->db->where("products.category_id", $category_id);
 			}
 			if($group_area_id){
-				$this->db->join('companies', 'companies.id = sales.customer_id', 'LEFT');
 				$this->db->where("companies.group_areas_id", $group_area_id);
 			}
 			if($product_id){
@@ -24345,6 +24346,7 @@ class Reports extends MY_Controller
 				$this->db->join('erp_categories', 'erp_categories.id = erp_products.category_id', 'left');
                 $sale_items = $this->db->get("erp_sale_items")->result();
                 $tqty = 0 ; 
+                $tprice = 0 ; 
                 $amount = 0 ;
                 $row++;
 				$vqty = 0;
@@ -24371,25 +24373,33 @@ class Reports extends MY_Controller
                         $this->excel->getActiveSheet()->SetCellValue('H' . $row, $row1->net_unit_price);
                         $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($row1->quantity)*($row1->net_unit_price));
                         $tqty+=$vqty;
+                        $tprice+=abs($row1->net_unit_price);
                         $amount+=(abs($row1->quantity)*abs($row1->net_unit_price));
                         $row++;
                         }
                     }
-                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, 'Total >> '.$cus->customer);
+					$this->excel->getActiveSheet()->mergeCells('A'. $row.':D'.$row);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, 'Total');
+					$this->excel->getActiveSheet()->getStyle('E'. $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $tqty);
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatMoney($tprice));
                     $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatMoney($amount));
                     $this->excel->getActiveSheet()->getStyle('I'. $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                     $this->excel->getActiveSheet()->getStyle('A'. $row.':I'.$row)->getFont()->setBold(true);
                     $this->excel->getActiveSheet()->getStyle('F'.$row. ':I'.$row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
                     $grand +=$amount;
+                    $gprice +=$tprice;
                     $gqty+=$tqty;
                     $row++;
                     
                 }
 			}
 			}
-                $this->excel->getActiveSheet()->SetCellValue('A' . $row, 'Grand Total ');
+                $this->excel->getActiveSheet()->mergeCells('A'. $row.':D'.$row);
+				$this->excel->getActiveSheet()->SetCellValue('E' . $row, 'Grand Total ');
+				$this->excel->getActiveSheet()->getStyle('E'. $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
                 $this->excel->getActiveSheet()->SetCellValue('F' . $row, $gqty);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatMoney($gprice));
                 $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatMoney($grand));
                 $this->excel->getActiveSheet()->getStyle('I'. $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                 $this->excel->getActiveSheet()->getStyle('A'. $row.':I'.$row)->getFont()->setBold(true);
