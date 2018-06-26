@@ -332,7 +332,7 @@
 								}
 							?>
 							<?php
-								$row = 4;
+								$row = 1;
 								$col =2;
 								if ($discount != 0) {
 									$col = 2;
