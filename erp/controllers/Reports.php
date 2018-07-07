@@ -18769,7 +18769,6 @@ class Reports extends MY_Controller
     }
 	//Export xls and pdf in Sales_Detail_Report in Sales Report
 	function salesDetail_actions(){
-		
 		if(!empty($_POST['val'])){
 			if($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf'){
 				$this->load->library('excel');
@@ -18799,6 +18798,7 @@ class Reports extends MY_Controller
 				
 				$sql1 = "SELECT
 							erp_sales.id,
+							erp_sale_items.product_id,
 							1 as type,
 							erp_sales.date,
 							erp_sales.reference_no,
@@ -18822,11 +18822,13 @@ class Reports extends MY_Controller
 							`erp_sales`
 						INNER JOIN erp_sale_items ON erp_sales.id = erp_sale_items.sale_id
 						WHERE erp_sales.opening_ar = 0
-						GROUP BY
-							erp_sales.id,reference_no";
+						";
+				/*GROUP BY
+							erp_sales.id,reference_no*/
 							
 				$sql2 = "SELECT
 							erp_return_sales.id,
+							erp_return_items.product_id,
 							2 as type,
 							erp_return_sales.date,
 							erp_return_sales.reference_no,
@@ -18849,12 +18851,13 @@ class Reports extends MY_Controller
 						FROM
 							erp_return_sales
 						INNER JOIN erp_return_items ON erp_return_sales.id = erp_return_items.return_id
-						GROUP BY
-							erp_return_sales.id,reference_no";
-				
+						";
+				/*GROUP BY
+							erp_return_sales.id,reference_no*/
+
 				foreach ($_POST['val'] as $id) { 
 					$sales = $this->db->query("SELECT * FROM ({$sql1} UNION {$sql2}) AS TEMP WHERE id = $id ORDER BY id DESC ")->result();
-					
+                    $this->erp->print_arrays($sales);
 					foreach($sales as $key => $sale){
 								
 						$table_return_items = "erp_return_items"; 
@@ -18880,18 +18883,17 @@ class Reports extends MY_Controller
 								 erp_product_variants.qty_unit,
 								 (CASE WHEN erp_products.unit = 0 THEN erp_products.unit ELSE erp_product_variants.name END) as unit
 							FROM ";
-								
 						$sales_detail = $this->db->query("{$sql}{$table_sale_items} AS erp_sale_items
 									LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
 									LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
 									LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-									WHERE erp_sale_items.sale_id={$sale->id} GROUP BY id")->result();
+									WHERE erp_sale_items.sale_id={$sale->id} AND erp_sale_items.product_id={$sale->product_id} GROUP BY id")->result();
 									
 						$sales_detail_returned = $this->db->query("{$sql}{$table_return_items} AS erp_sale_items
 									LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
 									LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
 									LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-									WHERE erp_sale_items.return_id={$sale->id} GROUP BY id")->result();
+									WHERE erp_sale_items.return_id={$sale->id} AND erp_sale_items.product_id={$sale->product_id} GROUP BY id")->result();
 						
 						if ($sale->type == 1) {
 							$this->excel->getActiveSheet()->SetCellValue('A' . $row, $sale->reference_no.">>".$sale->customer.">>".date('d/M/Y h:i A', strtotime($sale->date)));
@@ -22725,9 +22727,9 @@ class Reports extends MY_Controller
 				LEFT JOIN erp_products ON erp_sale_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_sales.customer_id = erp_companies.id
 				WHERE erp_sales.opening_ar = 0
-				GROUP BY
-					erp_sales.id,reference_no";
-					
+				";
+					/*GROUP BY
+					erp_sales.id,reference_no*/
 		$sql2 = "SELECT
 					erp_return_sales.id,
 					2 as type,
@@ -22758,8 +22760,9 @@ class Reports extends MY_Controller
 				INNER JOIN erp_return_items ON erp_return_sales.id = erp_return_items.return_id
 				LEFT JOIN erp_products ON erp_return_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_return_sales.customer_id = erp_companies.id
-				GROUP BY
-					erp_return_sales.id,reference_no";	
+				";
+		        /*GROUP BY
+					erp_return_sales.id,reference_no*/
 			
         $sql3 = "";
 		$sqls = "";

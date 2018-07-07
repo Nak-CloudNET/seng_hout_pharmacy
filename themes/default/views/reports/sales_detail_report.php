@@ -368,13 +368,13 @@ if ($this->input->post('saleman')) {
 											LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
                                             LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
 											LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-											WHERE erp_sale_items.sale_id={$sale->id} GROUP BY id")->result();
+											WHERE erp_sale_items.sale_id={$sale->id} AND erp_sale_items.product_id={$sale->product_id} GROUP BY id")->result();
 											
 								$sales_detail_returned = $this->db->query("{$sql}{$table_return_items} AS erp_sale_items
 											LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
 											LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
                                             LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-											WHERE erp_sale_items.return_id={$sale->id} GROUP BY id")->result();
+											WHERE erp_sale_items.return_id={$sale->id} AND erp_sale_items.product_id={$sale->product_id} GROUP BY id")->result();
 							
 								
 							?>
