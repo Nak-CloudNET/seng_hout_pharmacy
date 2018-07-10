@@ -145,7 +145,7 @@ if ($this->input->post('saleman')) {
                             <div class="form-group">
                                 <label class="control-label" for="product_id"><?= lang("product"); ?></label>
                                 <?php
-                                $pr[""] = "";
+                                $pr[""] = "ALL";
                                 foreach ($products as $product) {
                                     $pr[$product->id] = $product->name . " | " . $product->code;
                                 }
@@ -363,18 +363,33 @@ if ($this->input->post('saleman')) {
 										 erp_product_variants.qty_unit,
 										 (CASE WHEN erp_products.unit = 0 THEN erp_products.unit ELSE erp_product_variants.name END) as unit
 									FROM ";
-										
-								$sales_detail = $this->db->query("{$sql}{$table_sale_items} AS erp_sale_items
-											LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
-                                            LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
-											LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-											WHERE erp_sale_items.sale_id={$sale->id} AND erp_sale_items.product_id={$sale->product_id} GROUP BY id")->result();
-											
-								$sales_detail_returned = $this->db->query("{$sql}{$table_return_items} AS erp_sale_items
-											LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
-											LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
-                                            LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-											WHERE erp_sale_items.return_id={$sale->id} AND erp_sale_items.product_id={$sale->product_id} GROUP BY id")->result();
+
+                                if($product_id){
+                                    $sales_detail = $this->db->query("{$sql}{$table_sale_items} AS erp_sale_items
+                                        LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
+                                        LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
+                                        LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
+                                        WHERE erp_sale_items.sale_id={$sale->id} AND erp_sale_items.product_id={$product_id} GROUP BY id")->result();
+                                                
+                                    $sales_detail_returned = $this->db->query("{$sql}{$table_return_items} AS erp_sale_items
+                                        LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
+                                        LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
+                                        LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
+                                        WHERE erp_sale_items.return_id={$sale->id} AND erp_sale_items.product_id={$product_id}  GROUP BY id")->result(); 
+                                }else{
+                                    $sales_detail = $this->db->query("{$sql}{$table_sale_items} AS erp_sale_items
+                                        LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
+                                        LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
+                                        LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
+                                        WHERE erp_sale_items.sale_id={$sale->id} GROUP BY id")->result();
+                                                
+                                    $sales_detail_returned = $this->db->query("{$sql}{$table_return_items} AS erp_sale_items
+                                        LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
+                                        LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
+                                        LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
+                                        WHERE erp_sale_items.return_id={$sale->id}  GROUP BY id")->result(); 
+                                }
+								
 							
 								
 							?>

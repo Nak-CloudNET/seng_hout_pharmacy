@@ -22722,9 +22722,9 @@ class Reports extends MY_Controller
 				LEFT JOIN erp_products ON erp_sale_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_sales.customer_id = erp_companies.id
 				WHERE erp_sales.opening_ar = 0
-				";
-					/*GROUP BY
-					erp_sales.id,reference_no*/
+				GROUP BY
+					erp_sales.id,reference_no";
+					/**/
 		$sql2 = "SELECT
 					erp_return_sales.id,
 					2 as type,
@@ -22755,9 +22755,9 @@ class Reports extends MY_Controller
 				INNER JOIN erp_return_items ON erp_return_sales.id = erp_return_items.return_id
 				LEFT JOIN erp_products ON erp_return_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_return_sales.customer_id = erp_companies.id
-				";
-		        /*GROUP BY
-					erp_return_sales.id,reference_no*/
+				GROUP BY
+					erp_return_sales.id,reference_no";
+		        /**/
 			
         $sql3 = "";
 		$sqls = "";
