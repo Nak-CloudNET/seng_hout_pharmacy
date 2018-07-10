@@ -22497,12 +22497,11 @@ class Reports extends MY_Controller
 
         if ($post['category']) {
             $category = $post['category'];
-            $this->data['category'] = $post['category'];
+            $this->data['category_id'] = $post['category'];
             $str .= "&category=" . $category;
         } else {
             $category = null;
         }
-
         if ($post['saleman']) {
             $saleman = $post['saleman'];
             $this->data['saleman'] = $post['saleman'];
@@ -22767,8 +22766,8 @@ class Reports extends MY_Controller
             $sqls .= " AND product_id = '{$this->data['product_id']}'";
         }
         if ($category) {
-            $sql3 .= " AND category_id = '{$this->data['category']}'";
-            $sqls .= " AND category_id = '{$this->data['category']}'";
+            $sql3 .= " AND category_id = '{$this->data['category_id']}'";
+            $sqls .= " AND category_id = '{$this->data['category_id']}'";
         }
         if ($saleman) {
             $sql3 .= " AND saleman_by = '{$this->data['saleman']}'";
