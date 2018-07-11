@@ -297,6 +297,8 @@ if ($this->input->post('saleman')) {
                     <?php echo form_close(); ?>
 
                 </div>
+                <input type="hidden" name="exp_product_id" id="exp_product_id" />
+                <input type="hidden" name="exp_category_id" id="exp_category_id" />
                 <div class="clearfix"></div>
 
                 <div class="table-responsive">
@@ -702,7 +704,20 @@ if ($this->input->post('saleman')) {
 <script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-		
+        $('#exp_product_id').val($('#product_id').val());
+        $('#exp_category_id').val($('#category').val());
+		$('#category').change(function (){
+          if($(this).val())
+          {
+              $('#exp_category_id').val($(this).val());
+          }
+        });
+        $('#product_id').change(function (){
+            if($(this).val())
+            {
+                $('#exp_category_id').val($(this).val());
+            }
+        });
         // $('#pdf').click(function (event) {
             // event.preventDefault();
             // window.location.href = "<?=site_url('reports/getSalesReport/pdf/?v=1'.$v)?>";

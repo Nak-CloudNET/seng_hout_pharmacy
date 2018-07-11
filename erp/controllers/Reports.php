@@ -18769,6 +18769,18 @@ class Reports extends MY_Controller
     }
 	//Export xls and pdf in Sales_Detail_Report in Sales Report
 	function salesDetail_actions(){
+	    if($_POST['exp_product_id'])
+        {
+            $product_id=$_POST['exp_product_id'];
+        }else{
+            $product_id=NULL;
+        }
+        if($_POST['exp_category_id'])
+        {
+            $category_id=$_POST['exp_category_id'];
+        }else{
+            $category_id=NULL;
+        }
 		if(!empty($_POST['val'])){
 			if($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf'){
 				$this->load->library('excel');
@@ -18857,7 +18869,14 @@ class Reports extends MY_Controller
 								
 						$table_return_items = "erp_return_items"; 
 						$table_sale_items = "erp_sale_items";
-						
+                        $sql_search="";
+                        if($product_id)
+                        {
+                            $sql_search=" AND erp_sale_items.product_id={$product_id} ";
+                        }
+                        if($category_id){
+                            $sql_search.=" AND erp_products.category_id={$category_id} ";
+                        }
 						$sql = "SELECT
 								 erp_sale_items.id,
 								 erp_sale_items.sale_id,
@@ -18882,13 +18901,13 @@ class Reports extends MY_Controller
 									LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
 									LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
 									LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-									WHERE erp_sale_items.sale_id={$sale->id} GROUP BY id")->result();
+									WHERE erp_sale_items.sale_id={$sale->id} ".$sql_search." GROUP BY id")->result();
 
 						$sales_detail_returned = $this->db->query("{$sql}{$table_return_items} AS erp_sale_items
 									LEFT JOIN `erp_products` ON `erp_products`.`id` = `erp_sale_items`.`product_id`
 									LEFT JOIN `erp_units` ON `erp_units`.`id` = `erp_products`.`unit`
 									LEFT JOIN `erp_product_variants` ON `erp_sale_items`.`option_id` = `erp_product_variants`.`id`
-									WHERE erp_sale_items.return_id={$sale->id} GROUP BY id")->result();
+									WHERE erp_sale_items.return_id={$sale->id}".$sql_search." GROUP BY id")->result();
 						
 						if ($sale->type == 1) {
 							$this->excel->getActiveSheet()->SetCellValue('A' . $row, $sale->reference_no.">>".$sale->customer.">>".date('d/M/Y h:i A', strtotime($sale->date)));
@@ -18945,12 +18964,11 @@ class Reports extends MY_Controller
 							foreach($sales_detail as $sale_detail){										
 								$unit = isset($sale_detail->variant) ? $sale_detail->variant : $sale_detail->unit;
 
-								if ($sale_detail->option_id != 0) {
-									$total_cost = $sale_detail->unit_cost * $sale_detail->qty_unit * $sale_detail->quantity;
-								} else {
-									$total_cost = $sale_detail->unit_cost * $sale_detail->quantity;
-								}
-
+                                if ($sale_detail->option_id != 0) {
+                                    $total_cost = $this->erp->formatMoney($sale_detail->unit_cost) * $sale_detail->qty_unit * $sale_detail->quantity;
+                                } else {
+                                    $total_cost = $this->erp->formatMoney($sale_detail->unit_cost) * $sale_detail->quantity;
+                                }
 								$gross_margin = ($sale_detail->subtotal - $sale_detail->item_tax) - $total_cost;
 								$sub_total = ($total_amount - $sale->order_discount) + $sale->order_tax + $total_item_tax + $sale->shipping;
 								
