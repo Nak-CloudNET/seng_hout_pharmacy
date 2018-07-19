@@ -4663,6 +4663,7 @@ class Reports extends MY_Controller
         $this->data['warehouses'] = $this->site->getAllWarehouses();
 		$this->data['customer_groups'] = $this->companies_model->getAllCustomerGroups();
 		$this->data['customers'] = $this->site->getCustomers();
+        $this->data['areas'] = $this->site->getArea();
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('sales_report')));
         $meta = array('page_title' => lang('sales_report'), 'bc' => $bc);
         $this->page_construct('reports/sales', $meta, $this->data);
@@ -4731,7 +4732,11 @@ class Reports extends MY_Controller
         } else {
             $serial = NULL;
         }
-		
+        if ($this->input->get('area')) {
+            $area = $this->input->get('area');
+        } else {
+            $area = NULL;
+        }
 		if ($this->input->get('types')) {
             $types = $this->input->get('types');
         } else {
@@ -4907,7 +4912,8 @@ class Reports extends MY_Controller
 				erp_sales.date, 
 				reference_no, 
 				biller, 
-				customer, 				
+				customer,
+				erp_group_areas.areas_group, 				
 				grand_total,
 				paid, 
 				(erp_sales.grand_total - erp_sales.paid) as balance,
@@ -4915,7 +4921,8 @@ class Reports extends MY_Controller
 				->from('sales')
 				->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
 				->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
-				->join('companies', 'companies.id=sales.customer_id','left')                
+				->join('companies', 'companies.id=sales.customer_id','left')
+                ->join('group_areas', 'group_areas.areas_g_code=sales.group_areas_id','left')
 				->join('customer_groups','customer_groups.id=companies.customer_group_id','left')
                 ->where('erp_sales.sale_status <> "returned"')
 				->group_by('sales.id');
@@ -4942,6 +4949,9 @@ class Reports extends MY_Controller
             }
             if ($customer) {
                 $this->datatables->where('sales.customer_id', $customer);
+            }
+            if ($area) {
+                $this->datatables->where('sales.group_areas_id', $area);
             }
             if($customer_group){
 			   $this->datatables->where('companies.customer_group_id', $customer_group);                
