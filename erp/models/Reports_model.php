@@ -3151,6 +3151,28 @@ ORDER BY
         }
         return false;    
     }
+    function getExpiryByID($id){
+
+        $this->db
+            ->select("products.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance) as quantity_balance, warehouses.name, erp_purchase_items.expiry, serial.serial_number")
+            ->from('purchase_items')
+            ->join('products', 'products.id = purchase_items.product_id', 'left')
+            ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
+            ->join('serial', 'serial.product_id = products.id', 'left')
+            ->where('erp_purchase_items.expiry !=', NULL)
+            ->where('products.id',$id)
+            ->where('erp_purchase_items.expiry !=', '0000-00-00')
+            ->where('DATE_ADD(erp_purchase_items.expiry , INTERVAL -(SELECT erp_settings.alert_day FROM erp_settings) DAY) <= CURDATE() AND CURDATE()< erp_purchase_items.expiry')
+            ->group_by('erp_purchase_items.product_code')
+            ->group_by('erp_purchase_items.expiry')
+            ->having('SUM(erp_purchase_items.quantity_balance) > 0');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
 
     function getRegisterByID($id){
         $this->db
