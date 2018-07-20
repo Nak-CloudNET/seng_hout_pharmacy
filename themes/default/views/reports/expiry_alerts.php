@@ -13,18 +13,24 @@
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
-            "aoColumns": [{"bSortable": false, "mRender": img_hl}, null, null, {"mRender": formatQuantity}, null,{"mRender": fsd},null], 
+            "aoColumns":
+                [{"bSortable": false, "mRender": checkbox},
+                {"bSortable": false, "mRender": img_hl},
+                null, null, {"mRender": formatQuantity}, null,{"mRender": fsd},null],
         }).fnSetFilteringDelay().dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('product_code');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('product_name');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('quantity');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('warehouse');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
-			{column_number: 6, filter_default_label: "[<?=lang('serial_number');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('image');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('product_code');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('product_name');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('quantity');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('warehouse');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
+			{column_number: 7, filter_default_label: "[<?=lang('serial_number');?>]", filter_type: "text", data: []},
         ], "footer");
     });
 </script>
-
+<?php
+echo form_open('reports/expiry_actions', 'id="action-form"');
+?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i
@@ -55,6 +61,25 @@
                 <?php } ?>
             </ul>
         </div>
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown">
+                    <a href="#" id="pdf" class="tip" data-action="export_pdf" title="<?= lang('download_pdf') ?>">
+                        <i class="icon fa fa-file-pdf-o"></i>
+                    </a>
+                </li>
+                <li class="dropdown">
+                    <a href="#" id="excel" class="tip" data-action="export_excel" title="<?= lang('download_xls') ?>">
+                        <i class="icon fa fa-file-excel-o"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div style="display: none;">
+        <input type="hidden" name="form_action" value="" id="form_action"/>
+        <input type="hidden" name="wareid" value="<?php echo $warehouse_id ?>" id="form_action"/>
+        <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
     </div>
     <div class="box-content">
         <div class="row">
@@ -67,6 +92,9 @@
                            class="table table-bordered table-condensed table-hover table-striped dfTable reports-table">
                         <thead>
                         <tr class="active">
+                            <th style="min-width:30px; width: 30px; text-align: center;">
+                                <input class="checkbox checkth" type="checkbox" name="check"/>
+                            </th>
                             <th style="min-width:40px; width: 40px; text-align: center;"><?php echo $this->lang->line("image"); ?></th>
                             <th><?php echo $this->lang->line("product_code"); ?></th>
                             <th><?php echo $this->lang->line("product_name"); ?></th>
@@ -78,11 +106,14 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="5" class="dataTables_empty"><?= lang('loading_data_from_server'); ?></td>
+                            <td colspan="8" class="dataTables_empty"><?= lang('loading_data_from_server'); ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
                         <tr class="active">
+                            <th style="min-width:30px; width: 30px; text-align: center;">
+                                <input class="checkbox checkth" type="checkbox" name="check"/>
+                            </th>
                             <th style="min-width:40px; width: 40px; text-align: center;"><?php echo $this->lang->line("image"); ?></th>
                             <th></th>
 							<th></th>
@@ -98,3 +129,18 @@
         </div>
     </div>
 </div>
+<script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#image').click(function (event) {
+            event.preventDefault();
+            html2canvas($('.box'), {
+                onrendered: function (canvas) {
+                    var img = canvas.toDataURL()
+                    window.open(img);
+                }
+            });
+            return false;
+        });
+    });
+</script>

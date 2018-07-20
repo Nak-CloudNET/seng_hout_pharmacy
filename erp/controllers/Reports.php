@@ -226,44 +226,223 @@ class Reports extends MY_Controller
         $this->page_construct('reports/expiry_alerts', $meta, $this->data);
     }
 
-    function getExpiryAlerts($warehouse_id = NULL)
+    function getExpiryAlerts($warehouse_id = NULL,$pdf = NULL, $xls = NULL)
     {
         //$this->erp->checkPermissions('expiry_alerts', TRUE);
-        $date = date('Y-m-d', strtotime('+3 months'));
-        if (!$this->Owner && !$warehouse_id) {
-            $user = $this->site->getUser();
-            $warehouse_id = $user->warehouse_id;
-        }
+        $wid = $this->reports_model->getWareByUserID();
+        if ($pdf || $xls) {
 
-        $this->load->library('datatables');
-        if ($warehouse_id) {
-            $this->datatables                				
-				->select("products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
-                ->from('purchase_items')
-                ->join('products', 'products.id = purchase_items.product_id', 'left')				
-                ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
-				->join('serial', 'serial.product_id = products.id', 'left')
-				->where('warehouse_id', $warehouse_id)
-				->where('erp_purchase_items.expiry !=', NULL)->where('erp_purchase_items.expiry !=', '0000-00-00')
-				->where('DATE_ADD(erp_purchase_items.expiry , INTERVAL -(SELECT erp_settings.alert_day FROM erp_settings) DAY) <= CURDATE() AND CURDATE()< erp_purchase_items.expiry')
-				->group_by('erp_purchase_items.product_code')
-				->group_by('erp_purchase_items.expiry')
-				->having('SUM(erp_purchase_items.quantity_balance) > 0');
+            if ($warehouse_id) {
+                $this->db
+                    ->select('products.image as image, products.code, products.name, warehouses_products.quantity, alert_quantity')
+                    ->from('products')->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+                    ->where('alert_quantity > warehouses_products.quantity')
+                    ->where('warehouses_products.warehouse_id', $warehouse_id)
+                    ->where('track_quantity', 1)
+                    ->order_by('products.code desc');
+            } else {
+                $this->db
+                    ->select('image, code, name, warehouses_products.quantity, alert_quantity')
+                    ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+                    ->from('products')
+                    ->where('alert_quantity > warehouses_products.quantity')
+                    ->where('track_quantity', 1);
+                if($wid){
+                    $this->db->where("warehouses_products.warehouse_id IN ($wid)");
+                }
+                $this->db->order_by('code desc');
+            }
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = NULL;
+            }
+
+            if (!empty($data)) {
+
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('product_quantity_alerts'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('alert_quantity'));
+
+                $row = 2;
+                foreach ($data as $data_row) {
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code." ");
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->quantity);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->alert_quantity);
+                    $row++;
+                }
+
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(25);
+
+                $filename = 'product_quantity_alerts';
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                if ($pdf) {
+                    $styleArray = array(
+                        'borders' => array(
+                            'allborders' => array(
+                                'style' => PHPExcel_Style_Border::BORDER_THIN
+                            )
+                        )
+                    );
+                    $this->excel->getDefaultStyle()->applyFromArray($styleArray);
+                    $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
+                    require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
+                    $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+                    $rendererLibrary = 'MPDF';
+                    $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
+                    if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
+                        die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
+                            PHP_EOL . ' as appropriate for your directory structure');
+                    }
+
+                    header('Content-Type: application/pdf');
+                    header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
+                    header('Cache-Control: max-age=0');
+
+                    $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
+                    $objWriter->save('php://output');
+                    exit();
+                }
+                if ($xls) {
+                    ob_clean();
+                    header('Content-Type: application/vnd.ms-excel');
+                    header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+                    header('Cache-Control: max-age=0');
+                    ob_clean();
+                    $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+                    $objWriter->save('php://output');
+                    exit();
+                }
+
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER["HTTP_REFERER"]);
+
         } else {
-            $this->datatables
-                ->select("products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
-                ->from('purchase_items')
-                ->join('products', 'products.id = purchase_items.product_id', 'left')				
-                ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
-				->join('serial', 'serial.product_id = products.id', 'left')
-				->where('erp_purchase_items.expiry !=', NULL)->where('erp_purchase_items.expiry !=', '0000-00-00')
-				->where('DATE_ADD(erp_purchase_items.expiry , INTERVAL -(SELECT erp_settings.alert_day FROM erp_settings) DAY) <= CURDATE() AND CURDATE()< erp_purchase_items.expiry')
-				->group_by('erp_purchase_items.product_code')
-				->group_by('erp_purchase_items.expiry')
-				->having('SUM(erp_purchase_items.quantity_balance) > 0');
+            $this->load->library('datatables');
+            if ($warehouse_id) {
+                $this->datatables
+                    ->select("productss.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
+                    ->from('purchase_items')
+                    ->join('products', 'products.id = purchase_items.product_id', 'left')
+                    ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
+                    ->join('serial', 'serial.product_id = products.id', 'left')
+                    ->where('warehouse_id', $warehouse_id)
+                    ->where('erp_purchase_items.expiry !=', NULL)->where('erp_purchase_items.expiry !=', '0000-00-00')
+                    ->where('DATE_ADD(erp_purchase_items.expiry , INTERVAL -(SELECT erp_settings.alert_day FROM erp_settings) DAY) <= CURDATE() AND CURDATE()< erp_purchase_items.expiry')
+                    ->group_by('erp_purchase_items.product_code')
+                    ->group_by('erp_purchase_items.expiry')
+                    ->having('SUM(erp_purchase_items.quantity_balance) > 0');
+            } else {
+                $this->datatables
+                    ->select("products.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
+                    ->from('purchase_items')
+                    ->join('products', 'products.id = purchase_items.product_id', 'left')
+                    ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
+                    ->join('serial', 'serial.product_id = products.id', 'left')
+                    ->where('erp_purchase_items.expiry !=', NULL)->where('erp_purchase_items.expiry !=', '0000-00-00')
+                    ->where('DATE_ADD(erp_purchase_items.expiry , INTERVAL -(SELECT erp_settings.alert_day FROM erp_settings) DAY) <= CURDATE() AND CURDATE()< erp_purchase_items.expiry')
+                    ->group_by('erp_purchase_items.product_code')
+                    ->group_by('erp_purchase_items.expiry')
+                    ->having('SUM(erp_purchase_items.quantity_balance) > 0');
+            }
+            echo $this->datatables->generate();
         }
-        echo $this->datatables->generate();
     }
+    function expiry_actions()
+    {
+        $this->form_validation->set_rules('form_action', lang("form_action"), 'required');
+
+        if ($this->form_validation->run() == true) {
+
+            if (!empty($_POST['val'])) {
+                if ($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf') {
+
+                    $this->load->library('excel');
+                    $this->excel->setActiveSheetIndex(0);
+                    $this->excel->getActiveSheet()->setTitle(lang('quantity_alerts_report'));
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('quantity'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('expiry_date'));
+                    $this->excel->getActiveSheet()->getStyle('A1:D1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+                    $row = 2;
+                    foreach ($_POST['val'] as $id) {
+                        $sc = $this->reports_model->getExpiryByID($id);
+
+                        //$this->erp->print_arrays($sc);
+                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->product_code);
+                        $this->excel->getActiveSheet()->getStyle('A'. $row)->getNumberFormat()->setFormatCode("0");
+                        $this->excel->getActiveSheet()->getStyle('A'. $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->product_name);
+                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $this->erp->formatQuantity($sc->quantity_balance));
+                        $this->excel->getActiveSheet()->getStyle('C' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->expiry);
+                        $this->excel->getActiveSheet()->getStyle('D' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+                        $row++;
+                    }
+
+                    $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(40);
+                    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+                    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(30);
+                    $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
+                    $filename = 'expiry_alerts_report' . date('Y_m_d_H_i_s');
+                    if ($this->input->post('form_action') == 'export_pdf') {
+                        $styleArray = array('borders' => array('allborders' => array('style' => PHPExcel_Style_Border::BORDER_THIN)));
+                        $this->excel->getDefaultStyle()->applyFromArray($styleArray);
+                        $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
+                        require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
+                        $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+                        $rendererLibrary = 'MPDF';
+                        $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
+                        if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
+                            die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
+                                PHP_EOL . ' as appropriate for your directory structure');
+                        }
+
+                        header('Content-Type: application/pdf');
+                        header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
+                        header('Cache-Control: max-age=0');
+
+                        $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
+                        return $objWriter->save('php://output');
+                    }
+                    if ($this->input->post('form_action') == 'export_excel') {
+                        header('Content-Type: application/vnd.ms-excel');
+                        header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+                        header('Cache-Control: max-age=0');
+
+                        $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+                        return $objWriter->save('php://output');
+                    }
+
+                    redirect($_SERVER["HTTP_REFERER"]);
+                }
+            } else {
+                $this->session->set_flashdata('error', lang("no_tax_rate_selected"));
+                redirect($_SERVER["HTTP_REFERER"]);
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER["HTTP_REFERER"]);
+        }
+    }
+
 
     function quantity_alerts($warehouse_id = NULL)
     {
@@ -4663,6 +4842,7 @@ class Reports extends MY_Controller
         $this->data['warehouses'] = $this->site->getAllWarehouses();
 		$this->data['customer_groups'] = $this->companies_model->getAllCustomerGroups();
 		$this->data['customers'] = $this->site->getCustomers();
+        $this->data['areas'] = $this->site->getArea();
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('sales_report')));
         $meta = array('page_title' => lang('sales_report'), 'bc' => $bc);
         $this->page_construct('reports/sales', $meta, $this->data);
@@ -4731,7 +4911,11 @@ class Reports extends MY_Controller
         } else {
             $serial = NULL;
         }
-		
+        if ($this->input->get('area')) {
+            $area = $this->input->get('area');
+        } else {
+            $area = NULL;
+        }
 		if ($this->input->get('types')) {
             $types = $this->input->get('types');
         } else {
@@ -4907,7 +5091,8 @@ class Reports extends MY_Controller
 				erp_sales.date, 
 				reference_no, 
 				biller, 
-				customer, 				
+				customer,
+				erp_group_areas.areas_group, 				
 				grand_total,
 				paid, 
 				(erp_sales.grand_total - erp_sales.paid) as balance,
@@ -4915,7 +5100,8 @@ class Reports extends MY_Controller
 				->from('sales')
 				->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
 				->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
-				->join('companies', 'companies.id=sales.customer_id','left')                
+				->join('companies', 'companies.id=sales.customer_id','left')
+                ->join('group_areas', 'group_areas.areas_g_code=sales.group_areas_id','left')
 				->join('customer_groups','customer_groups.id=companies.customer_group_id','left')
                 ->where('erp_sales.sale_status <> "returned"')
 				->group_by('sales.id');
@@ -4942,6 +5128,9 @@ class Reports extends MY_Controller
             }
             if ($customer) {
                 $this->datatables->where('sales.customer_id', $customer);
+            }
+            if ($area) {
+                $this->datatables->where('sales.group_areas_id', $area);
             }
             if($customer_group){
 			   $this->datatables->where('companies.customer_group_id', $customer_group);                
