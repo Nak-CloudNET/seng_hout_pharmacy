@@ -21790,8 +21790,8 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('D1', lang('customer'));
                 $this->excel->getActiveSheet()->SetCellValue('E1', lang('project'));
                 $this->excel->getActiveSheet()->SetCellValue('F1', lang('quantity'));
-                $this->excel->getActiveSheet()->SetCellValue('G1', lang('cost'));
-                $this->excel->getActiveSheet()->SetCellValue('H1', lang('price'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('price_amount'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('cost_amount'));
                 $this->excel->getActiveSheet()->SetCellValue('I1', lang('profit'));
 				$this->excel->getActiveSheet()->getStyle('A1'. $row.':L1'.$row)->getFont()->setBold(true);
 				$this->excel->getActiveSheet()->getStyle('A1' .$row.':L1'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
@@ -21858,9 +21858,9 @@ class Reports extends MY_Controller
 								$this->excel->getActiveSheet()->SetCellValue('C' .$row, $getpro->reference_no);
 								$this->excel->getActiveSheet()->SetCellValue('D' .$row, $getpro->customer);
 								$this->excel->getActiveSheet()->SetCellValue('E' .$row, $getpro->biller_name);
-								$this->excel->getActiveSheet()->SetCellValue('F' .$row, $p_qty);
-								$this->excel->getActiveSheet()->SetCellValue('G' .$row, $unit_cost);
-								$this->excel->getActiveSheet()->SetCellValue('H' .$row, $unit_price);
+								$this->excel->getActiveSheet()->SetCellValue('F' .$row, $this->erp->formatDecimal($p_qty) .' '. strip_tags($unit_name));
+								$this->excel->getActiveSheet()->SetCellValue('G' .$row, $unit_price);
+								$this->excel->getActiveSheet()->SetCellValue('H' .$row, $unit_cost);
 								$this->excel->getActiveSheet()->SetCellValue('I' .$row, $profit);
 								
 								$row++;                   
@@ -21871,8 +21871,8 @@ class Reports extends MY_Controller
                             $this->excel->getActiveSheet()->getStyle('A' .$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                             $this->excel->getActiveSheet()->getStyle('A'. $row.':E'. $row)->getFont()->setBold(true);
                             $this->excel->getActiveSheet()->SetCellValue('F' .$row, $total_quantity);
-                            $this->excel->getActiveSheet()->SetCellValue('G' .$row, $total_cost);
-                            $this->excel->getActiveSheet()->SetCellValue('H' .$row, $total_price);
+                            $this->excel->getActiveSheet()->SetCellValue('G' .$row, $total_price);
+                            $this->excel->getActiveSheet()->SetCellValue('H' .$row, $total_cost);
                             $this->excel->getActiveSheet()->SetCellValue('I' .$row, $total_profit);
 							$this->excel->getActiveSheet()->getStyle('F'.$row. ':I'.$row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
 							
@@ -21905,8 +21905,8 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->getStyle('A' .$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                     $this->excel->getActiveSheet()->getStyle('A'. $row.':E'. $row)->getFont()->setBold(true);
                     $this->excel->getActiveSheet()->SetCellValue('F' .$row, $total_quantity_by_warehouse);
-                    $this->excel->getActiveSheet()->SetCellValue('G' .$row, $total_cost_by_warehouse);
-                    $this->excel->getActiveSheet()->SetCellValue('H' .$row, $total_price_by_warehouse);
+                    $this->excel->getActiveSheet()->SetCellValue('G' .$row, $total_price_by_warehouse);
+                    $this->excel->getActiveSheet()->SetCellValue('H' .$row, $total_cost_by_warehouse);
                     $this->excel->getActiveSheet()->SetCellValue('I' .$row, $total_profit_by_warehouse);
                     
 					//$this->excel->getActiveSheet()->getStyle('I'.$row. ':K'.$row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
@@ -21923,8 +21923,8 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->getStyle('A' .$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                 $this->excel->getActiveSheet()->getStyle('A'. $row.':K'. $row)->getFont()->setBold(true);
                 $this->excel->getActiveSheet()->SetCellValue('F' .$row, $this->erp->formatDecimal($gqty));
-                $this->excel->getActiveSheet()->SetCellValue('G' .$row, $this->erp->formatMoney($gprice));
-                $this->excel->getActiveSheet()->SetCellValue('H' .$row, $this->erp->formatMoney($gcost));
+                $this->excel->getActiveSheet()->SetCellValue('G' .$row, $this->erp->formatMoney($gcost));
+                $this->excel->getActiveSheet()->SetCellValue('H' .$row, $this->erp->formatMoney($gprice));
                 $this->excel->getActiveSheet()->SetCellValue('I' .$row, $this->erp->formatMoney($gprofit));
                 //$this->excel->getActiveSheet()->getStyle('I'.$row. ':I'.$row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
      
@@ -24112,7 +24112,6 @@ class Reports extends MY_Controller
 	
 	function product_profit()
     {
-		
         $wid = $this->reports_model->getWareByUserID();
 		$datt =$this->reports_model->getLastDate("sales","date");
         
@@ -24179,10 +24178,7 @@ class Reports extends MY_Controller
         $this->page_construct('reports/product_profit', $meta, $this->data);
 
     }
-	
-	
-	
-	
+
 	function transferReport(){
         if ($this->input->post('form_action') == 'export_excel' || $this->input->post('form_action') == 'export_pdf') {
             if (!empty($_POST['val'])) {
@@ -25806,6 +25802,16 @@ class Reports extends MY_Controller
                 //Set style bold for all column in hearder excel
                 $this->excel->getActiveSheet()->getStyle('A1'. $row.':'.$alphabet1[$b].$row)->getFont()->setBold(true);
                 $this->excel->getActiveSheet()->getStyle('A2'. $row.':'.$alphabet3[$b].$row)->getFont()->setBold(true);
+                if ($pdf) {
+                    $styleArray = array(
+                        'borders' => array(
+                            'allborders' => array(
+                                'style' => PHPExcel_Style_Border::BORDER_THIN
+                            )
+                        )
+                    );
+                    $this->excel->getDefaultStyle()->applyFromArray($styleArray);
+                }
 
             }
 
@@ -25865,7 +25871,7 @@ class Reports extends MY_Controller
                             //Show product name
                             $this->excel->getActiveSheet()->setCellValue('A'.$row, $rp->name?"         ".$rp->name:"         ".$rp->product_id);
                             //Show begin Total
-                            $this->excel->getActiveSheet()->setCellValue('B'.$row, $btotal_qty?$this->erp->formatDecimal($btotal_qty):''." ");
+                            $this->excel->getActiveSheet()->setCellValue('B'.$row, $btotal_qty?$this->erp->formatDecimal($btotal_qty).' '.strip_tags($this->erp->convert_unit_2_string($rp->product_id, $btotal_qty)):''." ");
                             $this->excel->getActiveSheet()->getStyle('B'. $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                             //End begin Total
 
@@ -25883,7 +25889,8 @@ class Reports extends MY_Controller
                                         
                                         if($allqty->bqty){
                                             //show the all quantity of each transaction In
-                                            $this->excel->getActiveSheet()->setCellValue($alphabet0[$i].$row,$this->erp->formatDecimal($allqty->bqty));                                                      
+                                            $this->excel->getActiveSheet()->setCellValue($alphabet0[$i].$row, $this->erp->formatDecimal($allqty->bqty) .' '. strip_tags($this->erp->convert_unit_2_string($rp->product_id, $allqty->bqty)));
+                                            $this->excel->getActiveSheet()->getStyle($alphabet0[$i].$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                                         }
                                             
                                         $total_in +=$allqty->bqty;
@@ -25910,7 +25917,8 @@ class Reports extends MY_Controller
                                         if($allqty2->bqty){
 
                                             //show the all quantity of each transaction Out
-                                            $this->excel->getActiveSheet()->setCellValue($alphabet0[$j].$row,$this->erp->formatDecimal($allqty2->bqty));
+                                            $this->excel->getActiveSheet()->setCellValue($alphabet0[$j].$row,$this->erp->formatDecimal($allqty2->bqty) .' '. strip_tags($this->erp->convert_unit_2_string($rp->product_id, $allqty2->bqty)));
+                                            $this->excel->getActiveSheet()->getStyle($alphabet0[$j].$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                                         }
 
                                         $total_out+=$allqty2->bqty;
@@ -25927,7 +25935,9 @@ class Reports extends MY_Controller
                             $this->excel->getActiveSheet()->getStyle($alphabet[$totalout].$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                             $this->excel->getActiveSheet()->getStyle($alphabet[$totalout].$row)->getFont()->setBold(true);
                             //Show Balance
-                            $this->excel->getActiveSheet()->setCellValue($alphabet[$b].$row,$this->erp->formatDecimal(($total_in-$total_out)?($total_in-$total_out):''));
+                            $am = ($total_in-$total_out);
+                            $this->excel->getActiveSheet()->setCellValue($alphabet[$b].$row,$this->erp->formatDecimal($am) .' '. strip_tags($this->erp->convert_unit_2_string($rp->product_id,$am)));
+                            $this->excel->getActiveSheet()->getStyle($alphabet[$b].$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                             $this->excel->getActiveSheet()->getStyle($alphabet[$b].$row)->getFont()->setBold(true);
                             //End balance
                             
@@ -26036,11 +26046,7 @@ class Reports extends MY_Controller
             $filename = lang('inventory_inout '). date('Y_m_d_H_i_s');
             $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
             if ($pdf) {
-                $styleArray = array(
-                    'borders' => array('allborders' => array('style' => PHPExcel_Style_Border::BORDER_THIN))
-                );
-                $this->excel->getDefaultStyle()->applyFromArray($styleArray);
-                $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
+
                 require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDF" . DIRECTORY_SEPARATOR . "mpdf.php");
                 $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
                 $rendererLibrary = 'MPDF';
@@ -26049,6 +26055,18 @@ class Reports extends MY_Controller
                     die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
                         PHP_EOL . ' as appropriate for your directory structure');
                 }
+
+                $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
+                $this->excel->getActiveSheet()->getPageSetup()->setPaperSize(PHPExcel_Worksheet_PageSetup::PAPERSIZE_A4);
+                $this->excel->getActiveSheet()->getPageSetup()->setFitToPage(true);
+                $this->excel->getActiveSheet()->getPageSetup()->setFitToWidth(1);
+                $this->excel->getActiveSheet()->getPageSetup()->setFitToHeight(1);
+
+                //Margins:
+                $this->excel->getActiveSheet()->getPageMargins()->setTop(0.25);
+                $this->excel->getActiveSheet()->getPageMargins()->setRight(0.25);
+                $this->excel->getActiveSheet()->getPageMargins()->setLeft(0.25);
+                $this->excel->getActiveSheet()->getPageMargins()->setBottom(0.25);
 
                 header('Content-Type: application/pdf');
                 header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
