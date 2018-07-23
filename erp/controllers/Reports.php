@@ -378,7 +378,8 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('C1', lang('Quantity'));
                     $this->excel->getActiveSheet()->SetCellValue('D1', lang('Warehouse'));
                     $this->excel->getActiveSheet()->SetCellValue('E1', lang('Expiry_Date'));
-                    $this->excel->getActiveSheet()->getStyle('A1:E1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('Serial Number'));
+                    $this->excel->getActiveSheet()->getStyle('A1:F1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
@@ -393,9 +394,8 @@ class Reports extends MY_Controller
                         $this->excel->getActiveSheet()->getStyle('C' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
                         $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->name);
                         $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->erp->hrsd($sc->expiry));
-
                         $this->excel->getActiveSheet()->getStyle('E' . $row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $sc->serial_number);
                         $row++;
                     }
 
@@ -404,6 +404,7 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
                     $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(30);
                     $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(30);
+                    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
                     $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
                     $filename = 'expiry_alerts_report' . date('Y_m_d_H_i_s');
                     if ($this->input->post('form_action') == 'export_pdf') {
