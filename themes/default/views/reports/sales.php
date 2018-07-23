@@ -95,7 +95,7 @@
             {column_number: 4, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
             {column_number: 5, filter_default_label: "[<?=lang('areas_group');?>]", filter_type: "text", data: []},
 
-            {column_number: 8, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
         ], "footer");
     });
 </script>
@@ -375,7 +375,8 @@
                             <th></th>
                             <th></th>
                             <th></th>
-                            <th></th>  
+                            <th></th>
+                            <th></th>
                             <th><?= lang("grand_total"); ?></th>
                             <th><?= lang("paid"); ?></th>
                             <th><?= lang("balance"); ?></th>
