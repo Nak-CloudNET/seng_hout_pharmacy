@@ -343,7 +343,7 @@ $(document).ready(function(){
 											}
 											}
 											//$qty_unit3 = $this->reports_model->getQtyUnitALL($rp->product_id,$rw->id,$from_date2,$to_date2);
-											$am = ($total_in-$total_out);
+											$am = $btotal_qty + $total_in - $total_out;
 											?>
 											<td style='text-align:right;'><b><?=$this->erp->formatDecimal($total_out?$total_out:'')?></b> </td>
 											<td style='text-align:right;'><span><b><?=$this->erp->formatDecimal($am?$am:'')?></b></span><br>
