@@ -21848,10 +21848,14 @@ class Reports extends MY_Controller
 								$unit_name = $this->erp->convert_unit_2_string($getpro->product_id,$p_qty);
 								$unit_cost = $this->erp->formatMoney($getpro->unit_cost);
 								$unit_price = $this->erp->formatMoney($getpro->unit_price);
-								$profit = $unit_price - $unit_cost;
+
+                                $unit_price_amount = $this->erp->formatMoney($getpro->option_id ? ($getpro->unit_price * $getpro->quantity) : ($getpro->unit_price * $p_qty));
+                                $unit_cost_amount = $this->erp->formatMoney($getpro->unit_cost * $p_qty);
+
+								$profit = $unit_price_amount - $unit_cost_amount;
 								$total_quantity+=$getpro->quantity;
-								$total_cost+=$getpro->unit_cost;
-								$total_price+=$getpro->unit_price;
+								$total_cost+=$unit_cost_amount;
+								$total_price+=$unit_price_amount;
 								$total_profit+=$profit;
 								
 								$this->excel->getActiveSheet()->SetCellValue('B' .$row, $this->erp->hrsd($getpro->date));
@@ -21859,8 +21863,8 @@ class Reports extends MY_Controller
 								$this->excel->getActiveSheet()->SetCellValue('D' .$row, $getpro->customer);
 								$this->excel->getActiveSheet()->SetCellValue('E' .$row, $getpro->biller_name);
 								$this->excel->getActiveSheet()->SetCellValue('F' .$row, $this->erp->formatDecimal($p_qty) .' '. strip_tags($unit_name));
-								$this->excel->getActiveSheet()->SetCellValue('G' .$row, $unit_price);
-								$this->excel->getActiveSheet()->SetCellValue('H' .$row, $unit_cost);
+								$this->excel->getActiveSheet()->SetCellValue('G' .$row, $unit_price_amount);
+								$this->excel->getActiveSheet()->SetCellValue('H' .$row, $unit_cost_amount);
 								$this->excel->getActiveSheet()->SetCellValue('I' .$row, $profit);
 								
 								$row++;                   
