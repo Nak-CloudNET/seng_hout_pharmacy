@@ -1087,7 +1087,7 @@ if ($Owner || $Admin ){ ?>
                                         </div>
                                     </div>
 
-                                    <div class="col-sm-4">
+                                    <!-- <div class="col-sm-4">
                                         <div class="form-group">
                                         
                                             <label class="control-label" for="supplier"><?= lang("supplier"); ?></label>
@@ -1100,7 +1100,7 @@ if ($Owner || $Admin ){ ?>
                                            
                                             ?>
                                          </div>
-                                    </div>
+                                    </div> -->
 
                                     <div class="col-sm-4">
                                         <div class="form-group">
