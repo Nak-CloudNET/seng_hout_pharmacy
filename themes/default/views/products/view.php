@@ -1087,9 +1087,9 @@ if ($Owner || $Admin ){ ?>
                                         </div>
                                     </div>
 
-                                    <!-- <div class="col-sm-4">
+                                    <!--<div class="col-sm-4">
                                         <div class="form-group">
-                                        
+
                                             <label class="control-label" for="supplier"><?= lang("supplier"); ?></label>
                                             <?php
                                                 $sp[""] = "";
@@ -1097,10 +1097,10 @@ if ($Owner || $Admin ){ ?>
                                                     $sp[$supplier->id] = $supplier->name != '-' ? $supplier->name : $supplier->company;
                                                 }
                                               echo form_dropdown('supplier', $sp, (isset($_POST['supplier']) ? $_POST['supplier'] : ""), 'class="form-control" id="supplier" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("supplier") . '"');
-                                           
+
                                             ?>
                                          </div>
-                                    </div> -->
+                                    </div>-->
 
                                     <div class="col-sm-4">
                                         <div class="form-group">

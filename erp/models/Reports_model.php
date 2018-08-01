@@ -2876,12 +2876,15 @@ ORDER BY
         //         ->from('erp_products')
         //         ->where('products.id', $id);
    		// $this->erp->print_arrays($wh);
-   		$this->db->select("erp_companies.id as idd, company, name, phone, email, count(" . $this->db->dbprefix('sales') . ".id) as total, COALESCE(sum(grand_total), 0) as total_amount, COALESCE(sum(paid), 0) as paid, ( COALESCE(sum(grand_total), 0) - COALESCE(sum(paid), 0)) as balance", FALSE)
+        $total_paid = "SUM(COALESCE( (SELECT SUM(IF((erp_payments.paid_by != 'deposit' AND ISNULL(erp_payments.return_id)), erp_payments.amount, IF(NOT ISNULL(erp_payments.return_id), ((-1)*erp_payments.amount), 0))) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id),0)) as paid";
+
+        $total_balance = "SUM((COALESCE(erp_sales.grand_total,0)-COALESCE((SELECT SUM(erp_return_sales.grand_total) FROM erp_return_sales WHERE erp_return_sales.sale_id = erp_sales.id), 0)-COALESCE( (SELECT SUM(IF((erp_payments.paid_by != 'deposit' AND ISNULL(erp_payments.return_id)), erp_payments.amount, IF(NOT ISNULL(erp_payments.return_id), ((-1)*erp_payments.amount), 0))) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id),0)- COALESCE((SELECT SUM(IF(erp_payments.paid_by = 'deposit', erp_payments.amount, 0)) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id  ),0))-COALESCE ((SELECT SUM(erp_payments.discount)FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id),0)) as balance";
+
+   		$this->db->select("erp_companies.id as idd, company, name, phone, email,group_areas.areas_group, count(" . $this->db->dbprefix('sales') . ".id) as total, COALESCE(sum(grand_total), 0) as total_amount,".$total_paid.",".$total_balance, FALSE)
                 ->from("companies")
                 ->join('sales', 'sales.customer_id = companies.id', 'left')
-                ->where(array('companies.group_name' => 'customer', 'sales.payment_status !=' => 'paid'))
-                ->where(array('sales.sale_status !=' => 'ordered'))
-                ->where(array('sales.sale_status !=' => 'returned'))
+                ->join('group_areas', 'group_areas.areas_g_code=sales.group_areas_id','left')
+                ->where(array('companies.group_name' => 'customer'))
 				->where('erp_companies.id', $id)
 				->group_by('companies.id');
 				// if($wh){
@@ -2987,14 +2990,15 @@ ORDER BY
                             GROUP_CONCAT(CONCAT((ROUND(".$this->db->dbprefix('sale_items') . ".quantity)), '(', " . $this->db->dbprefix('sale_items') . ".unit_price , ')') SEPARATOR '\n') as iqty, 
                             GROUP_CONCAT(" . $this->db->dbprefix('products') . ".cost SEPARATOR '\n') as icost, 
                             grand_total, paid, 
-                            (grand_total-paid) as balance, 
+                            (grand_total-paid) as balance,group_areas.areas_group, 
                             payment_status, 
                             SUM(".$this->db->dbprefix('sale_items') . ".quantity) as total_qty", FALSE)
                 ->from('sales')
                 ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
                 ->join('products', 'products.id = sale_items.product_id', 'left')
                 ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
-                ->join('companies', 'companies.id=sales.customer_id','left')                
+                ->join('companies', 'companies.id=sales.customer_id','left')
+                ->join('group_areas', 'group_areas.areas_g_code=sales.group_areas_id','left')
                 ->join('customer_groups','customer_groups.id=companies.customer_group_id','left')
                 ->where('erp_sales.id', $id)
                 ->group_by('sales.id');

@@ -18810,13 +18810,14 @@ class Reports extends MY_Controller
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customers_report'));
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('email_address'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('total_sales'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('total_amount'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('paid'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('balance'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('group_area'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('phone'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('email_address'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('total_sales'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('total_amount'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('paid'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('balance'));
                     
                     $row = 2;
                     $sum_sale = $sum_amount = $sum_paid = $sum_balance = 0;
@@ -18827,21 +18828,24 @@ class Reports extends MY_Controller
                         $sum_amount += $sc->total_amount;
                         $sum_paid += $sc->paid;
                         $sum_balance += $sc->balance;
-                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->company);
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->name);
-                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->phone." ");
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->email);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->erp->formatDecimal($sc->total));
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatDecimal($sc->total_amount));
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatDecimal($sc->paid));
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatDecimal($sc->balance));
+                        if($sc->total!=0 || $sc->total_amount!=0 || $sc->paid!=0 || $sc->balance!=0) {
+                            $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->company);
+                            $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->areas_group);
+                            $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->name);
+                            $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->phone . " ");
+                            $this->excel->getActiveSheet()->SetCellValue('E' . $row, $sc->email);
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatDecimal($sc->total));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatDecimal($sc->total_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatDecimal($sc->paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatDecimal($sc->balance));
 
-                        $new_row = $row+1;
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $new_row, $this->erp->formatDecimal($sum_sale));
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatDecimal($sum_amount));
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatDecimal($sum_paid));
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatDecimal($sum_balance));
-                        $row++;
+                            $new_row = $row + 1;
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatDecimal($sum_sale));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatDecimal($sum_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatDecimal($sum_paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatDecimal($sum_balance));
+                            $row++;
+                        }
                     }
                 }else{
                     // $this->erp->print_arrays($wh);
@@ -18849,38 +18853,42 @@ class Reports extends MY_Controller
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customers_report'));
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('email_address'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('total_sales'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('total_amount'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('paid'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('balance'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('group_area'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('phone'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('email_address'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('total_sales'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('total_amount'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('paid'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('balance'));
                     
                     $row = 2;
                     $sum_sale = $sum_amount = $sum_paid = $sum_balance = 0;
+
                     foreach ($_POST['val'] as $id) {
                         $sc = $this->reports_model->getCustomerByID($id,$wh);
-                        //$this->erp->print_arrays($sc);
                         $sum_sale += $sc->total;
                         $sum_amount += $sc->total_amount;
                         $sum_paid += $sc->paid;
                         $sum_balance += $sc->balance;
-                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->company);
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->name);
-                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->phone." ");
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->email);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->erp->formatDecimal($sc->total));
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatDecimal($sc->total_amount));
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatDecimal($sc->paid));
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatDecimal($sc->balance));
 
-                        $new_row = $row+1;
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $new_row, $this->erp->formatDecimal($sum_sale));
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatDecimal($sum_amount));
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatDecimal($sum_paid));
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatDecimal($sum_balance));
-                        $row++;
+                            $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->company);
+                            $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->areas_group);
+                            $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->name);
+                            $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->phone." ");
+                            $this->excel->getActiveSheet()->SetCellValue('E' . $row, $sc->email);
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatDecimal($sc->total));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatDecimal($sc->total_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatDecimal($sc->paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatDecimal($sc->balance));
+
+                            $new_row = $row+1;
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatDecimal($sum_sale));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatDecimal($sum_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatDecimal($sum_paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatDecimal($sum_balance));
+                            $row++;
+
                     }
                 }
 
@@ -18892,6 +18900,7 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(17);
                     $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(12);
                     $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(12);
+                    $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(12);
                     $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
                     $filename = 'customers_balance_' . date('Y_m_d_H_i_s');
                     if ($this->input->post('form_action') == 'export_pdf') {
@@ -18916,12 +18925,12 @@ class Reports extends MY_Controller
                             )
                         );
                         
-                        $this->excel->getActiveSheet()->getStyle('A1:H1')->applyFromArray($styleArray);
-                        $this->excel->getActiveSheet()->getStyle('A1:H1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-                        $this->excel->getActiveSheet()->getStyle('E' . $new_row.'')->getFont()->setBold(true);
+                        $this->excel->getActiveSheet()->getStyle('A1:I1')->applyFromArray($styleArray);
+                        $this->excel->getActiveSheet()->getStyle('A1:I1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
                         $this->excel->getActiveSheet()->getStyle('F' . $new_row.'')->getFont()->setBold(true);
                         $this->excel->getActiveSheet()->getStyle('G' . $new_row.'')->getFont()->setBold(true);
                         $this->excel->getActiveSheet()->getStyle('H' . $new_row.'')->getFont()->setBold(true);
+                        $this->excel->getActiveSheet()->getStyle('I' . $new_row.'')->getFont()->setBold(true);
                         $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
                         return $objWriter->save('php://output');
                     }
@@ -18935,16 +18944,16 @@ class Reports extends MY_Controller
                             )
                         );
                         
-                        $this->excel->getActiveSheet()->getStyle('A1:H1')->applyFromArray($styleArray);
-                        $this->excel->getActiveSheet()->getStyle('A1:H1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-                        $this->excel->getActiveSheet()->getStyle('E' . $new_row.'')->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border:: BORDER_THIN);
-                        $this->excel->getActiveSheet()->getStyle('E' . $new_row.'')->getFont()->setBold(true);
+                        $this->excel->getActiveSheet()->getStyle('A1:I1')->applyFromArray($styleArray);
+                        $this->excel->getActiveSheet()->getStyle('A1:I1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
                         $this->excel->getActiveSheet()->getStyle('F' . $new_row.'')->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border:: BORDER_THIN);
                         $this->excel->getActiveSheet()->getStyle('F' . $new_row.'')->getFont()->setBold(true);
                         $this->excel->getActiveSheet()->getStyle('G' . $new_row.'')->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border:: BORDER_THIN);
                         $this->excel->getActiveSheet()->getStyle('G' . $new_row.'')->getFont()->setBold(true);
                         $this->excel->getActiveSheet()->getStyle('H' . $new_row.'')->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border:: BORDER_THIN);
                         $this->excel->getActiveSheet()->getStyle('H' . $new_row.'')->getFont()->setBold(true);
+                        $this->excel->getActiveSheet()->getStyle('I' . $new_row.'')->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border:: BORDER_THIN);
+                        $this->excel->getActiveSheet()->getStyle('I' . $new_row.'')->getFont()->setBold(true);
 
                         $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
                         return $objWriter->save('php://output');
