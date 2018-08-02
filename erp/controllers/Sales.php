@@ -5441,10 +5441,10 @@ class Sales extends MY_Controller
             $this->data['inv'] = $sale;
 			$this->data['edit_sale'] = "1";
 			
-            if ($this->data['inv']->date <= date('Y-m-d', strtotime('-3 months'))) {
+            /*if ($this->data['inv']->date <= date('Y-m-d', strtotime('-3 months'))) {
                 $this->session->set_flashdata('error', lang("sale_x_edited_older_than_3_months"));
                 redirect($_SERVER["HTTP_REFERER"]);
-            }
+            }*/
 
             $inv_items = $this->sales_model->getAllInvoiceItems($id);
 			$customer = $this->site->getCompanyByID($sale->customer_id);

@@ -5325,10 +5325,10 @@ class Purchases extends MY_Controller
 				$pref = $this->purchases_model->getPaymentByPurchaseID($id);
 				$this->data['payment_ref'] = $pref?$pref->reference_no:$ref;
 
-				if ($this->data['inv']->date <= date('Y-m-d', strtotime('-3 months'))) {
+				/*if ($this->data['inv']->date <= date('Y-m-d', strtotime('-3 months'))) {
 					$this->session->set_flashdata('error', lang("purchase_x_edited_older_than_3_months"));
 					redirect($_SERVER["HTTP_REFERER"]);
-				}
+				}*/
 				
 				$inv_items = $this->purchases_model->getAllPurchaseItems($id);
 				

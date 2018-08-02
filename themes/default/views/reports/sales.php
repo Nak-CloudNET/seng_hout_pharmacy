@@ -159,7 +159,6 @@
                 echo "From " . $this->input->post('start_date') . " to " . $this->input->post('end_date');
             }
             ?></h2>
-
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown"><a href="#" class="toggle_up tip" title="<?= lang('hide_form') ?>"><i
