@@ -18834,16 +18834,16 @@ class Reports extends MY_Controller
                             $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->name);
                             $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->phone . " ");
                             $this->excel->getActiveSheet()->SetCellValue('E' . $row, $sc->email);
-                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatDecimal($sc->total));
-                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatDecimal($sc->total_amount));
-                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatDecimal($sc->paid));
-                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatDecimal($sc->balance));
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatMoney($sc->total));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatMoney($sc->total_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatMoney($sc->paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatMoney($sc->balance));
 
                             $new_row = $row + 1;
-                            $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatDecimal($sum_sale));
-                            $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatDecimal($sum_amount));
-                            $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatDecimal($sum_paid));
-                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatDecimal($sum_balance));
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatMoney($sum_sale));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatMoney($sum_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatMoney($sum_paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatMoney($sum_balance));
                             $row++;
                         }
                     }
@@ -18877,16 +18877,17 @@ class Reports extends MY_Controller
                             $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->name);
                             $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->phone." ");
                             $this->excel->getActiveSheet()->SetCellValue('E' . $row, $sc->email);
-                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatDecimal($sc->total));
-                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatDecimal($sc->total_amount));
-                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatDecimal($sc->paid));
-                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatDecimal($sc->balance));
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->erp->formatMoney($sc->total));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->erp->formatMoney($sc->total_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->erp->formatMoney($sc->paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->erp->formatMoney($sc->balance));
 
                             $new_row = $row+1;
-                            $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatDecimal($sum_sale));
-                            $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatDecimal($sum_amount));
-                            $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatDecimal($sum_paid));
-                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatDecimal($sum_balance));
+                            $this->excel->getActiveSheet()->SetCellValue('F' . $new_row, $this->erp->formatMoney($sum_sale));
+                            $this->excel->getActiveSheet()->SetCellValue('G' . $new_row, $this->erp->formatMoney($sum_amount));
+                            $this->excel->getActiveSheet()->SetCellValue('H' . $new_row, $this->erp->formatMoney($sum_paid));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatMoney($sum_balance));
+                            $this->excel->getActiveSheet()->SetCellValue('I' . $new_row, $this->erp->formatMoney($sum_balance));
                             $row++;
 
                     }
