@@ -10,7 +10,28 @@ class Sales_model extends CI_Model
 
     public function getProductNames($term, $warehouse_id, $standard, $combo, $digital, $service, $category, $limit = 100)
     {
-        $this->db->select('products.id, start_date, end_date, code, name, type, cost, warehouses_products.product_id, warehouses_products.quantity AS qoh, warehouses_products.quantity, price, tax_rate, tax_method, image, promotion, promo_price, product_details, details, subcategory_id, cf1, COALESCE((SELECT GROUP_CONCAT(sp.`serial_number`) FROM erp_serial as sp WHERE sp.product_id='.$this->db->dbprefix('products').'.id), "") as sep')
+        $this->db->select('products.id,
+        	start_date,
+        	end_date,
+        	code,
+        	name,
+        	type,
+        	cost,
+        	warehouses_products.product_id,
+        	warehouses_products.quantity AS qoh,
+        	warehouses_products.quantity,
+        	price,
+        	tax_rate,
+        	tax_method,
+        	image, 
+        	promotion,
+        	promo_price,
+        	product_details,
+        	details,
+        	subcategory_id,
+        	cf1,
+        	COALESCE((SELECT GROUP_CONCAT(sp.`serial_number`) FROM erp_serial as sp WHERE sp.product_id='.$this->db->dbprefix('products').'.id), "") as sep
+        	')
 				 ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
 				 ->group_by('products.id');
         if ($this->Settings->overselling) {

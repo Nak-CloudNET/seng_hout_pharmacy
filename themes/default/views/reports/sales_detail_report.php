@@ -1,18 +1,18 @@
 <?php
 
-	$v = "";
-if ($this->input->post('product_id')) {
-    $v .= "&product_id=" . $this->input->post('product_id');
-}
-if ($this->input->post('category')) {
-    $v .= "&category=" . $this->input->post('category');
-}
-if ($this->input->post('group_area')) {
-    $v .= "&group_area=" . $this->input->post('group_area');
-}
-if ($this->input->post('saleman')) {
-    $v .= "&saleman=" . $this->input->post('saleman');
-}
+    $v = "";
+    if ($this->input->post('product_id')) {
+        $v .= "&product_id=" . $this->input->post('product_id');
+    }
+    if ($this->input->post('category')) {
+        $v .= "&category=" . $this->input->post('category');
+    }
+    if ($this->input->post('group_area')) {
+        $v .= "&group_area=" . $this->input->post('group_area');
+    }
+    if ($this->input->post('saleman')) {
+        $v .= "&saleman=" . $this->input->post('saleman');
+    }
 	if ($this->input->post('reference_no')) {
 		$v .= "&reference_no=" . $this->input->post('reference_no');
 	}

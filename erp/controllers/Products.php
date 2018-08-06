@@ -449,6 +449,11 @@ class Products extends MY_Controller
 					$this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
 						->where_in('wp.warehouse_id', $this->session->userdata('warehouse_id'));
 				}
+
+				if($this->Settings->display_all_products == 0) {
+				    $this->db->where('products.quantity >', 0)
+                         ->or_where('products.type <>', 'standard');
+                }
                 $this->datatables->group_by("products.id");
 
             }
