@@ -73,10 +73,12 @@ class Reports_model extends CI_Model
         }
         return FALSE;
 	}
-	public function getAlladjustment($reference_no,$warehouse,$wid,$created_by,$start_date,$end_date,$page,$offset){
+	public function getAlladjustment($reference_no,$warehouse,$wid,$created_by,$start_date,$end_date,$page,$offset,$s_product){
 		if($reference_no){
 			$this->db->where("erp_adjustments.reference_no",$reference_no);
-		}
+		}if($s_product){
+            $this->db->where("erp_products.code",$s_product);
+        }
 		if($warehouse){
 		   $this->db->where("erp_adjustments.warehouse_id",$warehouse);
 		}else{
@@ -92,7 +94,11 @@ class Reports_model extends CI_Model
 		}
 		$this->db->select("erp_adjustments.*,erp_warehouses.name as warehouse,erp_users.username")
 		->join('erp_warehouses','erp_warehouses.id=erp_adjustments.warehouse_id','left')
-		->join('erp_users','erp_users.id=erp_adjustments.created_by','left');
+		->join('erp_users','erp_users.id=erp_adjustments.created_by','left')
+		->join('erp_adjustment_items','erp_adjustments.id=erp_adjustment_items.adjust_id ','left')
+		->join('erp_products','erp_products.id=erp_adjustment_items.product_id ','left')
+        ->group_by('erp_adjustments.id');
+
 		$this->db->limit($page,$offset);
 		$q =$this->db->get_where('erp_adjustments');
 		if ($q->num_rows() > 0){

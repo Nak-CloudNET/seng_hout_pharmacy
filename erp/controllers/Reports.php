@@ -9756,6 +9756,7 @@ class Reports extends MY_Controller
 		$reference_no = "";
 		$warehouse_id = "";
 		$created_by = "";
+		$s_product="";
 		$end_date = "";
 		$start_date = "";
 	    if($this->input->get('reference_no')){
@@ -9763,6 +9764,12 @@ class Reports extends MY_Controller
 			 $str.="&reference_no".$reference_no;
 			 $this->data['reference_no'] =$reference_no;
 		}
+        if($this->input->get('s_product')){
+            $s_product = $this->input->get('s_product');
+            $str.="&product_names".$s_product;
+            $this->data['s_product'] =$s_product;
+        }
+
 		if($this->input->get('warehouse')){
 			$warehouse_id =$this->input->get('warehouse');
 		    $str.="&warehouse=".$warehouse_id;
@@ -9794,6 +9801,7 @@ class Reports extends MY_Controller
 		if($reference_no){
 		    $this->db->where("erp_adjustments.reference_no",$reference_no); 	
 		}
+
 		if($created_by){
 			$this->db->where("erp_adjustments.created_by",$created_by);
 		}
@@ -9837,7 +9845,7 @@ class Reports extends MY_Controller
 		$this->pagination->initialize($config);
 		$this->data["pagination"] = $this->pagination->create_links(); 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error'); 
-        $this->data['items'] = $this->reports_model->getAlladjustment($reference_no,$warehouse_id,$wid,$created_by,$start_date,$end_date,$config["per_page"],$config["ob_set"]);
+        $this->data['items'] = $this->reports_model->getAlladjustment($reference_no,$warehouse_id,$wid,$created_by,$start_date,$end_date,$config["per_page"],$config["ob_set"],$s_product);
         //$this->data['warehouses'] = $this->site->getAllWarehouses();
 		
 		$this->data['created'] =$this->site->getAllUsers();

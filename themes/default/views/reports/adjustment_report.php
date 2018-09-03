@@ -117,7 +117,32 @@
                                 <label class="control-label" for="reference_no"><?= lang("reference_no"); ?></label>
                                 <?php echo form_input('reference_no', (isset($_GET['reference_no']) ? $_GET['reference_no'] : ""), 'class="form-control tip" id="reference_no"'); ?>
                             </div>
-                        </div>  
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group">
+                                <label class="control-label" for="reference_no"><?= lang("Product"); ?></label>
+                                <?php
+
+                                    $query1 = $this->db->query("
+							           SELECT erp_products.code as codes,erp_products.name as product_names
+                                       From erp_adjustment_items
+									   left JOIN erp_products ON erp_products.id=erp_adjustment_items.product_id 
+										LEFT JOIN erp_product_variants ON erp_product_variants.id = erp_adjustment_items.option_id 
+										LEFT JOIN erp_units ON erp_units.id=erp_products.unit  
+									  
+                       
+                                        ")->result();
+                                    $prn[""] = "ALL";
+                                    foreach ($query1 as $prn1) {
+                                        $prn[$prn1->codes] = $prn1->product_names;
+
+                                    }
+                                echo form_dropdown('s_product', $prn, (isset($_GET['s_product']) ? $_GET['s_product'] : ""), 'class="form-control" id="s_product" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product_name") . '"');
+
+//                                $this->erp->print_arrays($query1);
+                                ?>
+                            </div>
+                        </div>
                         <div class="col-sm-3">
                             <div class="form-group">
                                 <label class="control-label" for="warehouse"><?= lang("warehouse"); ?></label>
@@ -134,6 +159,7 @@
                             <div class="form-group">
                                 <label class="control-label" for="created_by"><?= lang("created_by"); ?></label>
                                 <?php
+
                                 $ct[""] = "ALL";
                                 foreach ($created as $create){
                                     $ct[$create->id] = $create->username;
@@ -191,22 +217,33 @@
 								 									
 							</tr>
 						</thead>
-						<?php 
+						<?php
+                            $where='';
 						   $grand_total=0;
+						   $item_id='';
 						   if(is_array($items)){
-						foreach($items as $item){ 
+						foreach($items as $item){
+						    if($_GET['s_product']!='') {
+                                $pro_id = $_GET['s_product'];
+                                $where= "and erp_products.code='{$pro_id}'";
+                            }
+                           $item_id=$item->id;
+
 						       $query=$this->db->query("
 							           SELECT erp_adjustment_items.quantity as qty_adjust,erp_adjustment_items.type,erp_products.code as codes,erp_products.name as product_names,erp_products.quantity as QOH,erp_product_variants.name as variant,erp_units.name as unit
                                        From erp_adjustment_items
 									   left JOIN erp_products ON erp_products.id=erp_adjustment_items.product_id 
 										LEFT JOIN erp_product_variants ON erp_product_variants.id = erp_adjustment_items.option_id 
 										LEFT JOIN erp_units ON erp_units.id=erp_products.unit  
-									   where erp_adjustment_items.adjust_id = {$item->id}
+									   where erp_adjustment_items.adjust_id = '{$item_id}' {$where}
                        
                      ")->result();
 		
 						?>
                         <tbody>
+                        <?php
+
+                        ?>
 						       <tr class="bold">
 							      <td style="min-width:30px; width: 30px; text-align: center;">
 									<input type="checkbox" name="val[]" class="checkbox multi-select input-xs" value="<?= $item->id; ?>" />
@@ -232,7 +269,7 @@
 						
 						}?>
 						     
-						<?php }  }?>
+						<?php }  } ?>
 					</tbody>
                    			
                     </table>
