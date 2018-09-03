@@ -9769,7 +9769,6 @@ class Reports extends MY_Controller
             $str.="&product_names".$s_product;
             $this->data['s_product'] =$s_product;
         }
-
 		if($this->input->get('warehouse')){
 			$warehouse_id =$this->input->get('warehouse');
 		    $str.="&warehouse=".$warehouse_id;

@@ -228,7 +228,6 @@
                                 $where= "and erp_products.code='{$pro_id}'";
                             }
                            $item_id=$item->id;
-
 						       $query=$this->db->query("
 							           SELECT erp_adjustment_items.quantity as qty_adjust,erp_adjustment_items.type,erp_products.code as codes,erp_products.name as product_names,erp_products.quantity as QOH,erp_product_variants.name as variant,erp_units.name as unit
                                        From erp_adjustment_items

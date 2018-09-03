@@ -86,6 +86,7 @@ class Reports_model extends CI_Model
 				$this->db->where("erp_adjustments.warehouse_id IN ($wid)");
 			}
 		}
+
 		if($created_by){
 		   $this->db->where("erp_adjustments.created_by",$created_by);
 		}
