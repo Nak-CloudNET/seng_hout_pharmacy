@@ -334,7 +334,7 @@ class Reports extends MY_Controller
             $this->load->library('datatables');
             if ($warehouse_id) {
                 $this->datatables
-                    ->select("productss.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
+                    ->select("products.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
                     ->from('purchase_items')
                     ->join('products', 'products.id = purchase_items.product_id', 'left')
                     ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
@@ -22947,12 +22947,14 @@ class Reports extends MY_Controller
 					erp_sale_items.product_id,
 					erp_products.category_id,
 					erp_sales.saleman_by,
-					erp_companies.group_areas_id
+					erp_companies.group_areas_id,
+                    erp_group_areas.areas_group as customer_area
 				FROM
 					`erp_sales`
 				INNER JOIN erp_sale_items ON erp_sales.id = erp_sale_items.sale_id
 				LEFT JOIN erp_products ON erp_sale_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_sales.customer_id = erp_companies.id
+                LEFT JOIN erp_group_areas ON erp_sales.group_areas_id = erp_group_areas.areas_g_code
 				WHERE erp_sales.opening_ar = 0
 				GROUP BY
 					erp_sales.id,reference_no";
@@ -22981,12 +22983,14 @@ class Reports extends MY_Controller
 					erp_return_items.product_id,
 					erp_products.category_id,
 					erp_return_sales.created_by,
-					erp_companies.group_areas_id
+					erp_companies.group_areas_id,
+                    erp_group_areas.areas_group as customer_area
 				FROM
 					erp_return_sales
 				INNER JOIN erp_return_items ON erp_return_sales.id = erp_return_items.return_id
 				LEFT JOIN erp_products ON erp_return_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_return_sales.customer_id = erp_companies.id
+                LEFT JOIN erp_group_areas ON erp_companies.group_areas_id = erp_group_areas.areas_g_code
 				GROUP BY
 					erp_return_sales.id,reference_no";
 		        /**/
