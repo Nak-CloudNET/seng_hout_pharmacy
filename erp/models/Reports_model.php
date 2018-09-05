@@ -3799,12 +3799,13 @@ ORDER BY
 		return false;
 	}
 	
-	public function getCategoriesProductProfitByWarehouse($warehouse_id,$category_id,$product_id,$from_date,$to_date,$reference_no,$biller){
+	public function getCategoriesProductProfitByWarehouse($warehouse_id,$category_id,$product_id,$from_date,$to_date,$reference_no,$biller, $group_area){
 		
 		$this->db->select('categories.id, categories.name AS category_name');
 		$this->db->join('erp_products','erp_products.id = erp_sale_items.product_id');
 		$this->db->join('erp_categories', 'erp_categories.id = erp_products.category_id');
-		$this->db->join('sales','sales.id = sale_items.sale_id');
+		$this->db->join('sales','sales.id = sale_items.sale_id', 'left');
+		$this->db->join('group_areas','sales.group_areas_id = group_areas.areas_g_code', 'left');
 		if($warehouse_id){
 			$this->db->where('sale_items.warehouse_id', $warehouse_id);
 		}
@@ -3816,6 +3817,9 @@ ORDER BY
 		}
 		if($biller){
 			$this->db->where('biller_id', $biller);
+		}
+		if($group_area){
+			$this->db->where('sales.group_areas_id', $group_area);
 		}
 		if($reference_no){
 			$this->db->where('reference_no', $reference_no);
@@ -3879,11 +3883,12 @@ ORDER BY
 		return false;
 	}
 	
-	public function getProductsProfitByWhCat($warehouse_id,$category_id,$product_id,$from_date,$to_date,$reference_no,$biller){
+	public function getProductsProfitByWhCat($warehouse_id,$category_id,$product_id,$from_date,$to_date,$reference_no,$biller, $group_area){
 		$this->db->select('product_id, product_code,products.name as product_name,units.name as un');
 		$this->db->join("products","products.id=erp_sale_items.product_id");
 		$this->db->join("units","units.id=products.unit");
-		$this->db->join('sales','sales.id = sale_items.sale_id');
+		$this->db->join('sales','sales.id = sale_items.sale_id', 'left');
+		$this->db->join('group_areas','sales.group_areas_id = group_areas.areas_g_code', 'left');
 		if($warehouse_id){
 			$this->db->where('erp_sale_items.warehouse_id', $warehouse_id);
 		}
@@ -3896,6 +3901,9 @@ ORDER BY
 		
 		if($biller){
 			$this->db->where('biller_id', $biller);
+		}
+		if($group_area){
+			$this->db->where('sales.group_areas_id', $group_area);
 		}
 		if($reference_no){
 			$this->db->where('erp_sale_items.reference_no', $reference_no);
@@ -3965,12 +3973,13 @@ ORDER BY
 		return false;
 	}
 	
-	public function getProductsProfitByProduct($warehouse_id,$category_id,$product_id,$from_date,$to_date,$reference_no, $biller){
-		$this->db->select('erp_sales.date,erp_sales.customer,erp_sales.reference_no,erp_sale_items.*, companies.name AS biller_name, product_variants.qty_unit as qty_variant');
-		$this->db->join('erp_sales','erp_sales.id = erp_sale_items.sale_id');
+	public function getProductsProfitByProduct($warehouse_id,$category_id,$product_id,$from_date,$to_date,$reference_no, $biller, $group_area){
+		$this->db->select('erp_sales.date,erp_sales.customer,erp_sales.reference_no,erp_sale_items.*, companies.name AS biller_name, product_variants.qty_unit as qty_variant, group_areas.areas_group as customer_area');
+		$this->db->join('erp_sales','erp_sales.id = erp_sale_items.sale_id', 'left');
 		$this->db->join('companies', 'companies.id = erp_sales.biller_id', 'left');
 		$this->db->join('product_variants', 'product_variants.id = erp_sale_items.option_id', 'left');
 		$this->db->join('products','products.id = sale_items.product_id');
+		$this->db->join('group_areas','erp_sales.group_areas_id = group_areas.areas_g_code', 'left');
 		if($warehouse_id){
 			$this->db->where('erp_sale_items.warehouse_id', $warehouse_id);
 		}
@@ -3983,6 +3992,9 @@ ORDER BY
 		
 		if($biller){
 			$this->db->where('biller_id', $biller);
+		}
+		if($group_area){
+			$this->db->where('sales.group_areas_id', $group_area);
 		}
 		if($reference_no){
 			$this->db->where('reference_no', $reference_no);

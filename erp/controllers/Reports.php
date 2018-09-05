@@ -24162,6 +24162,11 @@ class Reports extends MY_Controller
         }else{
             $biller = 0;
         }
+        if ($this->input->post('group_area')) {
+            $group_area = $this->input->post('group_area');
+        }else{
+            $group_area = '';
+        }
         if ($this->input->post('from_date')) {
             $from_date =  $this->erp->fld($this->input->post('from_date'));
         }else{
@@ -24179,7 +24184,8 @@ class Reports extends MY_Controller
 		$this->data['warehouses'] = $this->reports_model->getWarehousesProductProfit($wid,$wahouse_id,$category_id,$product_id,trim($from_date),trim($to_date),$reference,$biller);
 		$this->data['categories']   = $this->reports_model->getAllCategories();
 		$this->data['products']     = $this->reports_model->getAllProducts();
-		$this->data['billers']     = $this->reports_model->getAllBillers();
+        $this->data['billers']     = $this->reports_model->getAllBillers();
+		$this->data['customer_areas']     = $this->site->getArea();
 		
         $this->data['reference1'] = $reference;
 		$this->data['wahouse_id1'] = $wahouse_id;
@@ -24192,6 +24198,7 @@ class Reports extends MY_Controller
         }
          $this->data['cate_id1'] = $category_id;
          $this->data['biller1'] = $biller;
+         $this->data['group_area1'] = $group_area;
         
 		//$this->erp->print_arrays($this->reports_model->getAllCategories());
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => '#', 'page' => lang('reports')));
