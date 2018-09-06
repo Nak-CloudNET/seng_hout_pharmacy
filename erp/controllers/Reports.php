@@ -9740,6 +9740,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['products'] = $this->site->getProducts();
 
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('purchases_report')));
         $meta = array('page_title' => lang('purchases_report'), 'bc' => $bc);
@@ -9856,8 +9857,8 @@ class Reports extends MY_Controller
 	function getPurchasesReport($pdf = NULL, $xls = NULL)
     {
         $datt =$this->reports_model->getLastDate("purchases","date");
-        if ($this->input->get('product')) {
-            $product = $this->input->get('product');
+        if ($this->input->get('product_id')) {
+            $product = $this->input->get('product_id');
         } else {
             $product = NULL;
         }
