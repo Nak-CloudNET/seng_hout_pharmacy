@@ -34,6 +34,7 @@
 		$v .= "&cf6=" . $this->input->post('cf6');
 	}
 ?>
+
 <style type="text/css" media="screen">
     #PRData td:nth-child(6), #PRData td:nth-child(7) {
         text-align: right;
@@ -159,6 +160,7 @@
     echo form_open('products/product_actions'.($warehouse_id ? '/'.$warehouse_id : ''), 'id="action-form"');
 //} 
 ?>
+
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-barcode"></i><?= lang('products') . ' (' . (sizeof(explode('-',$warehouse_id))>1 ? lang('all_warehouses') : (!isset($warehouse_id)||$warehouse_id==null?lang('all_warehouses'):$warehouse->name) ) . ')'; ?>
