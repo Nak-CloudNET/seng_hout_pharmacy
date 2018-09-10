@@ -6068,7 +6068,6 @@ class Sales extends MY_Controller
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $unitPrice,
                         'quantity'          => $item_quantity,
-
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $item_tax,
                         'tax_rate_id'       => $pr_tax,
@@ -6123,6 +6122,7 @@ class Sales extends MY_Controller
 
             $total_tax = $this->erp->formatDecimal($product_tax + $order_tax);
             $grand_total = $this->erp->formatDecimal($paid_amount);
+
             $data = array(
                 'date'              => $date,
                 'reference_no'      => $reference,
