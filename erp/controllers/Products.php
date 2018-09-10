@@ -456,7 +456,6 @@ class Products extends MY_Controller
                          //->or_where('products.type <>', 'standard');
                 }
                 $this->datatables->group_by("products.id");
-
             }
 
         if (!$this->Owner && !$this->Admin) {

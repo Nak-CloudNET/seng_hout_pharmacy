@@ -282,6 +282,7 @@
             </ul>
         </div>
     </div>
+
 	<div style="display: none;">
 		<input type="hidden" name="form_action" value="" id="form_action"/>
 		<?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
