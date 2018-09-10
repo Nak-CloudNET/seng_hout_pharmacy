@@ -17,6 +17,37 @@
     <!--[if lt IE 9]>
     <script src="<?= $assets ?>js/jquery.js"></script>
     <![endif]-->
+    <script>
+
+        function dd(e) {
+            console.log(e);
+        }
+
+        var __c = '<?= $this->router->fetch_class() ?>';
+        var __f = '<?= $this->router->fetch_method() ?>';
+        function __getRandomUnique() {
+            return Math.floor(new Date().valueOf() * Math.random());
+        }
+        function __getItem(key) {
+            return localStorage.getItem(__c + __f + key);
+        }
+        function __setItem(key, vl) {
+            localStorage.setItem(__c + __f + key, vl);
+        }
+        function __removeItem(arr_key) {
+            if ($.isArray(arr_key)) {
+                for(var i = 0; i < arr_key.length; i++) {
+                    if (__getItem(arr_key[i])) {
+                        localStorage.removeItem(__c + __f + arr_key[i]);
+                    }
+                }
+            } else {
+                if (__getItem(arr_key)) {
+                    localStorage.removeItem(__c + __f + arr_key);
+                }
+            }
+        }
+    </script>
     <noscript>
         <style type="text/css">
             #loading {
@@ -658,13 +689,12 @@
                                                 <i class="fa fa-reply"></i>
                                                 <span class="text"> <?= lang('list_sales_return'); ?></span>
                                             </a>
-                                        </li>
-                                        <!--<li id="sales_add_return">
+                                        </li><li id="sales_add_return">
                                             <a class="submenu" href="<?= site_url('sales/add_return'); ?>">
                                                 <i class="fa fa-plus-circle"></i>
                                                 <span class="text"> <?= lang('add_sale_return'); ?></span>
                                             </a>
-                                        </li>--> 
+                                        </li>
 										
 										
                                     </ul>

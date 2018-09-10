@@ -531,28 +531,31 @@ class Customers extends MY_Controller
 
     function suggestions($term = NULL, $limit = NULL)
     {
-        // $this->erp->checkPermissions('index');
         if ($this->input->get('term')) {
             $term = $this->input->get('term', TRUE);
         }
         if (strlen($term) < 1) {
             return FALSE;
         }
-		
-		$limit 			 = $this->input->get('limit', TRUE);
+
+        $limit 			 = $this->input->get('limit', TRUE);
+        //$result = $this->companies_model->getCustomerSuggestions(trim($term), $limit);
+        //$rows['discount'] = $result[0]->order_discount ? $result[0]->order_discount : $result[1]->order_discount;
         $rows['results'] = $this->companies_model->getCustomerSuggestions($term, $limit);
-		
-		$gift_card = $this->companies_model->getGiftCardByCardNUM($term);
-		if( $gift_card ){
-			if($gift_card->expiry < date('Y-m-d') ){
-				$rows['results'] = '';
-			}
-		}
-        
+
+        if ($this->Settings->member_card_expiry) {
+            $gift_card = $this->companies_model->getGiftCardByCardNUM($term);
+            if( $gift_card ){
+                if($gift_card->expiry < date('Y-m-d') ){
+                    $rows['results'] = '';
+                }
+            }
+        }
         echo json_encode($rows);
     }
-	
-	function balance_suggest($term = NULL, $limit = NULL)
+
+
+    function balance_suggest($term = NULL, $limit = NULL)
     {
         // $this->erp->checkPermissions('index');
         if ($this->input->get('term')) {
