@@ -337,6 +337,7 @@ class Products extends MY_Controller
 
         if ($this->input->get('product')) {
             $product = $this->input->get('product');
+
         } else {
             $product = NULL;
         }
@@ -451,11 +452,10 @@ class Products extends MY_Controller
 				}
 
 				if($this->Settings->display_all_products == 0) {
-				    $this->db->where('products.quantity >', 0)
-                         ->or_where('products.type <>', 'standard');
+//				    $this->db->where('products.quantity >', 0);
+                         //->or_where('products.type <>', 'standard');
                 }
                 $this->datatables->group_by("products.id");
-
             }
 
         if (!$this->Owner && !$this->Admin) {

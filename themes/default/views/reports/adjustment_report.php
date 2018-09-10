@@ -134,10 +134,10 @@
                                         ")->result();
                                     $prn[""] = "ALL";
                                     foreach ($query1 as $prn1) {
-                                        $prn[$prn1->codes] = $prn1->product_names;
+                                        $prn[$prn1->codes] = '('.$prn1->codes.') '.$prn1->product_names;
 
                                     }
-                                echo form_dropdown('s_product', $prn, (isset($_GET['s_product']) ? $_GET['s_product'] : ""), 'class="form-control" id="s_product" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product_name") . '"');
+                                echo form_dropdown('s_product', $prn, (isset($_GET['s_product']) ? $_GET['s_product'] : ""), 'class="form-control" id="s_product" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product_name"). '"');
 
 //                                $this->erp->print_arrays($query1);
                                 ?>
@@ -290,7 +290,7 @@
 		
        /* $('#pdf').click(function (event) {
             event.preventDefault();
-            window.location.href = "<?=site_url('reports/getSalesReport/pdf/?v=1'.$v)?>";
+            window.location.href = "<?= site_url('reports/getSalesReport/pdf/?v=1'.$v )?>";
             return false;
         });*/
 		$('.reset').click(function(){
