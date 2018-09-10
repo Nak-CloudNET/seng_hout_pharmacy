@@ -2504,7 +2504,9 @@ class Sales_model extends CI_Model
 	}
     public function updatePurchaseItem($id, $qty, $sale_item_id, $product_id = NULL, $warehouse_id = NULL, $option_id = NULL, $return_item_id = NULL)
     {
+
         if ($id) {
+
             if($pi = $this->getPurchaseItemByID($id)) {
                 $pr = $this->site->getProductByID($pi->product_id);
                 if ($pr->type == 'combo') {
@@ -2556,7 +2558,9 @@ class Sales_model extends CI_Model
                 }
             }
         } else {
+
 			$expiry_date = $this->getReturnItems($return_item_id);
+            //echo "Hello";exit();
             if ($sale_item = $this->getSaleItemByID($sale_item_id)) {
 
                 $option_id = isset($sale_item->option_id) && !empty($sale_item->option_id) ? $sale_item->option_id : NULL;
@@ -2600,7 +2604,6 @@ class Sales_model extends CI_Model
 						$option = $this->site->getProductVariantOptionIDPID($option_id, $sale_item->product_id);
 						$qty_balance = $qty_balance * $option->qty_unit;
 					}
-
                     $clause['purchase_id'] 		= NULL;
                     $clause['transfer_id'] 		= NULL;
                     $clause['quantity'] 		= 0;
@@ -2612,10 +2615,13 @@ class Sales_model extends CI_Model
                 }
             }
             if (! $sale_item && $product_id) {
+
                 $pr = $this->site->getProductByIDWh($product_id,$warehouse_id);
                 $clause = array('product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'option_id' => $option_id);
                 if ($pr->type == 'standard') {
+
                     if ($pi = $this->site->getPurchasedItem($clause)) {
+
                         $quantity_balance = $pi->quantity_balance+$qty;
 
 						$qty_balance = abs($qty);
@@ -2646,6 +2652,7 @@ class Sales_model extends CI_Model
 
 						$qty_balance = $qty;
 						if($option_id){
+
 							$option = $this->site->getProductVariantOptionIDPID($option_id, $product_id);
 							$qty_balance = $qty_balance * $option->qty_unit;
 						}
@@ -2658,8 +2665,11 @@ class Sales_model extends CI_Model
 						$clause['transaction_type'] = 'SALE RETURN';
 						$clause['transaction_id'] 	= $return_item_id;
                         $this->db->insert('purchase_items', $clause);
+
                     }
+
                 } elseif ($pr->type == 'combo') {
+
                     $combo_items = $this->site->getProductComboItems($pr->id, $warehouse_id);
                     foreach ($combo_items as $combo_item) {
                         $clause = array('product_id' => $combo_item->id, 'warehouse_id' => $warehouse_id, 'option_id' => NULL);
@@ -2838,29 +2848,37 @@ class Sales_model extends CI_Model
 	/* Return Sales */
 	public function returnSales($data = array(), $items = array(), $payment = array())
     {
+
         //$this->erp->print_arrays($data, $items, $payment);
         foreach ($items as $item) {
+
             if ($item['product_type'] == 'combo') {
+
                 $combo_items = $this->site->getProductComboItems($item['product_id'], $item['warehouse_id']);
                 foreach ($combo_items as $combo_item) {
+
                     if ($costings = $this->getCostingLines($item['sale_item_id'], $combo_item->id)) {
+
                         $quantity = $item['quantity']*$combo_item->qty;
                         foreach ($costings as $cost) {
-                            if ($cost->quantity >= $quantity) {
-                                $qty = $cost->quantity - $quantity;
-                                $bln = $cost->quantity_balance && $cost->quantity_balance >= $quantity ? $cost->quantity_balance - $quantity : 0;
-                                $this->db->update('costing', array('quantity' => $qty, 'quantity_balance' => $bln), array('id' => $cost->id));
-                                $quantity = 0;
-                            } elseif ($cost->quantity < $quantity) {
-                                $qty = $quantity - $cost->quantity;
-                                $this->db->delete('costing', array('id' => $cost->id));
-                                $quantity = $qty;
-                            }
+                        if ($cost->quantity >= $quantity) {
+                            $qty = $cost->quantity - $quantity;
+                            $bln = $cost->quantity_balance && $cost->quantity_balance >= $quantity ? $cost->quantity_balance - $quantity : 0;
+                            $this->db->update('costing', array('quantity' => $qty, 'quantity_balance' => $bln), array('id' => $cost->id));
+                            $quantity = 0;
+                        } elseif ($cost->quantity < $quantity) {
+                            $qty = $quantity - $cost->quantity;
+                            $this->db->delete('costing', array('id' => $cost->id));
+                            $quantity = $qty;
                         }
                     }
-                    $this->updatePurchaseItem(NULL,($item['quantity']*$combo_item->qty), NULL, $combo_item->id, $item['warehouse_id']);
                 }
-            } else {
+                   // $this->updatePurchaseItem(NULL,($item['quantity']*$combo_item->qty), NULL, $combo_item->id, $item['warehouse_id']);
+                }
+                }
+
+            else {
+
                 if ($costings = $this->getCostingLines($item['sale_item_id'], $item['product_id'])) {
                     $quantity = $item['quantity'];
                     foreach ($costings as $cost) {
@@ -2895,6 +2913,7 @@ class Sales_model extends CI_Model
 				$this->updatePurchaseItem(NULL, $item['quantity']*($cost->qty_unit?$cost->qty_unit:1), $item['sale_item_id'], $item['product_id'], $item['warehouse_id'], $item['option_id']);
             }
         }
+
 		//$this->erp->print_arrays($items);
         //$sale_items = $this->site->getAllSaleItems($data['sale_id']);
 

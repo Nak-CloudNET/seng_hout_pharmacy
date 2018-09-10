@@ -5980,6 +5980,7 @@ class Sales extends MY_Controller
             $percentage         = '%';
             $i = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
+
                 $item_id        = $_POST['product_id'][$r];
                 $item_type      = $_POST['product_type'][$r];
                 $item_code      = $_POST['product_code'][$r];
@@ -6068,7 +6069,6 @@ class Sales extends MY_Controller
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $unitPrice,
                         'quantity'          => $item_quantity,
-
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $item_tax,
                         'tax_rate_id'       => $pr_tax,
@@ -6123,6 +6123,7 @@ class Sales extends MY_Controller
 
             $total_tax = $this->erp->formatDecimal($product_tax + $order_tax);
             $grand_total = $this->erp->formatDecimal($paid_amount);
+            //$this->erp->print_arrays($biller_id);
             $data = array(
                 'date'              => $date,
                 'reference_no'      => $reference,
@@ -6145,6 +6146,7 @@ class Sales extends MY_Controller
                 'grand_total'       => $grand_total,
                 'created_by'        => $this->session->userdata('user_id')
             );
+
             if ($this->input->post('amount-paid') && $this->input->post('amount-paid') != 0) {
                 $payment = array(
                     'date'          => $date,
@@ -6276,7 +6278,6 @@ class Sales extends MY_Controller
                 }else{
                     $expdates           = NULL;
                 }
-
                 $w_piece                = $this->sales_model->getProductVariantByOptionID($row->id);
                 $psoqty                 = 0;
                 $optqty                 = 0;
