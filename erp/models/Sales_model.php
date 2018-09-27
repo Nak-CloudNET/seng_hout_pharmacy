@@ -2846,140 +2846,73 @@ class Sales_model extends CI_Model
     }
 
 	/* Return Sales */
-	public function returnSales($data = array(), $items = array(), $payment = array())
+    public function returnSales($data = array(), $items = array(), $payment = array())
     {
-
-        //$this->erp->print_arrays($data, $items, $payment);
-        foreach ($items as $item) {
-
-            if ($item['product_type'] == 'combo') {
-
-                $combo_items = $this->site->getProductComboItems($item['product_id'], $item['warehouse_id']);
-                foreach ($combo_items as $combo_item) {
-
-                    if ($costings = $this->getCostingLines($item['sale_item_id'], $combo_item->id)) {
-
-                        $quantity = $item['quantity']*$combo_item->qty;
-                        foreach ($costings as $cost) {
-                        if ($cost->quantity >= $quantity) {
-                            $qty = $cost->quantity - $quantity;
-                            $bln = $cost->quantity_balance && $cost->quantity_balance >= $quantity ? $cost->quantity_balance - $quantity : 0;
-                            $this->db->update('costing', array('quantity' => $qty, 'quantity_balance' => $bln), array('id' => $cost->id));
-                            $quantity = 0;
-                        } elseif ($cost->quantity < $quantity) {
-                            $qty = $quantity - $cost->quantity;
-                            $this->db->delete('costing', array('id' => $cost->id));
-                            $quantity = $qty;
-                        }
-                    }
-                }
-                   // $this->updatePurchaseItem(NULL,($item['quantity']*$combo_item->qty), NULL, $combo_item->id, $item['warehouse_id']);
-                }
-                }
-
-            else {
-
-                if ($costings = $this->getCostingLines($item['sale_item_id'], $item['product_id'])) {
-                    $quantity = $item['quantity'];
-                    foreach ($costings as $cost) {
-                        if($cost->option_id != 0 || $cost->option_id != NULL) {
-							$quantity = $quantity * $cost->qty_unit;
-							if (($cost->quantity* $cost->qty_unit) > $quantity) {
-								$qty = ($cost->quantity * $cost->qty_unit) - $quantity;
-								$bln = $cost->quantity_balance && $cost->quantity_balance >= $quantity ? $cost->quantity_balance - $quantity : 0;
-								$this->db->set('quantity',$qty/$cost->qty_unit);
-								$this->db->update('costing', array('quantity_balance' => $bln), array('id' => $cost->id));
-								$quantity = 0;
-							} elseif (($cost->quantity*$cost->qty_unit) <= $quantity) {
-								$qty = $quantity - ($cost->quantity*$cost->qty_unit);
-								$this->db->delete('costing', array('id' => $cost->id));
-								$quantity = $qty;
-							}
-						} else {
-							if ($cost->quantity >= $quantity) {
-								$qty = $cost->quantity - $quantity;
-								$bln = $cost->quantity_balance && $cost->quantity_balance >= $quantity ? $cost->quantity_balance - $quantity : 0;
-								$this->db->update('costing', array('quantity' => $qty, 'quantity_balance' => $bln), array('id' => $cost->id));
-								$quantity = 0;
-							} elseif ($cost->quantity < $quantity) {
-								$qty = $quantity - $cost->quantity;
-								$this->db->delete('costing', array('id' => $cost->id));
-								$quantity = $qty;
-							}
-						}
-                    }
-                }
-                //$this->updatePurchaseItem(NULL, $item['quantity']*$cost->qty_unit, $item['sale_item_id'], $item['product_id'], $item['warehouse_id'], $item['option_id']);
-				$this->updatePurchaseItem(NULL, $item['quantity']*($cost->qty_unit?$cost->qty_unit:1), $item['sale_item_id'], $item['product_id'], $item['warehouse_id'], $item['option_id']);
-            }
+        foreach($items as $g){
+            $totalCostProducts = $this->getTotalCostProducts($g['product_id'], $g['quantity']);
+            $data['total_cost'] += $totalCostProducts->total_cost;
         }
 
-		//$this->erp->print_arrays($items);
-        //$sale_items = $this->site->getAllSaleItems($data['sale_id']);
-
-		foreach($items as $g){
-			$totalCostProducts = $this->getTotalCostProducts($g['product_id'], $g['quantity']);
-			$data['total_cost'] += $totalCostProducts->total_cost;
-		}
-		//$this->erp->print_arrays($data , $items);
         if ($this->db->insert('return_sales', $data)) {
             $return_id = $this->db->insert_id();
-            //$return_sale_item = $this->getReturnItemByReturnID($return_id);
-            if ($this->site->getReference('re') == $data['reference_no']) {
-                $this->site->updateReference('re');
+            if ($this->site->getReference('re', $data['biller_id']) == $data['reference_no']) {
+                $this->site->updateReference('re', $data['biller_id']);
             }
-            $sale_items = array();
-            $sale_id = 0;
+
             foreach ($items as $item) {
-                $sale_id = $item['sale_id'];
 
-				$sale_items = $this->site->getAllSaleItems($sale_id);
-                $item['return_id'] = $return_id;
+                $item['return_id']              = $return_id;
+                $qty_balance                    = $item['quantity_balance'];
+                unset($item['quantity_balance']);
                 $this->db->insert('return_items', $item);
+                $return_item_id                 = $this->db->insert_id();
 
-				if($sale_id){
-					$this->calculateSaleTotalsReturn($sale_id, $return_id, $data['surcharge']);
-				}
+                $clause = array(
+                    'transaction_type' 	=> 'PRODUCT RETURN',
+                    'transaction_id' 	=> $return_item_id,
+                    'status' 			=> 'received',
+                    'product_id' 		=> $item['product_id'],
+                    'warehouse_id' 		=> $item['warehouse_id'],
+                    'option_id' 		=> $item['option_id'],
+                    'date' 		        => $data['date'],
+                    'quantity_balance'  => $qty_balance,
+                    'product_code'      => $item['product_code'],
+                    'product_name'      => $item['product_name'],
+                    'product_type'      => $item['product_type'],
+                );
 
-                if ($item['sale_item_id']) {
-                    if ($sale_item = $this->getSaleItemByID($item['sale_item_id'])) {
-                        if ($sale_item->quantity == $item['quantity']) {
-                            //$this->db->delete('sale_items', array('id' => $item['sale_item_id']));
-                        } else {
-                            $nqty = $sale_item->quantity - $item['quantity'];
-                            $tax = $sale_item->unit_price - $sale_item->net_unit_price;
-                            $discount = $sale_item->item_discount / $sale_item->quantity;
-                            $item_tax = $tax * $nqty;
-                            $item_discount = $discount * $nqty;
-                            $subtotal = $sale_item->unit_price * $nqty;
-                            //$this->db->update('sale_items', array('quantity' => $nqty, 'item_tax' => $item_tax, 'item_discount' => $item_discount, 'subtotal' => $subtotal), array('id' => $item['sale_item_id']));
-                        }
-                    }
-                }
-                $this->site->syncQuantitys(NULL, NULL, NULL, $item['product_id']);
-				$this->site->syncQuantitys(NULL, NULL, $sale_items);
+                $this->db->insert('purchase_items', $clause);
+
             }
+
+            $this->site->syncQuantity(NULL, NULL, NULL, NULL, NULL, $return_id);
+
             if (!empty($payment)) {
-                $data['sale_id'] = $sale_id;
-                if($data['sale_id']){
-                    $payment['sale_id'] = $data['sale_id'];
-                    $payment['return_id'] = $return_id;
-                    $payment['pos_paid'] = $payment['amount'];
-                    $this->db->insert('payments', $payment);
-                    if ($this->site->getReference('pay') == $data['reference_no']) {
-                        $this->site->updateReference('pay');
-                    }
-                    $this->calculateSaleTotalsReturn($data['sale_id'], $return_id, $data['surcharge']);
-                } else {
-                    $payment['return_id'] = $return_id;
-                    $this->db->insert('payments', $payment);
-                    if ($this->site->getReference('pay') == $data['reference_no']) {
-                        $this->site->updateReference('pay');
-                    }
-                    $this->calculateSaleTotalsReturn($data['sale_id'], $return_id, $data['surcharge']);
+                $payment['return_id'] = $return_id;
+                $this->db->insert('payments', $payment);
+                $payment_id = $this->db->insert_id();
+                if ($this->site->getReference('pp', $payment['biller_id']) == $payment['reference_no']) {
+                    $this->site->updateReference('pp', $payment['biller_id']);
                 }
+
+                if ($payment['paid_by'] == 'deposit') {
+                    $deposit = array(
+                        'date'          => $payment['date'],
+                        'reference'     => $payment['reference_no'],
+                        'amount'        => $payment['amount'],
+                        'paid_by'       => $payment['paid_by'],
+                        'created_by'    => $this->session->userdata('user_id'),
+                        'status'        => 'deposit',
+                        'biller_id'     => $payment['biller_id'],
+                        'payment_id'    => $payment_id,
+                        'company_id'    => $data['customer_id'],
+                        'note'          => $data['customer']
+                    );
+                    $this->db->insert('deposits', $deposit);
+                }
+
+                $this->calculateSaleTotalsReturn($data['sale_id'], $return_id, $data['surcharge']);
             }
-          //  $this->site->syncQuantity(NULL, NULL, $sale_items);
             return true;
         }
         return false;

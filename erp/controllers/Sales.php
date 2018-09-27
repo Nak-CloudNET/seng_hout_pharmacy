@@ -5960,15 +5960,11 @@ class Sales extends MY_Controller
             $unit_cost          = "unit_cost";
             $tax_rate           = "tax_rate";
             $reference          = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('re');
-
-
-
             if ($this->Owner || $this->Admin) {
                 $date           = $this->erp->fld(trim($this->input->post('date')));
             } else {
                 $date           = date('Y-m-d H:i:s');
             }
-           // isClosedDate($date);
             $return_surcharge   = $this->input->post('return_surcharge') ? $this->input->post('return_surcharge') : 0;
             $note               = $this->erp->clear_tags($this->input->post('note'));
 
@@ -5980,13 +5976,11 @@ class Sales extends MY_Controller
             $percentage         = '%';
             $i = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
-
                 $item_id        = $_POST['product_id'][$r];
                 $item_type      = $_POST['product_type'][$r];
                 $item_code      = $_POST['product_code'][$r];
                 $item_name      = $_POST['product_name'][$r];
                 $sale_ref       = $_POST['sale_reference'][$r];
-                //$this->erp->print_arrays($reference);
                 if(!$sale_ref){
                     $sample_sale_ref = $this->sales_model->getSampleSaleRefByProductID($item_id);
                     $sale_ref   = $sample_sale_ref;
@@ -6069,6 +6063,7 @@ class Sales extends MY_Controller
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $unitPrice,
                         'quantity'          => $item_quantity,
+                        'quantity_balance'  => $quantity_balance,
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $item_tax,
                         'tax_rate_id'       => $pr_tax,
@@ -6123,7 +6118,6 @@ class Sales extends MY_Controller
 
             $total_tax = $this->erp->formatDecimal($product_tax + $order_tax);
             $grand_total = $this->erp->formatDecimal($paid_amount);
-            //$this->erp->print_arrays($biller_id);
             $data = array(
                 'date'              => $date,
                 'reference_no'      => $reference,
@@ -6146,7 +6140,6 @@ class Sales extends MY_Controller
                 'grand_total'       => $grand_total,
                 'created_by'        => $this->session->userdata('user_id')
             );
-
             if ($this->input->post('amount-paid') && $this->input->post('amount-paid') != 0) {
                 $payment = array(
                     'date'          => $date,

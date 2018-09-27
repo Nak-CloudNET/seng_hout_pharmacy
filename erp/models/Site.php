@@ -3404,6 +3404,14 @@ class Site extends CI_Model
         return FALSE;
 	}
 
+    public function getAllSaleReturnItems($id){
+        $q = $this->db->get_where('return_items', array('return_id' => $id));
+        if ($q->num_rows() > 0) {
+            return $q->result();
+        }
+        return FALSE;
+    }
+
 	public function syncVariantsQty($warehouse_id, $product_id) {
         $balance_qty 	= $this->getBalanceQuantity($product_id);
         $wh_balance_qty = $this->getBalanceQuantity($product_id, $warehouse_id);
