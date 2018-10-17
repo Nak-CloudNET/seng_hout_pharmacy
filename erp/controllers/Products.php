@@ -2132,7 +2132,7 @@ class Products extends MY_Controller
         if ($warehouse_id) {
             $this->datatables
                 ->select("{$this->db->dbprefix('adjustments')}.id as id, 
-                date, reference_no, warehouses.name as wh_name, 0 as quantity, 
+                adjustments.date, reference_no, warehouses.name as wh_name, 0 as quantity, 
                 CONCAT({$this->db->dbprefix('users')}.first_name, ' ', 
                 {$this->db->dbprefix('users')}.last_name) as created_by, 
                 {$this->db->dbprefix('adjustments')}.note, 
