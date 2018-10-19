@@ -538,7 +538,7 @@ class Site extends CI_Model
 
 	public function getCustomers()
 	{
-		$this->db->select("id,CONCAT(code,'-',name) as text");
+		$this->db->select("id,CONCAT(code,'-',name) as text,name,company");
 		$this->db->where('group_name', 'customer');
 		$q = $this->db->get('companies');
         if ($q->num_rows() > 0) {

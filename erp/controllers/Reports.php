@@ -5819,6 +5819,7 @@ class Reports extends MY_Controller
         $this->data['date'] = date('Y-m-d');
         $this->data['user_id'] = $user_id;
         $this->data['billers'] = $this->site->getAllCompanies('biller');
+        $this->data['customers'] = $this->site->getCustomers();
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('saleman_detail_report_')));
         $meta = array('page_title' => lang('saleman_detail_report_'), 'bc' => $bc);
         $this->page_construct('reports/view_saleman_report', $meta, $this->data);
@@ -5832,6 +5833,11 @@ class Reports extends MY_Controller
             $customer = $this->input->get('customer');
         } else {
             $customer = NULL;
+        }
+        if ($this->input->get('customerA')) {
+            $customerA = $this->input->get('customerA');
+        } else {
+            $customerA = NULL;
         }
 
         if ($this->input->get('reference_no')) {
@@ -5905,7 +5911,10 @@ class Reports extends MY_Controller
         if ($customer) {
             $this->datatables->where('sales.saleman_by', $customer);
         }
-        
+        if ($customerA) {
+            $this->datatables->where('companies.id', $customerA);
+        }
+
         if ($reference_no) {
             $this->datatables->where('sales.reference_no', $reference_no);
         }

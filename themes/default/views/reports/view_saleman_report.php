@@ -27,6 +27,9 @@
 		if(isset($date)){
 			$v .= "&d=" . $date;
 		}
+        if ($this->input->post('customerA')) {
+            $v .= "&customerA=" . $this->input->post('customerA');
+        }
 	}
 ?>
 
@@ -225,7 +228,7 @@
                             <div class="form-group">
                                 <label class="control-label" for="biller"><?= lang("biller"); ?></label>
                                 <?php
-                                $bl[""] = "";
+                                $bl["0"] = "All";
                                 foreach ($billers as $biller) {
                                     $bl[$biller->id] = $biller->company != '-' ? $biller->company : $biller->name;
                                 }
@@ -277,6 +280,18 @@
                                     );
                                     echo form_dropdown('issued_by', $issued_by, (isset($_POST['issued_by']) ? $_POST['issued_by'] : ""), 'id="issued_by" class="form-control issued_by"');
                                 ?>                          
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="biller"><?= lang("customer"); ?></label>
+                                <?php
+                                $cus["0"] = "All";
+                                foreach ($customers as $cust) {
+                                    $cus[$cust->id] = $cust->name? $cust->name : $cust->company;
+                                }
+                                echo form_dropdown('customerA', $cus, (isset($_POST['customerA']) ? $_POST['customerA'] : ""), 'class="form-control" id="customer" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("biller") . '"');
+                                ?>
                             </div>
                         </div>
                     </div>
