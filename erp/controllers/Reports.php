@@ -334,7 +334,7 @@ class Reports extends MY_Controller
             $this->load->library('datatables');
             if ($warehouse_id) {
                 $this->datatables
-                    ->select("productss.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
+                    ->select("products.id,products.image, erp_purchase_items.product_code, erp_purchase_items.product_name, SUM(erp_purchase_items.quantity_balance), warehouses.name, erp_purchase_items.expiry, serial.serial_number")
                     ->from('purchase_items')
                     ->join('products', 'products.id = purchase_items.product_id', 'left')
                     ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
@@ -5819,6 +5819,7 @@ class Reports extends MY_Controller
         $this->data['date'] = date('Y-m-d');
         $this->data['user_id'] = $user_id;
         $this->data['billers'] = $this->site->getAllCompanies('biller');
+        $this->data['customers'] = $this->site->getCustomers();
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('saleman_detail_report_')));
         $meta = array('page_title' => lang('saleman_detail_report_'), 'bc' => $bc);
         $this->page_construct('reports/view_saleman_report', $meta, $this->data);
@@ -5832,6 +5833,11 @@ class Reports extends MY_Controller
             $customer = $this->input->get('customer');
         } else {
             $customer = NULL;
+        }
+        if ($this->input->get('customerA')) {
+            $customerA = $this->input->get('customerA');
+        } else {
+            $customerA = NULL;
         }
 
         if ($this->input->get('reference_no')) {
@@ -5905,7 +5911,10 @@ class Reports extends MY_Controller
         if ($customer) {
             $this->datatables->where('sales.saleman_by', $customer);
         }
-        
+        if ($customerA) {
+            $this->datatables->where('companies.id', $customerA);
+        }
+
         if ($reference_no) {
             $this->datatables->where('sales.reference_no', $reference_no);
         }
@@ -9740,6 +9749,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['products'] = $this->site->getProducts();
 
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('purchases_report')));
         $meta = array('page_title' => lang('purchases_report'), 'bc' => $bc);
@@ -9756,6 +9766,7 @@ class Reports extends MY_Controller
 		$reference_no = "";
 		$warehouse_id = "";
 		$created_by = "";
+		$s_product="";
 		$end_date = "";
 		$start_date = "";
 	    if($this->input->get('reference_no')){
@@ -9763,6 +9774,11 @@ class Reports extends MY_Controller
 			 $str.="&reference_no".$reference_no;
 			 $this->data['reference_no'] =$reference_no;
 		}
+        if($this->input->get('s_product')){
+            $s_product = $this->input->get('s_product');
+            $str.="&product_names".$s_product;
+            $this->data['s_product'] =$s_product;
+        }
 		if($this->input->get('warehouse')){
 			$warehouse_id =$this->input->get('warehouse');
 		    $str.="&warehouse=".$warehouse_id;
@@ -9794,6 +9810,7 @@ class Reports extends MY_Controller
 		if($reference_no){
 		    $this->db->where("erp_adjustments.reference_no",$reference_no); 	
 		}
+
 		if($created_by){
 			$this->db->where("erp_adjustments.created_by",$created_by);
 		}
@@ -9837,7 +9854,7 @@ class Reports extends MY_Controller
 		$this->pagination->initialize($config);
 		$this->data["pagination"] = $this->pagination->create_links(); 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error'); 
-        $this->data['items'] = $this->reports_model->getAlladjustment($reference_no,$warehouse_id,$wid,$created_by,$start_date,$end_date,$config["per_page"],$config["ob_set"]);
+        $this->data['items'] = $this->reports_model->getAlladjustment($reference_no,$warehouse_id,$wid,$created_by,$start_date,$end_date,$config["per_page"],$config["ob_set"],$s_product);
         //$this->data['warehouses'] = $this->site->getAllWarehouses();
 		
 		$this->data['created'] =$this->site->getAllUsers();
@@ -9849,8 +9866,8 @@ class Reports extends MY_Controller
 	function getPurchasesReport($pdf = NULL, $xls = NULL)
     {
         $datt =$this->reports_model->getLastDate("purchases","date");
-        if ($this->input->get('product')) {
-            $product = $this->input->get('product');
+        if ($this->input->get('product_id')) {
+            $product = $this->input->get('product_id');
         } else {
             $product = NULL;
         }
@@ -18995,10 +19012,10 @@ class Reports extends MY_Controller
 				$this->excel->getActiveSheet()->SetCellValue('C1', lang('warehouse'));
 				$this->excel->getActiveSheet()->SetCellValue('D1', lang('unit_cost'));
 				$this->excel->getActiveSheet()->SetCellValue('E1', lang('unit_price'));
-				$this->excel->getActiveSheet()->SetCellValue('F1', lang('quantity'));
-				$this->excel->getActiveSheet()->SetCellValue('G1', lang('unit'));
-				$this->excel->getActiveSheet()->SetCellValue('H1', lang('tax'));
-				$this->excel->getActiveSheet()->SetCellValue('I1', lang('discount'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('tax'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('discount'));
+				$this->excel->getActiveSheet()->SetCellValue('H1', lang('quantity'));
+				$this->excel->getActiveSheet()->SetCellValue('I1', lang('unit'));
 				$this->excel->getActiveSheet()->SetCellValue('J1', lang('total_costs'));
 				$this->excel->getActiveSheet()->SetCellValue('K1', lang('total_price'));
 				$this->excel->getActiveSheet()->SetCellValue('L1', lang('gross_mg'));
@@ -19190,10 +19207,10 @@ class Reports extends MY_Controller
 								$this->excel->getActiveSheet()->SetCellValue('C'. $row, $warehouses_arr[$sale_detail->warehouse_id]);
 								$this->excel->getActiveSheet()->SetCellValue('D' .$row, $this->erp->formatMoney($sale_detail->unit_cost));
 								$this->excel->getActiveSheet()->SetCellValue('E' .$row, $this->erp->formatMoney($sale_detail->unit_price));
-								$this->excel->getActiveSheet()->SetCellValue('F'. $row, $this->erp->formatQuantity($sale_detail->quantity));
-								$this->excel->getActiveSheet()->SetCellValue('G'. $row, $unit);
-								$this->excel->getActiveSheet()->SetCellValue('H' .$row, "(".$this->erp->formatMoney($sale_detail->item_tax).")");
-								$this->excel->getActiveSheet()->SetCellValue('I'. $row, "(".$this->erp->formatMoney($sale_detail->item_discount).")");
+                                $this->excel->getActiveSheet()->SetCellValue('F' .$row, "(".$this->erp->formatMoney($sale_detail->item_tax).")");
+                                $this->excel->getActiveSheet()->SetCellValue('G'. $row, "(".$this->erp->formatMoney($sale_detail->item_discount).")");
+								$this->excel->getActiveSheet()->SetCellValue('H'. $row, $this->erp->formatQuantity($sale_detail->quantity));
+								$this->excel->getActiveSheet()->SetCellValue('I'. $row, $unit);
 								$this->excel->getActiveSheet()->SetCellValue('J'. $row, $this->erp->formatMoney($total_cost));
 								$this->excel->getActiveSheet()->SetCellValue('K'. $row, ($sale_detail->subtotal - $sale_detail->item_tax));
 								$this->excel->getActiveSheet()->SetCellValue('L'. $row, $this->erp->formatMoney($gross_margin));
@@ -19271,8 +19288,8 @@ class Reports extends MY_Controller
 						$this->excel->getActiveSheet()->SetCellValue('J'. $row, $this->erp->formatMoney($total_costs));
 						$this->excel->getActiveSheet()->SetCellValue('K'. $row, $this->erp->formatMoney($total_amount));
 						$this->excel->getActiveSheet()->SetCellValue('L'. $row, $this->erp->formatMoney($total_gross_margin));
-						$this->excel->getActiveSheet()->mergeCells('A'.$row.':G'.$row);
-						$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
+						$this->excel->getActiveSheet()->mergeCells('A'.$row.':I'.$row);
+						$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 						$row++;
@@ -19283,8 +19300,8 @@ class Reports extends MY_Controller
 						$this->excel->getActiveSheet()->SetCellValue('I'. $row, "");
 						$this->excel->getActiveSheet()->SetCellValue('K'. $row, "(".$this->erp->formatMoney($sale->order_discount).")");
 						$this->excel->getActiveSheet()->SetCellValue('L'. $row, "(".$this->erp->formatMoney($sale->order_discount).")");
-						$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-						$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
+						$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+						$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 						$row++;
@@ -19295,8 +19312,8 @@ class Reports extends MY_Controller
 						$this->excel->getActiveSheet()->SetCellValue('I'. $row, "");
 						$this->excel->getActiveSheet()->SetCellValue('K'. $row, $this->erp->formatMoney($sale->shipping));
 						$this->excel->getActiveSheet()->SetCellValue('L'. $row, $this->erp->formatMoney($sale->shipping));
-						$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-						$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
+						$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+						$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 						$row++;
@@ -19308,8 +19325,8 @@ class Reports extends MY_Controller
 						$this->excel->getActiveSheet()->setCellValue('J'. $row, $this->erp->formatMoney($total_costs));
 						$this->excel->getActiveSheet()->setCellValue('K'. $row, $this->erp->formatMoney($amount));
 						$this->excel->getActiveSheet()->setCellValue('L'. $row, $this->erp->formatMoney($amount - $total_costs));
-						$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-						$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
+						$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+						$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_THIN);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 						$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 						$row++;
@@ -19349,8 +19366,8 @@ class Reports extends MY_Controller
 				$this->excel->getActiveSheet()->setCellValue('J'. $row, $this->erp->formatMoney($g_total_costs));
 				$this->excel->getActiveSheet()->setCellValue('K'. $row, $this->erp->formatMoney($g_amounts));
 				$this->excel->getActiveSheet()->setCellValue('L'. $row, $this->erp->formatMoney($g_amounts - $g_total_costs));
-				$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-				$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+				$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+				$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 				$row++;
@@ -19362,8 +19379,8 @@ class Reports extends MY_Controller
 				$this->excel->getActiveSheet()->setCellValue('I'. $row, "");
 				$this->excel->getActiveSheet()->setCellValue('K'. $row, "(".$this->erp->formatMoney($g_order_discounts).")");
 				$this->excel->getActiveSheet()->setCellValue('L'. $row, "(".$this->erp->formatMoney($g_order_discounts).")");
-				$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-				$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+				$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+				$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 				$row++;
@@ -19374,8 +19391,8 @@ class Reports extends MY_Controller
 				$this->excel->getActiveSheet()->setCellValue('I'. $row, "");
 				$this->excel->getActiveSheet()->setCellValue('K'. $row, $this->erp->formatMoney($g_total_shipping));
 				$this->excel->getActiveSheet()->setCellValue('L'. $row, $this->erp->formatMoney($g_total_shipping));
-				$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-				$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+				$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+				$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 				$row++;
@@ -19386,8 +19403,8 @@ class Reports extends MY_Controller
 				$this->excel->getActiveSheet()->setCellValue('I'. $row, "");
 				$this->excel->getActiveSheet()->setCellValue('J'. $row, "(".$this->erp->formatMoney($total_overh).")");
 				$this->excel->getActiveSheet()->setCellValue('L'. $row, "(".$this->erp->formatMoney($total_overh).")");
-				$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-				$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+				$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+				$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 				$row++;
@@ -19397,8 +19414,8 @@ class Reports extends MY_Controller
 				$this->excel->getActiveSheet()->setCellValue('H'. $row, "");
 				$this->excel->getActiveSheet()->setCellValue('I'. $row, "");
 				$this->excel->getActiveSheet()->setCellValue('L'. $row, $this->erp->formatMoney($grand_totals - $g_total_costs - $total_overh));
-				$this->excel->getActiveSheet()->mergeCells('A'. $row.':G'. $row);
-				$this->excel->getActiveSheet()->getStyle('H'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
+				$this->excel->getActiveSheet()->mergeCells('A'. $row.':I'. $row);
+				$this->excel->getActiveSheet()->getStyle('J'. $row.':L'. $row)->getBorders()->getTop()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
 				$this->excel->getActiveSheet()->getStyle('A'. $row.':L'.$row)->getFont()->setBold(true);
 				$row++;
@@ -22940,12 +22957,14 @@ class Reports extends MY_Controller
 					erp_sale_items.product_id,
 					erp_products.category_id,
 					erp_sales.saleman_by,
-					erp_companies.group_areas_id
+					erp_companies.group_areas_id,
+                    erp_group_areas.areas_group as customer_area
 				FROM
 					`erp_sales`
 				INNER JOIN erp_sale_items ON erp_sales.id = erp_sale_items.sale_id
 				LEFT JOIN erp_products ON erp_sale_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_sales.customer_id = erp_companies.id
+                LEFT JOIN erp_group_areas ON erp_sales.group_areas_id = erp_group_areas.areas_g_code
 				WHERE erp_sales.opening_ar = 0
 				GROUP BY
 					erp_sales.id,reference_no";
@@ -22974,12 +22993,14 @@ class Reports extends MY_Controller
 					erp_return_items.product_id,
 					erp_products.category_id,
 					erp_return_sales.created_by,
-					erp_companies.group_areas_id
+					erp_companies.group_areas_id,
+                    erp_group_areas.areas_group as customer_area
 				FROM
 					erp_return_sales
 				INNER JOIN erp_return_items ON erp_return_sales.id = erp_return_items.return_id
 				LEFT JOIN erp_products ON erp_return_items.product_id = erp_products.id
 				LEFT JOIN erp_companies ON erp_return_sales.customer_id = erp_companies.id
+                LEFT JOIN erp_group_areas ON erp_companies.group_areas_id = erp_group_areas.areas_g_code
 				GROUP BY
 					erp_return_sales.id,reference_no";
 		        /**/
@@ -24155,6 +24176,11 @@ class Reports extends MY_Controller
         }else{
             $biller = 0;
         }
+        if ($this->input->post('group_area')) {
+            $group_area = $this->input->post('group_area');
+        }else{
+            $group_area = '';
+        }
         if ($this->input->post('from_date')) {
             $from_date =  $this->erp->fld($this->input->post('from_date'));
         }else{
@@ -24172,7 +24198,8 @@ class Reports extends MY_Controller
 		$this->data['warehouses'] = $this->reports_model->getWarehousesProductProfit($wid,$wahouse_id,$category_id,$product_id,trim($from_date),trim($to_date),$reference,$biller);
 		$this->data['categories']   = $this->reports_model->getAllCategories();
 		$this->data['products']     = $this->reports_model->getAllProducts();
-		$this->data['billers']     = $this->reports_model->getAllBillers();
+        $this->data['billers']     = $this->reports_model->getAllBillers();
+		$this->data['customer_areas']     = $this->site->getArea();
 		
         $this->data['reference1'] = $reference;
 		$this->data['wahouse_id1'] = $wahouse_id;
@@ -24185,6 +24212,7 @@ class Reports extends MY_Controller
         }
          $this->data['cate_id1'] = $category_id;
          $this->data['biller1'] = $biller;
+         $this->data['group_area1'] = $group_area;
         
 		//$this->erp->print_arrays($this->reports_model->getAllCategories());
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => '#', 'page' => lang('reports')));

@@ -1,9 +1,9 @@
 <?php
 
 $v = "";
-/* if($this->input->post('name')){
-  $v .= "&name=".$this->input->post('name');
-  } */
+if($this->input->post('product_id')){
+  $v .= "&product_id=".$this->input->post('product_id');
+  } 
 if ($this->input->post('reference_no')) {
     $v .= "&reference_no=" . $this->input->post('reference_no');
 }
@@ -211,6 +211,18 @@ if (isset($biller_id)) {
 
                     <?php echo form_open("reports/purchases"); ?>
                     <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="product_id"><?= lang("product"); ?></label>
+                                <?php
+                                $pr[""] = "";
+                                foreach ($products as $product) {
+                                    $pr[$product->id] = $product->name . " | " . $product->code ;
+                                }
+                                echo form_dropdown('product_id', $pr, (isset($_POST['product_id']) ? $_POST['product_id'] : ""), 'class="form-control" id="product_id" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("product") . '"');
+                                ?>
+                            </div>
+                        </div>
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label class="control-label" for="reference_no"><?= lang("reference_no"); ?></label>

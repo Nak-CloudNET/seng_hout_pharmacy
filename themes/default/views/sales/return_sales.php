@@ -1,13 +1,13 @@
 <script>
-	function nl2br (str, is_xhtml) {   
-		var rs = '';
-		var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';    
-		rs = (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1'+ breakTag +'$2');
-		if(rs == 'null'){
-			rs = '';
-		}
-		return rs;
-	}
+    function nl2br (str, is_xhtml) {
+        var rs = '';
+        var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';
+        rs = (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1'+ breakTag +'$2');
+        if(rs == 'null'){
+            rs = '';
+        }
+        return rs;
+    }
 
     $(document).ready(function () {
         var oTable = $('#RESLData').dataTable({
@@ -22,10 +22,10 @@
                     "value": "<?= $this->security->get_csrf_hash() ?>"
                 });
                 $.ajax({'dataType': 'json',
-				'type': 'POST', 
-				'url': sSource, 
-				'data': aoData,
-				'success': fnCallback});
+                    'type': 'POST',
+                    'url': sSource,
+                    'data': aoData,
+                    'success': fnCallback});
             },
             'fnRowCallback': function (nRow, aData, iDisplayIndex) {
                 var oSettings = oTable.fnSettings();
@@ -33,22 +33,24 @@
                 nRow.className = "return_link";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,
-                "mRender": checkbox
-                }, {"mRender": fld}, null, {"mRender": nl2br}, null, null,null, {"mRender": currencyFormat}, {"bVisible": false}],
+            "aoColumns": [
+                {"bSortable": false, "mRender": checkbox},
+                {"mRender": fld}, null, null, null, null,null,
+                {"mRender": currencyFormat} /*, {"bVisible ": true}*/
+            ],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var sc = 0, gtotal = 0, tpaid = 0, tbalance = 0;
                 for (var i = 0; i < aaData.length; i++) {
                     //sc += parseFloat(aaData[aiDisplay[i]][6]);
-                  //  gtotal += parseFloat(aaData[aiDisplay[i]][7]);
-                   // tpaid += parseFloat(aaData[aiDisplay[i]][8]);
-                  tbalance += parseFloat(aaData[aiDisplay[i]][7]);
+                    //  gtotal += parseFloat(aaData[aiDisplay[i]][7]);
+                    // tpaid += parseFloat(aaData[aiDisplay[i]][8]);
+                    tbalance += parseFloat(aaData[aiDisplay[i]][7]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-               // nCells[6].innerHTML = currencyFormat(parseFloat(sc));
+                // nCells[6].innerHTML = currencyFormat(parseFloat(sc));
                 //nCells[7].innerHTML = currencyFormat(parseFloat(gtotal));
-             //   nCells[8].innerHTML = currencyFormat(parseFloat(tpaid));
-               nCells[7].innerHTML = currencyFormat(parseFloat(tbalance));
+                //   nCells[8].innerHTML = currencyFormat(parseFloat(tpaid));
+                nCells[7].innerHTML = currencyFormat(parseFloat(tbalance));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
@@ -56,24 +58,24 @@
             {column_number: 3, filter_default_label: "[<?=lang('sales_no');?>]", filter_type: "text", data: []},
             {column_number: 4, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
             {column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-			 {column_number: 6, filter_default_label: "[<?=lang('saleman');?>]", filter_type: "text", data: []}
+            {column_number: 6, filter_default_label: "[<?=lang('saleman');?>]", filter_type: "text", data: []}
         ], "footer");
 
         <?php if($this->session->userdata('remove_rels')) { ?>
-        localStorage.setItem('remove_rels', '1');
+        __setItem('remove_rels', '1');
         <?php $this->erp->unset_data('remove_rels'); } ?>
-        if (localStorage.getItem('remove_rels')) {
-            localStorage.removeItem('reref');
-            localStorage.removeItem('renote');
-            localStorage.removeItem('reitems');
-            localStorage.removeItem('rediscount');
-            localStorage.removeItem('retax2');
-            localStorage.removeItem('return_surcharge');
-            localStorage.removeItem('remove_rels');
+        if (__getItem('remove_rels')) {
+            __removeItem('reref');
+            __removeItem('renote');
+            __removeItem('reitems');
+            __removeItem('rediscount');
+            __removeItem('retax2');
+            __removeItem('return_surcharge');
+            __removeItem('remove_rels');
         }
 
         $(document).on('click', '.sledit', function (e) {
-            if (localStorage.getItem('slitems')) {
+            if (__getItem('slitems')) {
                 e.preventDefault();
                 var href = $(this).attr('href');
                 bootbox.confirm("<?=lang('you_will_loss_sale_data')?>", function (result) {
@@ -87,9 +89,8 @@
 
 </script>
 
-<?php //if ($Owner) {
-   echo form_open('sales/getReturnsAll_action/'.($warehouse_id ? $warehouse_id : ''), 'id="action-form"');
-//} 
+<?php
+echo form_open('sales/getReturnsAll_action/'.($warehouse_id ? $warehouse_id : ''), 'id="action-form"');
 ?>
 <div class="box">
     <div class="box-header">
@@ -98,18 +99,18 @@
                 <i class="fa-fw fa fa-barcode"></i>
                 <?= lang('sale_return'); ?>
                 (
-                    <?php
-                        if (count($warehouse) > 1) {
-                            echo lang('all_warehouses');
-                        } else {
-                            if (is_array($warehouse)) {
-                                foreach ($warehouse as $ware) {
-                                    echo $ware->name;
-                                }
-                            }
-                            echo $warehouse->name;
+                <?php
+                if (count($warehouse) > 1) {
+                    echo lang('all_warehouses');
+                } else {
+                    if (is_array($warehouse)) {
+                        foreach ($warehouse as $ware) {
+                            echo $ware->name;
                         }
-                    ?>
+                    }
+                    echo $warehouse->name;
+                }
+                ?>
                 )
             </h2>
         <?php } else { ?>
@@ -127,24 +128,24 @@
                                                                                   title="<?= lang("actions") ?>"></i></a>
                     <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
                         <?php //if ($Owner || $Admin || $GP['sales-add']) { ?>
-						<!-- <li><a href="<?= site_url('sales/add_return') ?>"><i
-                                    class="fa fa-plus-circle"></i> <?= lang('add_sale_return') ?></a></li> -->
-						<?php //} ?>
-						<?php if ($Owner || $Admin || $GP['sales-export']) { ?>
-							<li><a href="#" id="excel" data-action="export_excel"><i
-										class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
-							<li><a href="#" id="pdf" data-action="export_pdf"><i
-										class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?></a></li>
-						<?php } ?>
-						<?php //if ($Owner || $Admin || $GP['sales-import']) { ?>
-							<!-- <li>
-								<a href="<?= site_url('sales/sale_by_csv'); ?>">
-									<i class="fa fa-plus-circle"></i>
-									<span class="text"> <?= lang('add_sale_by_csv'); ?></span>
-								</a>
-							</li> -->
-						<?php //} ?>
-						
+                        <!-- <li><a href="<?= site_url('sales/add_return') ?>"><i
+                                        class="fa fa-plus-circle"></i> <?= lang('add_sale_return') ?></a></li> -->
+                        <?php //} ?>
+                        <?php if ($Owner || $Admin || $GP['sales-export']) { ?>
+                            <li><a href="#" id="excel" data-action="export_excel"><i
+                                            class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
+                            <li><a href="#" id="pdf" data-action="export_pdf"><i
+                                            class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?></a></li>
+                        <?php } ?>
+                        <?php //if ($Owner || $Admin || $GP['sales-import']) { ?>
+                        <!-- <li>
+                                    <a href="<?= site_url('sales/sale_by_csv'); ?>">
+                                        <i class="fa fa-plus-circle"></i>
+                                        <span class="text"> <?= lang('add_sale_by_csv'); ?></span>
+                                    </a>
+                                </li> -->
+                        <?php //} ?>
+
                     </ul>
                 </li>
                 <?php if (!empty($warehouses)) { ?>
@@ -154,7 +155,7 @@
                                                                                       title="<?= lang("warehouses") ?>"></i></a>
                         <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
                             <li><a href="<?= site_url('sales/return_sales') ?>"><i
-                                        class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
+                                            class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
                             <li class="divider"></li>
                             <?php
                             foreach ($warehouses as $warehouse) {
@@ -177,7 +178,7 @@
                     <table id="RESLData" class="table table-bordered table-hover table-striped">
                         <thead>
                         <tr>
-							<th style="min-width:30px; width: 30px; text-align: center;">
+                            <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
                             <th><?php echo $this->lang->line("date"); ?></th>
@@ -187,13 +188,12 @@
                             <th><?php echo $this->lang->line("customer"); ?></th>
                             <th><?php echo $this->lang->line("saleman"); ?></th>
                             <th><?php echo $this->lang->line("amount"); ?></th>
-                            <th><?php echo $this->lang->line("actions"); ?></th>
+                            <!--<th><?php echo $this->lang->line("actions"); ?></th>-->
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="10"
-                                class="dataTables_empty"><?php echo $this->lang->line("loading_data"); ?></td>
+                            <td colspan="9" class="dataTables_empty"><?php echo $this->lang->line("loading_data"); ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -208,7 +208,7 @@
                             <th></th>
                             <th></th>
                             <th></th>
-                            <th class="text-center"><?= lang('action') ?></th>
+                            <!--<th class="text-center"><?= lang('action') ?></th>-->
                         </tr>
                         </tfoot>
                     </table>
@@ -217,22 +217,8 @@
         </div>
     </div>
 </div>
-    <div style="display: none;">
-        <input type="hidden" name="form_action" value="" id="form_action"/>
-        <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
-    </div>
-    <?= form_close() ?>
-<script>
-	// $(document).ready(function(){
-	// 	$("#excel").click(function(e){
-	// 		e.preventDefault();
-	// 		window.location.href = "<?=site_url('Sales/getReturnsAll/0/xls/')?>";
-	// 		return false;
-	// 	});
-	// 	$('#pdf').click(function (event) {
- //            event.preventDefault();
- //            window.location.href = "<?=site_url('Sales/getReturnsAll/pdf/?v=1'.$v)?>";
- //            return false;
- //        });
-	// });
-</script>
+<div style="display: none;">
+    <input type="hidden" name="form_action" value="" id="form_action"/>
+    <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
+</div>
+<?= form_close() ?>

@@ -1,18 +1,18 @@
 <?php
 
-	$v = "";
-if ($this->input->post('product_id')) {
-    $v .= "&product_id=" . $this->input->post('product_id');
-}
-if ($this->input->post('category')) {
-    $v .= "&category=" . $this->input->post('category');
-}
-if ($this->input->post('group_area')) {
-    $v .= "&group_area=" . $this->input->post('group_area');
-}
-if ($this->input->post('saleman')) {
-    $v .= "&saleman=" . $this->input->post('saleman');
-}
+    $v = "";
+    if ($this->input->post('product_id')) {
+        $v .= "&product_id=" . $this->input->post('product_id');
+    }
+    if ($this->input->post('category')) {
+        $v .= "&category=" . $this->input->post('category');
+    }
+    if ($this->input->post('group_area')) {
+        $v .= "&group_area=" . $this->input->post('group_area');
+    }
+    if ($this->input->post('saleman')) {
+        $v .= "&saleman=" . $this->input->post('saleman');
+    }
 	if ($this->input->post('reference_no')) {
 		$v .= "&reference_no=" . $this->input->post('reference_no');
 	}
@@ -393,9 +393,10 @@ if ($this->input->post('saleman')) {
 								<tr class="info-reference_no">
 									<td><input type="checkbox" class="checkbox multi-select input-xs" name='val[]' value="<?php echo $sale->id ?>" /></td>
 									<td colspan="12" style="font-size:18px;" class="left">
-										<b style="<?php if($sale->type == 2){ echo "color:red"; } ?>">
+										<b style="<?php if($sale->type == 2){ echo "color:red"; } ?> " data-toggle="tooltip" data-placement="bottom" title="Reference No. >> Customer >> Customer Area >> Date">
 											<?= $sale->reference_no; ?> <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-											<?= $sale->customer ?> <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                                            <?= $sale->customer ?> <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+											<?= $sale->customer_area ?> <i class="fa fa-angle-double-right" aria-hidden="true"></i>
 											<?= date('d/M/Y h:i A',strtotime($sale->date)); ?>
 											
 										</b>
@@ -464,7 +465,7 @@ if ($this->input->post('saleman')) {
 								?>
 										<tr>			
 											<td></td>
-											<td>(<?= $sale_detail->product_name; ?>) <?= $sale_detail->product_code ?></td>
+											<td><?= $sale_detail->product_name; ?></td>
 											<td><?= $sale->biller ?></td>
 											<td class="center"><?= $warehouses_arr[$sale_detail->warehouse_id]; ?></td>
 											<td class="right"><?= $this->erp->formatMoney($sale_detail->unit_cost); ?></td>

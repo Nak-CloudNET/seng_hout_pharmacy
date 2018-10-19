@@ -267,12 +267,13 @@ class Companies_model extends CI_Model
 
     public function getCustomerSuggestions($term, $limit = 10)
     {
-        $this->db->select("companies.id, CONCAT(code,' - ', (
-			IF((ISNULL(company) OR company = ''), name, company)
+        $this->db->select("companies.id, CONCAT(erp_companies.code,' - ', (
+			IF((ISNULL(erp_companies.company) OR erp_companies.company = ''), erp_companies.name, erp_companies.company)
 		)) as text", FALSE);
-		$this->db->join('gift_cards', 'gift_cards.customer_id = companies.id', 'left');
-        $this->db->where(" (erp_companies.id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR erp_gift_cards.card_no LIKE '%". $term ."%' ) ");
-		$this->db->group_by('companies.id');
+        $this->db->join('gift_cards', 'gift_cards.customer_id = companies.id', 'left');
+        $this->db->join('customer_groups', 'companies.customer_group_id = customer_groups.id', 'left');
+        $this->db->where(" (erp_companies.id LIKE '%" . $term . "%' OR erp_companies.name LIKE '%" . $term . "%' OR erp_companies.company LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR erp_gift_cards.card_no LIKE '%" . $term . "%' ) ");
+        $this->db->group_by('companies.id');
         $q = $this->db->get_where('companies', array('group_name' => 'customer'), $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

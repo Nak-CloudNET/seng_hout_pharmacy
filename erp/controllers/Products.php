@@ -337,6 +337,7 @@ class Products extends MY_Controller
 
         if ($this->input->get('product')) {
             $product = $this->input->get('product');
+
         } else {
             $product = NULL;
         }
@@ -449,8 +450,12 @@ class Products extends MY_Controller
 					$this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
 						->where_in('wp.warehouse_id', $this->session->userdata('warehouse_id'));
 				}
-                $this->datatables->group_by("products.id");
 
+				if($this->Settings->display_all_products == 0) {
+//				    $this->db->where('products.quantity >', 0);
+                         //->or_where('products.type <>', 'standard');
+                }
+                $this->datatables->group_by("products.id");
             }
 
         if (!$this->Owner && !$this->Admin) {
@@ -2127,7 +2132,7 @@ class Products extends MY_Controller
         if ($warehouse_id) {
             $this->datatables
                 ->select("{$this->db->dbprefix('adjustments')}.id as id, 
-                date, reference_no, warehouses.name as wh_name, 0 as quantity, 
+                adjustments.date, reference_no, warehouses.name as wh_name, 0 as quantity, 
                 CONCAT({$this->db->dbprefix('users')}.first_name, ' ', 
                 {$this->db->dbprefix('users')}.last_name) as created_by, 
                 {$this->db->dbprefix('adjustments')}.note, 

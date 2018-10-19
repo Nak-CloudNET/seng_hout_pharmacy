@@ -1739,7 +1739,7 @@ class Sales extends MY_Controller
 		if($warehouse_id){
 			$warehouse_id = explode('-', $warehouse_id);
 		}
-		
+
         if (!$this->Owner && !$warehouse_id) {
             //$user = $this->site->getUser();
             //$warehouse_id = $user->warehouse_id;
@@ -1813,7 +1813,7 @@ class Sales extends MY_Controller
                 ->from('return_sales')
                 ->group_by('return_sales.id');
         }
-		
+
 		if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('return_sales.created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
@@ -5932,97 +5932,102 @@ class Sales extends MY_Controller
         }
     }
 
-	function add_return($quote_id = NULL)
+    function add_return($quote_id = NULL)
     {
         $this->erp->checkPermissions('return_sales',null,'sales');
 
         $this->form_validation->set_message('is_natural_no_zero', lang("no_zero_required"));
-        //$this->form_validation->set_rules('reference_no', lang("reference_no"), 'required');
         $this->form_validation->set_rules('customer', lang("customer"), 'required');
         $this->form_validation->set_rules('biller', lang("biller"), 'required');
-        //$this->form_validation->set_rules('sale_status', lang("sale_status"), 'required');
-        //$this->form_validation->set_rules('payment_status', lang("payment_status"), 'required');
-		
-		if($this->input->post('payment_status') == 'paid'){
-			$this->form_validation->set_rules('amount-paid', lang("amount"), 'required');
-		}
+
+        if($this->input->post('payment_status') == 'paid'){
+            $this->form_validation->set_rules('amount-paid', lang("amount"), 'required');
+        }
 
         if ($this->form_validation->run() == true) {
-			
-            $sale = $this->sales_model->getInvoiceByRef($quote_id);
-			$warehouse_id = $this->input->post('warehouse');
-            $customer_id = $this->input->post('customer');
-			$biller_id = $this->input->post('biller');
-			$customer_details = $this->site->getCompanyByID($customer_id);
-			$customer = $customer_details->company ? $customer_details->company : $customer_details->name;
-			$biller_details = $this->site->getCompanyByID($biller_id);
-            $biller = $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
-			
-            $quantity = "quantity";
-            $product = "product";
-            $unit_cost = "unit_cost";
-            $tax_rate = "tax_rate";
-            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('re');
+
+            $sale               = $this->sales_model->getInvoiceByRef($quote_id);
+            $warehouse_id       = $this->input->post('warehouse');
+            $customer_id        = $this->input->post('customer');
+            $biller_id          = $this->input->post('biller');
+            $customer_details   = $this->site->getCompanyByID($customer_id);
+            $customer           = $customer_details->company ? $customer_details->company : $customer_details->name;
+            $biller_details     = $this->site->getCompanyByID($biller_id);
+            $biller             = $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
+
+            $quantity           = "quantity";
+            $product            = "product";
+            $unit_cost          = "unit_cost";
+            $tax_rate           = "tax_rate";
+            $reference          = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('re');
             if ($this->Owner || $this->Admin) {
-                $date = $this->erp->fld(trim($this->input->post('date')));
+                $date           = $this->erp->fld(trim($this->input->post('date')));
             } else {
-                $date = date('Y-m-d H:i:s');
+                $date           = date('Y-m-d H:i:s');
             }
+            $return_surcharge   = $this->input->post('return_surcharge') ? $this->input->post('return_surcharge') : 0;
+            $note               = $this->erp->clear_tags($this->input->post('note'));
 
-            $return_surcharge = $this->input->post('return_surcharge') ? $this->input->post('return_surcharge') : 0;
-            $note = $this->erp->clear_tags($this->input->post('note'));
-
-            $total = 0;
-            $product_tax = 0;
-            $order_tax = 0;
-            $product_discount = 0;
-            $order_discount = 0;
-            $percentage = '%';
+            $total              = 0;
+            $product_tax        = 0;
+            $order_tax          = 0;
+            $product_discount   = 0;
+            $order_discount     = 0;
+            $percentage         = '%';
             $i = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
-                $item_id = $_POST['product_id'][$r];
-                $item_type = $_POST['product_type'][$r];
-                $item_code = $_POST['product_code'][$r];
-                $item_name = $_POST['product_name'][$r];
-                $sale_ref = $_POST['sale_reference'][$r];
-				if(!$sale_ref){
-					$sample_sale_ref = $this->sales_model->getSampleSaleRefByProductID($item_id);
-					$sale_ref = $sample_sale_ref;
-				}
-				
-                $item_option = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' ? $_POST['product_option'][$r] : NULL;
-                //$option_details = $this->sales_model->getProductOptionByID($item_option);
+                $item_id        = $_POST['product_id'][$r];
+                $item_type      = $_POST['product_type'][$r];
+                $item_code      = $_POST['product_code'][$r];
+                $item_name      = $_POST['product_name'][$r];
+                $sale_ref       = $_POST['sale_reference'][$r];
+                if(!$sale_ref){
+                    $sample_sale_ref = $this->sales_model->getSampleSaleRefByProductID($item_id);
+                    $sale_ref   = $sample_sale_ref;
+                }
+
+                $item_option    = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' ? $_POST['product_option'][$r] : NULL;
+
                 $real_unit_price = $this->erp->formatDecimal($_POST['real_unit_price'][$r]);
-                $unit_price = $this->erp->formatDecimal($_POST['unit_price'][$r]);
-                $item_quantity = $_POST['quantity'][$r];
-                $item_serial = isset($_POST['serial'][$r]) ? $_POST['serial'][$r] : '';
-                $item_tax_rate = isset($_POST['product_tax'][$r]) ? $_POST['product_tax'][$r] : NULL;
-                $item_discount = isset($_POST['product_discount'][$r]) ? $_POST['product_discount'][$r] : NULL;
-				
-				$sale_r = $this->sales_model->getSaleItemByRefPID($sale_ref, $item_id);
-				if(!$sale_r) {
-					$sale_r = $this->sales_model->getSaleItemByProductID($item_id);
-				}
-				$sale_item_id = $sale_r->sale_item_id;
-                $sale_id = $sale_r->sale_id?$sale_r->sale_id:0;
+                $unit_price     = $this->erp->formatDecimal($_POST['unit_price'][$r]);
+                $item_quantity  = $_POST['quantity'][$r];
+                $item_serial    = isset($_POST['serial'][$r]) ? $_POST['serial'][$r] : '';
+                $item_tax_rate  = isset($_POST['product_tax'][$r]) ? $_POST['product_tax'][$r] : NULL;
+                $item_discount  = isset($_POST['product_discount'][$r]) ? $_POST['product_discount'][$r] : NULL;
+
+                $sale_r         = $this->sales_model->getSaleItemByRefPID($sale_ref, $item_id);
+                if(!$sale_r) {
+                    $sale_r = $this->sales_model->getSaleItemByProductID($item_id);
+                }
+                $sale_item_id   = $sale_r->sale_item_id;
+                $sale_id        = $sale_r->sale_id?$sale_r->sale_id:0;
 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : NULL;
                     if (isset($item_discount)) {
                         $discount = $item_discount;
-                        $dpos = strpos($discount, $percentage);
+                        $dpos   = strpos($discount, $percentage);
                         if ($dpos !== false) {
                             $pds = explode("%", $discount);
                             $pr_discount = (($this->erp->formatDecimal($unit_price)) * (Float)($pds[0])) / 100;
                         } else {
-                            $pr_discount = $this->erp->formatDecimal($discount);
+                            $pr_discount = $this->erp->formatDecimal($discount/$item_quantity);
                         }
                     } else {
                         $pr_discount = 0;
                     }
-                    $unit_price = $this->erp->formatDecimal($unit_price - $pr_discount);
-                    $pr_item_discount = $this->erp->formatDecimal($pr_discount * $item_quantity);
-                    $product_discount += $pr_item_discount;
+                    $unitPrice          = $this->erp->formatDecimal($unit_price);
+                    $unit_price         = $this->erp->formatDecimal($unit_price - $pr_discount);
+                    $pr_item_discount   = $this->erp->formatDecimal($pr_discount);
+                    $product_discount   += $pr_item_discount;
+
+                    $quantity_balance = 0;
+                    if($item_option != 0) {
+                        $row = $this->purchases_model->getVariantQtyById($item_option);
+                        $quantity_balance = $item_quantity * $row->qty_unit;
+                    }else{
+                        $quantity_balance = $item_quantity;
+                    }
 
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $pr_tax = $item_tax_rate;
@@ -6039,47 +6044,47 @@ class Sales extends MY_Controller
                             $item_tax = $this->erp->formatDecimal($tax_details->rate);
                             $tax = $tax_details->rate;
                         }
-                        $pr_item_tax = $this->erp->formatDecimal($item_tax * $item_quantity);
+                        $pr_item_tax = $item_tax * $item_quantity;
                     } else {
                         $pr_tax = 0;
                         $pr_item_tax = 0;
                         $tax = "";
                     }
-                    
-                    $item_net_price = $product_details->tax_method ? $this->erp->formatDecimal($unit_price-$pr_discount) : $this->erp->formatDecimal($unit_price-$item_tax-$pr_discount);
-                    $product_tax += $pr_item_tax;
-                    $subtotal = (($item_net_price * $item_quantity) + $pr_item_tax);
+
+                    $item_net_price = $product_details->tax_method ? $this->erp->formatDecimal($unit_price) : $this->erp->formatDecimal($unit_price-$item_tax);
+                    $product_tax    += $pr_item_tax;
+                    $subtotal       = (($item_net_price * $item_quantity) + $pr_item_tax);
                     $products[] = array(
-                        'product_id' => $item_id,
-                        'product_code' => $item_code,
-                        'product_name' => $item_name,
-                        'product_type' => $item_type,
-                        'option_id' => $item_option,
-                        'net_unit_price' => $item_net_price,
-                        // 'unit_price' => $this->erp->formatDecimal($item_net_price + $item_tax),
-                        'quantity' => $item_quantity,
-                        'warehouse_id' => $warehouse_id,
-                        'item_tax' => $pr_item_tax,
-                        'tax_rate_id' => $pr_tax,
-                        'tax' => $tax,
-                        'discount' => $item_discount,
-                        'item_discount' => $pr_item_discount,
-                        'subtotal' => $this->erp->formatDecimal($subtotal),
-                        'serial_no' => $item_serial,
-                        'real_unit_price' => $real_unit_price,
-                        'sale_item_id' => $sale_item_id,
-                        'sale_id' => $sale_id
+                        'product_id'        => $item_id,
+                        'product_code'      => $item_code,
+                        'product_name'      => $item_name,
+                        'product_type'      => $item_type,
+                        'option_id'         => $item_option,
+                        'net_unit_price'    => $item_net_price,
+                        'unit_price'        => $unitPrice,
+                        'quantity'          => $item_quantity,
+                        'quantity_balance'  => $quantity_balance,
+                        'warehouse_id'      => $warehouse_id,
+                        'item_tax'          => $item_tax,
+                        'tax_rate_id'       => $pr_tax,
+                        'tax'               => $tax,
+                        'discount'          => $item_discount,
+                        'item_discount'     => $pr_item_discount,
+                        'subtotal'          => $this->erp->formatDecimal($subtotal),
+                        'serial_no'         => $item_serial,
+                        'real_unit_price'   => $real_unit_price
                     );
                     $total += $item_net_price * $item_quantity;
                 }
             }
+
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang("order_items"), 'required');
             } else {
                 krsort($products);
             }
-			
-			$paid_amount = $this->input->post('amount-paid');
+
+            $paid_amount = $this->input->post('amount-paid');
 
             if ($this->input->post('discount')) {
                 $order_discount_id = $this->input->post('order_discount');
@@ -6108,49 +6113,49 @@ class Sales extends MY_Controller
             } else {
                 $order_tax_id = NULL;
             }
-			
-			$references = sizeof($_POST['sale_reference']);
+
+            $references = sizeof($_POST['sale_reference']);
 
             $total_tax = $this->erp->formatDecimal($product_tax + $order_tax);
             $grand_total = $this->erp->formatDecimal($paid_amount);
-            $data = array('date' => $date,
-                'sale_id' => $quote_id,
-                'reference_no' => $reference,
-                'customer_id' => $customer_id,
-                'customer' => $customer,
-                'biller_id' => $biller_id,
-                'biller' => $biller,
-                'warehouse_id' => $warehouse_id,
-                'note' => $note,
-                'total' => $this->input->post('amount-paid'),
-                'product_discount' => $this->erp->formatDecimal($product_discount),
+            $data = array(
+                'date'              => $date,
+                'reference_no'      => $reference,
+                'customer_id'       => $customer_id,
+                'customer'          => $customer,
+                'biller_id'         => $biller_id,
+                'biller'            => $biller,
+                'warehouse_id'      => $warehouse_id,
+                'note'              => $note,
+                'total'             => $this->input->post('amount-paid'),
+                'product_discount'  => $this->erp->formatDecimal($product_discount),
                 'order_discount_id' => $order_discount_id,
-                'order_discount' => $order_discount,
-                'total_discount' => $total_discount,
-                'product_tax' => $this->erp->formatDecimal($product_tax),
-                'order_tax_id' => $order_tax_id,
-                'order_tax' => $order_tax,
-                'total_tax' => $total_tax,
-                'surcharge' => $this->erp->formatDecimal($return_surcharge),
-                'grand_total' => $grand_total,
-                'created_by' => $this->session->userdata('user_id')
+                'order_discount'    => $order_discount,
+                'total_discount'    => $total_discount,
+                'product_tax'       => $this->erp->formatDecimal($product_tax),
+                'order_tax_id'      => $order_tax_id,
+                'order_tax'         => $order_tax,
+                'total_tax'         => $total_tax,
+                'surcharge'         => $this->erp->formatDecimal($return_surcharge),
+                'grand_total'       => $grand_total,
+                'created_by'        => $this->session->userdata('user_id')
             );
             if ($this->input->post('amount-paid') && $this->input->post('amount-paid') != 0) {
                 $payment = array(
-                    'date' => $date,
-                    'reference_no' => $this->input->post('payment_reference_no'),
-                    'amount' => $this->erp->formatDecimal($this->input->post('amount-paid')),
-                    'paid_by' => $this->input->post('paid_by'),
-                    'cheque_no' => $this->input->post('cheque_no'),
-                    'cc_no' => $this->input->post('pcc_no'),
-                    'cc_holder' => $this->input->post('pcc_holder'),
-                    'cc_month' => $this->input->post('pcc_month'),
-                    'cc_year' => $this->input->post('pcc_year'),
-                    'cc_type' => $this->input->post('pcc_type'),
-                    'created_by' => $this->session->userdata('user_id'),
-                    'type' => 'returned',
-                    'biller_id' => $sale->biller_id ? $sale->biller_id : $this->default_biller_id,
-					'add_payment' => '0'
+                    'date'          => $date,
+                    'reference_no'  => $this->input->post('payment_reference_no'),
+                    'amount'        => $this->erp->formatDecimal($this->input->post('amount-paid')),
+                    'paid_by'       => $this->input->post('paid_by'),
+                    'cheque_no'     => $this->input->post('cheque_no'),
+                    'cc_no'         => $this->input->post('pcc_no'),
+                    'cc_holder'     => $this->input->post('pcc_holder'),
+                    'cc_month'      => $this->input->post('pcc_month'),
+                    'cc_year'       => $this->input->post('pcc_year'),
+                    'cc_type'       => $this->input->post('pcc_type'),
+                    'created_by'    => $this->session->userdata('user_id'),
+                    'type'          => 'returned',
+                    'biller_id'     => $biller_id,
+                    'add_payment'   => '0'
                 );
             } else {
                 $payment = array();
@@ -6172,97 +6177,42 @@ class Sales extends MY_Controller
                 $photo = $this->upload->file_name;
                 $data['attachment'] = $photo;
             }
-            //$this->erp->print_arrays($data, $products, $payment);
+//            $this->erp->print_arrays($data, $products, $payment);
         }
 
         if ($this->form_validation->run() == true && $this->sales_model->returnSales($data, $products, $payment)) {
             $this->session->set_flashdata('message', lang("return_sale_added"));
-            redirect("sales/return_sale");
+            $this->session->set_userdata('remove_return', '1');
+            redirect("sales/return_sales");
         } else {
-
-            if ($quote_id) {
-                $this->data['quote'] = $this->sales_model->getQuoteByID($quote_id);
-                $items = $this->sales_model->getAllQuoteItems($quote_id);
-                $c = rand(100000, 9999999);
-                foreach ($items as $item) {
-                    $row = $this->site->getProductByID($item->product_id);
-                    if (!$row) {
-                        $row = json_decode('{}');
-                        $row->tax_method = 0;
-                    } else {
-                        unset($row->cost, $row->details, $row->product_details, $row->supplier1price, $row->supplier2price, $row->supplier3price, $row->supplier4price, $row->supplier5price);
-                    }
-                    $row->quantity = 0;
-                    $pis = $this->sales_model->getPurchasedItems($item->product_id, $item->warehouse_id, $item->option_id);
-                    if($pis){
-                        foreach ($pis as $pi) {
-                            $row->quantity += $pi->quantity_balance;
-                        }
-                    }
-                    $row->id = $item->product_id;
-                    $row->code = $item->product_code;
-                    //$row->name = $item->product_name;
-                    $row->type = $item->product_type;
-                    $row->qty = $item->quantity;
-                    $row->discount = $item->discount ? $item->discount : '0';
-                    $row->price = $this->erp->formatDecimal($item->net_unit_price+$this->erp->formatDecimal($item->item_discount/$item->quantity));
-                    $row->unit_price = $row->tax_method ? $item->unit_price+$this->erp->formatDecimal($item->item_discount/$item->quantity)+$this->erp->formatDecimal($item->item_tax/$item->quantity) : $item->unit_price+($item->item_discount/$item->quantity);
-                    $row->real_unit_price = $item->real_unit_price;
-                    $row->tax_rate = $item->tax_rate_id;
-                    $row->serial = '';
-                    $row->option = $item->option_id;
-
-                    $options = $this->sales_model->getProductOptions($row->id, $item->warehouse_id);
-
-                    if ($options) {
-                        $option_quantity = 0;
-                        foreach ($options as $option) {
-                            $pis = $this->sales_model->getPurchasedItems($row->id, $item->warehouse_id, $item->option_id);
-                            if($pis){
-                                foreach ($pis as $pi) {
-                                    $option_quantity += $pi->quantity_balance;
-                                }
-                            }
-                            if($option->quantity > $option_quantity) {
-                                $option->quantity = $option_quantity;
-                            }
-                        }
-                    }
-                    $combo_items = FALSE;
-                    if ($row->type == 'combo') {
-                        $combo_items = $this->sales_model->getProductComboItems($row->id, $item->warehouse_id);
-                    }
-                    $ri = $this->Settings->item_addition ? $row->id : $c;
-                    if ($row->tax_rate) {
-                        $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
-                        $pr[$ri] = array('id' => $c, 'item_id' => $row->id, 'label' => $row->name . " (" . $row->code . ")", 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'options' => $options, 'sale_ref' => '', 'quantity_received' => 0);
-                    } else {
-                        $pr[$ri] = array('id' => $c, 'item_id' => $row->id, 'label' => $row->name . " (" . $row->code . ")", 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => false, 'options' => $options, 'sale_ref' => '', 'quantity_received' => 0);
-                    }
-                    $c++;
-                }
-                $this->data['quote_items'] = json_encode($pr);
+            $this->data['error']        = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['quote_id']     = $quote_id;
+            $this->data['billers']      = $this->site->getAllCompanies('biller');
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['agencies']     = $this->site->getAllUsers();
+            $this->data['tax_rates']    = $this->site->getAllTaxRates();
+            $this->data['setting']      = $this->site->get_setting();
+            $this->data['bankAccounts'] =  $this->site->getAllBankAccounts();
+            if ($this->Owner || $this->Admin || !$this->session->userdata('biller_id')){
+                $biller_id = $this->site->get_setting()->default_biller;
+                $this->data['reference']    = $this->site->getReference('re', $biller_id);
+                $this->data['payment_ref']  = $this->site->getReference('pp', $biller_id);
+                $this->data['deposit_ref']  = $this->site->getReference('sp', $biller_id);
+            }else{
+                $biller_id = $this->session->userdata('biller_id');
+                $this->data['reference']    = $this->site->getReference('re', $biller_id);
+                $this->data['payment_ref']  = $this->site->getReference('pp', $biller_id);
+                $this->data['deposit_ref']  = $this->site->getReference('sp', $biller_id);
             }
-
-            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['quote_id'] = $quote_id;
-            $this->data['billers'] = $this->site->getAllCompanies('biller');
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
-			
-			$this->data['agencies'] = $this->site->getAllUsers();
-            $this->data['tax_rates'] = $this->site->getAllTaxRates();
-            //$this->data['currencies'] = $this->sales_model->getAllCurrencies();
-            $this->data['slnumber'] = ''; //$this->site->getReference('so');
-            $this->data['payment_ref'] = $this->site->getReference('sp');
-			$this->data['setting'] = $this->site->get_setting();
+            $this->data['setting']      = $this->site->get_setting();
             $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('sales'), 'page' => lang('sales')), array('link' => '#', 'page' => lang('add_sale_return')));
             $meta = array('page_title' => lang('add_sale_return'), 'bc' => $bc);
             $this->page_construct('sales/add_return', $meta, $this->data);
         }
-    
-	}
 
-	function getReferences($term = NULL, $limit = NULL)
+    }
+
+    function getReferences($term = NULL, $limit = NULL)
     {
        
         if ($this->input->get('term')) {
@@ -6276,7 +6226,219 @@ class Sales extends MY_Controller
         $rows['results'] = $this->sales_model->getSalesReferences($term, $limit);
         echo json_encode($rows);
     }
-	
+    function suggestionsReturn(){
+        $term = $this->input->get('term', TRUE);
+        $warehouse_id = $this->input->get('warehouse_id', TRUE);
+        $customer_id = $this->input->get('customer_id', TRUE);
+        $category_id = $this->input->get('category_id', TRUE);
+
+        if (strlen($term) < 1 || !$term) {
+            die("<script type='text/javascript'>setTimeout(function(){ window.top.location.href = '" . site_url('welcome') . "'; }, 10);</script>");
+        }
+        $spos = strpos($term, '_');
+        if ($spos !== false) {
+            $st 	= explode("_", $term);
+            $sr 	= trim($st[0]);
+            $opt_id = trim($st[1]);
+        } else {
+            $sr 	= $term;
+            $opt_id = '';
+        }
+        $customer 		= $this->site->getCompanyByID($customer_id);
+        $customer_group = $this->site->getCustomerGroupByID($customer->customer_group_id);
+        $user_setting 	= $this->site->getUserSetting($this->session->userdata('user_id'));
+        $rows           = $this->sales_model->getProductReturns($sr, $warehouse_id, $user_setting->sales_standard, $user_setting->sales_combo, $user_setting->sales_digital, $user_setting->sales_service, $user_setting->sales_category, $category_id);
+        $expiry_status = 0;
+        if($this->site->get_setting()->product_expiry == 1){
+            $expiry_status = 1;
+        }
+
+        if ($rows) {
+            foreach ($rows as $row) {
+                $option                 = FALSE;
+                $row->quantity          = 0;
+                $row->item_tax_method   = $row->tax_method;
+                $row->qty               = 1;
+                $row->discount          = '0';
+                $row->serial            = '';
+                $options                = $this->sales_model->getProductOptions($row->id, $warehouse_id, 1);
+                $group_prices           = $this->sales_model->getProductPriceGroupId($row->id, $customer->price_group_id);
+                $all_group_prices       = $this->sales_model->getProductPriceGroup($row->id);
+                $pending_so_qty         = $this->sales_model->getPendingSOQTYByProductID($row->id);
+
+                if($expiry_status == 1) {
+                    $expdates           = $this->sales_model->getProductExpireDate($row->id, $warehouse_id);
+                }else{
+                    $expdates           = NULL;
+                }
+                $w_piece                = $this->sales_model->getProductVariantByOptionID($row->id);
+                $psoqty                 = 0;
+                $optqty                 = 0;
+
+                if($pending_so_qty) {
+                    $psoqty             = $pending_so_qty->psoqty;
+                }
+                if ($options) {
+                    $opt                = $options[count($options)-1];
+                    if (!$option) {
+                        $option         = $opt->id;
+                        $optqty         = $opt->qty_unit;
+                    }
+                } else {
+                    $opt                = json_decode('{}');
+                    $opt->price         = 0;
+                }
+                $row->psoqty            = $psoqty;
+                if ($opt_id) {
+                    $row->option 		= $opt_id;
+                } else {
+                    $row->option 		= $option;
+                }
+                $row->qty_unit          = $optqty;
+
+                if($expiry_status == 1 && $expdates != NULL){
+                    $row->expdate       = $expdates[0]->id;
+                }else{
+                    $row->expdate       = NULL;
+                }
+
+                $pis                    = $this->sales_model->getPurchasedItems($row->id, $warehouse_id, $row->option);
+                if($pis){
+                    foreach ($pis as $pi) {
+                        //  $row->quantity += $pi->quantity_balance;
+                    }
+                }
+                $test                   = $this->sales_model->getWP2($row->id, $warehouse_id);
+                $row->quantity          = $test->quantity;
+
+                if ($options) {
+                    $option_quantity = 0;
+                    foreach ($options as $option) {
+                        $pis            = $this->sales_model->getPurchasedItems($row->id, $warehouse_id, $row->option);
+                        if($pis){
+                            foreach ($pis as $pi) {
+                                //$option_quantity += $pi->quantity_balance;
+                            }
+
+                        }
+                        if($option->quantity > $option_quantity) {
+                            //$option->quantity = $option_quantity;
+                        }
+                        //$option->quantity = $test->quantity;
+
+                        if($customer_group->makeup_cost == 1){
+                            $option->price = $option->price  + (($option->price * $customer_group->percent) / 100);
+                        }
+                    }
+                }
+
+                $setting = $this->sales_model->getSettings();
+
+                if($row->subcategory_id)
+                {
+                    $percent = $this->sales_model->getCustomerMakup($customer->customer_group_id,$row->id,1);
+
+                }else{
+                    $percent = $this->sales_model->getCustomerMakup($customer->customer_group_id,$row->id,0);
+                }
+
+                if ($opt->price != 0) {
+                    if($customer_group->makeup_cost == 1 && $percent!=""){
+                        if($setting->attributes==1)
+                        {
+                            if(isset($percent->percent)) {
+                                $row->price = ($row->cost*$opt->qty_unit)  + ((($row->cost*$opt->qty_unit)  * (isset($percent->percent)?$percent->percent:0)) / 100);
+                            }else {
+                                $row->price = $opt->price + (($opt->price * $customer_group->percent) / 100);
+                            }
+                        }
+                    }else{
+                        if($setting->attributes==1)
+                        {
+                            $row->price = $opt->price + (($opt->price * $customer_group->percent) / 100);
+                        }
+                    }
+                } else {
+                    if($customer_group->makeup_cost == 1 && $percent!=""){
+                        if($setting->attributes==1)
+                        {
+                            if(isset($percent->percent)) {
+                                $row->price = $row->cost  + (($row->cost * (isset($percent->percent)?$percent->percent:0)) / 100);
+                            }else {
+                                $row->price = $row->price + (($row->price * $customer_group->percent) / 100);
+                            }
+                        }
+                    }else{
+                        if($setting->attributes==1)
+                        {
+                            $row->price = $row->price + (($row->price * $customer_group->percent) / 100);
+                        }
+                    }
+                }
+
+                if($group_prices)
+                {
+                    $curr_by_item = $this->site->getCurrencyByCode($group_prices[0]->currency_code);
+                    $row->price_id = $group_prices[0]->id ? $group_prices[0]->id : 0;
+                    $row->price = $group_prices[0]->price ? $group_prices[0]->price : 0;
+
+                    if($customer_group->makeup_cost == 1){
+                        //$row->price = $row->cost + (($row->cost * $customer_group->percent) / 100);
+                        $row->price = $row->cost + (($row->cost * (isset($percent->percent)?$percent->percent:0)) / 100);
+
+                    }else{
+                        //$row->price = $group_prices[0]->price;
+                        $row->price = $group_prices[0]->price + (($group_prices[0]->price * $customer_group->percent) / 100);
+                    }
+                }else{
+                    $row->price_id = 0;
+                }
+                $pending_so_qty = $this->sales_model->getPendingSOQTYByProductID($row->id);
+                $psoqty = 0;
+
+                if ($pending_so_qty) {
+                    $psoqty = $pending_so_qty->psoqty;
+                }
+
+                $row->psoqty            = $psoqty;
+                $row->old_qty_rec	    = 0;
+                $row->piece			    = 0;
+                $row->digital_code	    = "";
+                $row->digital_name	    = "";
+                $row->digital_id	    = 0;
+                $row->piece			    = 0;
+                $row->wpiece		    = $row->cf1;
+                $row->is_sale_order     = 0;
+                $row->item_load         = 0;
+                $row->oqty			    = 0;
+                $row->w_piece		    = $row->cf1;
+                $row->rate_item_cur     = (isset($curr_by_item->rate)?$curr_by_item->rate:0);
+                $row->real_unit_price   = $row->price;
+
+                $combo_items = FALSE;
+                $customer_percent = $customer_group->percent ? $customer_group->percent : 0;
+                if ($row->tax_rate) {
+                    $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
+                    if ($row->type == 'combo') {
+                        $combo_items = $this->sales_model->getProductComboItems($row->id, $warehouse_id);
+                    }
+
+                    $pr[] = array('id' => str_replace(".", "", microtime(true)), 'item_id' => $row->id, 'label' => $row->name . " (" . $row->code . ")", 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'options' => $options, 'expdates' => $expdates, 'group_prices' => $group_prices, 'all_group_prices' => $all_group_prices, 'makeup_cost' => $customer_group->makeup_cost, 'customer_percent' => $customer_percent, 'makeup_cost_percent' => $percent->percent);
+
+                } else {
+                    $pr[] = array('id' => str_replace(".", "", microtime(true)), 'item_id' => $row->id, 'label' => $row->name . " (" . $row->code . ")", 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => false, 'options' => $options,$options,'expdates'=>$expdates,'group_prices'=>$group_prices, 'all_group_prices' => $all_group_prices, 'makeup_cost'=>$customer_group->makeup_cost, 'customer_percent' => $customer_percent, 'makeup_cost_percent'=>$percent->percent);
+                }
+
+            }
+
+            //$this->erp->print_arrays($pr);
+            echo json_encode($pr);
+
+        } else {
+            echo json_encode(array(array('id' => 0, 'label' => lang('no_match_found'), 'value' => $term)));
+        }
+    }
+
     function delete($id = NULL)
     {
         $this->erp->checkPermissions('delete',null,'sales');
