@@ -1134,6 +1134,7 @@
                                             	</li>
 												<li id="drivers_index">
                                                     <a class="submenu" href="<?= site_url('drivers/add'); ?>" data-toggle="modal" data-target="#myModal">
+
                                                         <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_driver'); ?></span>
                                                     </a>
                                                 </li>
