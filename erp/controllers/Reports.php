@@ -17226,7 +17226,7 @@ class Reports extends MY_Controller
             $issued_by = null;
             $this->data['issued_by2'] = 0;
         }
-        
+        $this->data['customers'] = $this->site->getCustomers();
         $cust_data[] = "";
         $salemans = $this->reports_model->getSaleman();
         

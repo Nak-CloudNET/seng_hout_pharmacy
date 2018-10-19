@@ -1164,6 +1164,7 @@
                                             	</li>
 												<li id="drivers_index">
                                                     <a class="submenu" href="<?= site_url('drivers/add'); ?>" data-toggle="modal" data-target="#myModal">
+
                                                         <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_driver'); ?></span>
                                                     </a>
                                                 </li>
@@ -1688,11 +1689,11 @@
 																<i class="fa fa-users"></i><span class="text"> <?= lang('saleman_report'); ?></span>
 															</a>
 														</li>
-													<!--	<li id="reports_saleman_detail">
+													<li id="reports_saleman_detail">
 															<a href="<?= site_url('reports/saleman_detail') ?>">
 																<i class="fa fa-users"></i><span class="text"> <?= lang('saleman_detail_report_'); ?></span>
 															</a>
-														</li>
+														</li><!--
                                                         <li id="reports_shops">
 															<a href="<?= site_url('reports/shops') ?>">
 																<i class="fa fa-building"></i><span class="text"> <?= lang('biller_report'); ?></span>

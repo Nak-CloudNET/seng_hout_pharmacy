@@ -177,6 +177,18 @@
                                 ?>                          
                             </div>
                         </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label" for="biller"><?= lang("customer"); ?></label>
+                                <?php
+                                $cus["0"] = "All";
+                                foreach ($customers as $cust) {
+                                    $cus[$cust->id] = $cust->name? $cust->name : $cust->company;
+                                }
+                                echo form_dropdown('customerA', $cus, (isset($_POST['customerA']) ? $_POST['customerA'] : ""), 'class="form-control" id="customer" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("biller") . '"');
+                                ?>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <div
@@ -212,7 +224,7 @@
 								$total_pay_amoun2 = 0;
 								$total_return_amoun2 = 0;
                             foreach($salemans as $saleman){
-                                $items = $this->reports_model->getSalemanReportDetail($saleman->id, $start_date2, $end_date2, $saleman2, $sales_type2, $issued_by2);
+                                $items = $this->reports_model->getSalemanReportDetail($saleman->id, $start_date2, $end_date2, $saleman2, $sales_type2, $issued_by2,($_POST['customerA']?$_POST['customerA']:''));
                                 // $this->erp->print_arrays($items);
 								if(is_array($items)){
 									$am = 0;
@@ -236,7 +248,7 @@
 									<td><?= $row->due_date ? $this->erp->hrld($row->due_date) : '' ?></td>
                                     <td><?= $row->reference_no ?></td>
                                     <td><?= $row->biller ?></td>
-                                    <td><?= $row->customer ?></td>
+                                    <td><?= $row->customer?$row->customer:$row->cp ?></td>
                                     <td>
                                         <?= $row->note ? $row->note : '' ?>
                                     </td>
