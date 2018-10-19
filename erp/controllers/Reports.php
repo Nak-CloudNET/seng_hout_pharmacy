@@ -17236,7 +17236,6 @@ class Reports extends MY_Controller
         $bc = array( array('link' => base_url(), 'page' => lang('home')), array('link' => '#', 'page' => lang('reports')),array('link' => '#', 'page' => lang('saleman_detail_report')) );
         $meta = array('page_title' => lang('saleman_detail_report'), 'bc' => $bc);
         $this->page_construct('Reports/saleman_detail', $meta, $this->data);
-    
     }
 
     function saleman_detail_action($pdf=null, $excel=null,$saleman2=null)

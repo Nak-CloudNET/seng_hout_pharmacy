@@ -429,7 +429,6 @@ class Reports_model extends CI_Model
 		   $this->db->where('date_format(erp_sales.date,"%Y-%m-%d") BETWEEN "' . $start_date2 . '" and "' . $end_date2 . '"');
 		   $this->db->where('groups.type =', 'SALE');
 	    }
-
 	    if($saleman2){
 		    $this->db->where('sales.saleman_by',$saleman2);
 	    }

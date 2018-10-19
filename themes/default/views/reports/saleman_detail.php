@@ -217,7 +217,6 @@
                                 <th><?php echo $this->lang->line("balance"); ?></th>
                                 <th><?php echo $this->lang->line("payment_status"); ?></th>
                             </tr>
-             
                         <?php 
 								$total_sale2 = 0;
 								$total_am2 = 0;
