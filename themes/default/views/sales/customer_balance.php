@@ -118,17 +118,28 @@
 				 <div id="form">
 
                             <?php echo form_open("sales/customer_balance"); ?>
-                            <div class="row">                            
-								<div class="col-sm-4">
+                            <div class="row">
+                                <div class="col-md-4">
                                     <div class="form-group">
-                                        <label class="control-label" for="biller"><?= lang("customer"); ?></label>
-                                        <?php
-                                        $cus["0"] = lang('all');
-                                        foreach ($customers as $customer) {
-                                            $cus[$customer->id] =  $customer->name;
-                                        }
-                                        echo form_dropdown('customer', $cus, (isset($_POST['customer']) ? $_POST['customer'] : ""), 'class="form-control" id="biller" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("customer") . '"');
-                                        ?>
+                                        <?= lang("customer", "slcustomer"); ?>
+                                        <?php if ($Owner || $Admin || $GP['customers-add']) { ?><div class="input-group"><?php } ?>
+                                            <?php
+                                            echo form_input('customer_1', (isset($_POST['customer']) ? $_POST['customer'] : (isset($sale_order->company_name)?$sale_order->company_name:$this->input->get('customer'))), 'id="slcustomer" data-placeholder="' . lang("select") . ' ' . lang("customer") . '" required="required" class="form-control input-tip" style="min-width:100%;"');
+                                            ?>
+                                            <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
+
+                                            <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
+                                                <a href="#" id="view-customer" class="external" data-toggle="modal" data-target="#myModal">
+                                                    <i class="fa fa-2x fa-user" id="addIcon"></i>
+                                                </a>
+                                            </div>
+
+                                            <div class="input-group-addon no-print" style="padding: 2px 5px;"><a
+                                                        href="<?= site_url('customers/add/sale'); ?>" id="add-customer"
+                                                        class="external" data-toggle="modal" data-target="#myModal"><i
+                                                            class="fa fa-2x fa-plus-circle" id="addIcon"></i></a></div>
+                                        </div>
+                                    <?php } ?>
                                     </div>
                                 </div>
 								<div class="col-sm-4">
@@ -139,7 +150,7 @@
                                         foreach ($group_areas as $group_area) {
                                             $group[$group_area->areas_g_code] =  $group_area->areas_group;
                                         }
-                                        echo form_dropdown('group_area', $group, (isset($_POST['group_area']) ? $_POST['group_area'] : ""), 'class="form-control" id="group_area" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
+                                        echo form_dropdown('group_area', $group, (isset($_POST['group_area']) ? $_POST['group_area'] : ""), 'class="form-control" id="slarea" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
                                         ?>
                                     </div>
                                 </div>
@@ -237,5 +248,75 @@
             });
             return false;
         });
+    });
+
+
+    $(document).ready(function () {
+        $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer_to_load') ?>").select2({
+            placeholder: "<?= lang('select_area_to_load') ?>", data: [
+                {id: '', text: '<?= lang('select_area_to_load') ?>'}
+            ]
+        });
+
+        $('#slarea').change(function () {
+            var v = $(this).val();
+            $('#modal-loading').show();
+            if (v) {
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    url: "<?= site_url('sales/getCustomersByArea') ?>/" + v,
+                    dataType: "json",
+                    success: function (scdata) {
+                        if (scdata != null) {
+                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: scdata
+                            });
+                        }else{
+
+                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: 'not found'
+                            });
+                        }
+                    },
+                    error: function () {
+                        bootbox.alert('<?= lang('ajax_error') ?>');
+                        $('#modal-loading').hide();
+                    }
+                });
+            } else {
+                $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
+                    placeholder: "<?= lang('select_area_to_load') ?>",
+                    data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
+                });
+            }
+            $('#modal-loading').hide();
+        }).trigger('change');
+
+        $("#slcustomer").change(function () {
+            var v = $(this).val();
+            $('#modal-loading').show();
+            if (v) {
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    url: "<?= site_url('sales/getAreaByCustomer') ?>/" + v,
+                    dataType: "json",
+                    success: function (scdata) {
+                        var option = '';
+                        $.each( scdata, function( index, data ){
+                            $('#slarea').val(data.areas_g_code).trigger('change');
+                        });
+                    },
+                    error: function () {
+                        bootbox.alert('<?= lang('ajax_error') ?>');
+                        $('#modal-loading').hide();
+                    }
+                });
+            }
+        });
+
     });
 </script>

@@ -711,7 +711,6 @@ class Sales extends MY_Controller
         } else {
             $this->data['warehouses'] = NULL;
             $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
-
             $this->data['warehouse'] = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : NULL;
         }
         $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('sales'), 'page' => lang('sales')), array('link' => '#', 'page' => lang('customer_balance')));
