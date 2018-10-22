@@ -971,7 +971,7 @@ class Sales extends MY_Controller
 				) AS erp_total_return_sale";
 		
 		$this->load->library('datatables');
-		$this->datatables->select($this->db->dbprefix('companies') . ".id as idd, companies.company, companies.name, 
+		$this->datatables->select($this->db->dbprefix('companies') . ".id as idd,group_areas.areas_group as group_area, companies.company, companies.name, 
 					companies.phone, companies.email, count(" . $this->db->dbprefix('sales') . ".id) as total, 
 					COALESCE(SUM(erp_sales.grand_total), 0) as total_amount, 
 					SUM(COALESCE(erp_total_return_sale.return_sale, 0)) AS return_sale,
@@ -982,6 +982,7 @@ class Sales extends MY_Controller
 					", FALSE)
                 ->from("sales")
                 ->join('companies', 'companies.id = sales.customer_id', 'left')
+                ->join('group_areas', 'companies.group_areas_id = group_areas.areas_g_code', 'left')
 				->join($sp, 'pmt.cust_id = sales.customer_id', 'left')
 				->join($return, 'total_return_sale.sale_id = sales.id', 'left')
                 ->where(array('companies.group_name' => 'customer', 'sales.payment_status !=' => 'paid'))

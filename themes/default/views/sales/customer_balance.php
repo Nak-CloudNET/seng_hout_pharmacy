@@ -34,7 +34,7 @@
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
-            "aoColumns": [{"bSortable": false, "mRender": checkbox}, null, null, null, null, {
+            "aoColumns": [{"bSortable": false, "mRender": checkbox}, null, null, null, null,null, {
                 "mRender": formatQuantity,
                 "bSearchable": false
             }, {"mRender": currencyFormat, "bSearchable": false}, {
@@ -53,19 +53,20 @@
 					balance += parseFloat(aaData[aiDisplay[i]][11]);
 				}
 				var nCells = nRow.getElementsByTagName('th');
-				nCells[5].innerHTML = formatQuantity(parseFloat(tSales));
-				nCells[6].innerHTML = currencyFormat(parseFloat(tAmount));
-				nCells[7].innerHTML = currencyFormat(parseFloat(tReturn));
-				nCells[8].innerHTML = currencyFormat(parseFloat(tPaid));
-				nCells[9].innerHTML = currencyFormat(parseFloat(tDeposit));
-				nCells[10].innerHTML = currencyFormat(parseFloat(tDiscount));
-				nCells[11].innerHTML = currencyFormat(parseFloat(balance));
+				nCells[6].innerHTML = formatQuantity(parseFloat(tSales));
+				nCells[7].innerHTML = currencyFormat(parseFloat(tAmount));
+				nCells[8].innerHTML = currencyFormat(parseFloat(tReturn));
+				nCells[9].innerHTML = currencyFormat(parseFloat(tPaid));
+				nCells[10].innerHTML = currencyFormat(parseFloat(tDeposit));
+				nCells[11].innerHTML = currencyFormat(parseFloat(tDiscount));
+				nCells[12].innerHTML = currencyFormat(parseFloat(balance));
 			}
         }).fnSetFilteringDelay().dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('group-area');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
         ], "footer");
     });
 	
@@ -119,30 +120,7 @@
 
                             <?php echo form_open("sales/customer_balance"); ?>
                             <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <?= lang("customer", "slcustomer"); ?>
-                                        <?php if ($Owner || $Admin || $GP['customers-add']) { ?><div class="input-group"><?php } ?>
-                                            <?php
-                                            echo form_input('customer_1', (isset($_POST['customer']) ? $_POST['customer'] : (isset($sale_order->company_name)?$sale_order->company_name:$this->input->get('customer'))), 'id="slcustomer" data-placeholder="' . lang("select") . ' ' . lang("customer") . '" required="required" class="form-control input-tip" style="min-width:100%;"');
-                                            ?>
-                                            <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
-
-                                            <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
-                                                <a href="#" id="view-customer" class="external" data-toggle="modal" data-target="#myModal">
-                                                    <i class="fa fa-2x fa-user" id="addIcon"></i>
-                                                </a>
-                                            </div>
-
-                                            <div class="input-group-addon no-print" style="padding: 2px 5px;"><a
-                                                        href="<?= site_url('customers/add/sale'); ?>" id="add-customer"
-                                                        class="external" data-toggle="modal" data-target="#myModal"><i
-                                                            class="fa fa-2x fa-plus-circle" id="addIcon"></i></a></div>
-                                        </div>
-                                    <?php } ?>
-                                    </div>
-                                </div>
-								<div class="col-sm-4">
+                                <div class="col-sm-4">
                                     <div class="form-group">
                                         <label class="control-label" for="group_area"><?= lang("group_area"); ?></label>
                                         <?php
@@ -154,6 +132,22 @@
                                         ?>
                                     </div>
                                 </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <?= lang("customer", "slcustomer"); ?>
+                                        <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
+                                        <div><?php } ?>
+                                            <?php
+                                            echo form_input('customer_1', (isset($_POST['customer']) ? $_POST['customer'] : (isset($sale_order->company_name)?$sale_order->company_name:$this->input->get('customer'))), ' id="slcustomer"  data-placeholder="' . lang("select") . ' ' . lang("customer") . '" required="required" class="form-control " ');
+                                            ?>
+                                            <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
+
+
+                                        </div>
+                                    <?php } ?>
+                                    </div>
+                                </div>
+
                                 <?php if($this->Settings->product_serial) { ?>
                                     <div class="col-sm-4">
                                         <div class="form-group">
@@ -191,6 +185,7 @@
 								<th style="min-width:30px; width: 30px; text-align: center;">
 									<input class="checkbox checkth" type="checkbox" name="check"/>
 								</th>
+								<th><?= lang("group-area"); ?></th>
 								<th><?= lang("company"); ?></th>
 								<th><?= lang("name"); ?></th>
 								<th><?= lang("phone"); ?></th>
@@ -215,6 +210,7 @@
 								<th style="min-width:30px; width: 30px; text-align: center;">
 									<input class="checkbox checkth" type="checkbox" name="check"/>
 								</th>
+								<th></th>
 								<th></th>
 								<th></th>
 								<th></th>
@@ -252,11 +248,7 @@
 
 
     $(document).ready(function () {
-        $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer_to_load') ?>").select2({
-            placeholder: "<?= lang('select_area_to_load') ?>", data: [
-                {id: '', text: '<?= lang('select_area_to_load') ?>'}
-            ]
-        });
+
 
         $('#slarea').change(function () {
             var v = $(this).val();
@@ -295,28 +287,7 @@
             $('#modal-loading').hide();
         }).trigger('change');
 
-        $("#slcustomer").change(function () {
-            var v = $(this).val();
-            $('#modal-loading').show();
-            if (v) {
-                $.ajax({
-                    type: "get",
-                    async: false,
-                    url: "<?= site_url('sales/getAreaByCustomer') ?>/" + v,
-                    dataType: "json",
-                    success: function (scdata) {
-                        var option = '';
-                        $.each( scdata, function( index, data ){
-                            $('#slarea').val(data.areas_g_code).trigger('change');
-                        });
-                    },
-                    error: function () {
-                        bootbox.alert('<?= lang('ajax_error') ?>');
-                        $('#modal-loading').hide();
-                    }
-                });
-            }
-        });
+
 
     });
 </script>
