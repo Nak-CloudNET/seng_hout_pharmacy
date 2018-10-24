@@ -248,7 +248,11 @@
 
 
     $(document).ready(function () {
-
+        $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer_to_load') ?>").select2({
+            placeholder: "<?= lang('select_area_to_load') ?>", data: [
+                {id: '', text: '<?= lang('select_area_to_load') ?>'}
+            ]
+        });
 
         $('#slarea').change(function () {
             var v = $(this).val();

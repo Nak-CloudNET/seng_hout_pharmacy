@@ -553,7 +553,7 @@
 						<div class="col-sm-4">
                             <div class="form-group">
                                 <label class="control-label" for="customer"><?= lang("customer"); ?></label>
-                                <?php echo form_input('customer', (isset($_POST['customer']) ? $_POST['customer'] : ""), 'class="form-control" id="customer" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("customer") . '"'); ?>
+                                <?php echo form_input('customer', (isset($_POST['customer']) ? $_POST['customer'] : ""), 'class="form-control" id="slcustomer" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("customer") . '"'); ?>
                             </div>
                         </div>
 						
@@ -639,7 +639,7 @@
                                 foreach ($areas as $area) {
                                     $garea[$area->areas_g_code] = $area->areas_group;
                                 }
-                                echo form_dropdown('group_area', $garea, (isset($_POST['group_area']) ? $_POST['group_area'] : ""), 'class="form-control" id="group_area" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
+                                echo form_dropdown('group_area', $garea, (isset($_POST['group_area']) ? $_POST['group_area'] : ""), 'class="form-control" id="slarea" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
                                 ?>
                             </div>
                         </div>
@@ -737,3 +737,52 @@
         </div>
     </div>
 </div>
+<script>
+    $(document).ready(function () {
+        $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer_to_load') ?>").select2({
+            placeholder: "<?= lang('select_area_to_load') ?>", data: [
+                {id: '', text: '<?= lang('select_area_to_load') ?>'}
+            ]
+        });
+
+        $('#slarea').change(function () {
+            var v = $(this).val();
+            $('#modal-loading').show();
+            if (v) {
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    url: "<?= site_url('sales/getCustomersByArea') ?>/" + v,
+                    dataType: "json",
+                    success: function (scdata) {
+                        if (scdata != null) {
+                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: scdata
+                            });
+                        }else{
+
+                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: 'not found'
+                            });
+                        }
+                    },
+                    error: function () {
+                        bootbox.alert('<?= lang('ajax_error') ?>');
+                        $('#modal-loading').hide();
+                    }
+                });
+            } else {
+                $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
+                    placeholder: "<?= lang('select_area_to_load') ?>",
+                    data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
+                });
+            }
+            $('#modal-loading').hide();
+        }).trigger('change');
+
+
+
+    });
+</script>
