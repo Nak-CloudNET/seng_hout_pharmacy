@@ -269,6 +269,17 @@ class Sales_model extends CI_Model
         }
 		return FALSE;
 	}
+	public function getGroupAreaBycus($customerID){
+        $this->db->select('group_areas_id')
+            ->from('erp_companies')
+            ->where('erp_companies.id',$customerID);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0 ){
+            return $q->rows();
+        }
+        return FALSE;
+
+    }
 
 	public function getCusDetail($customer_id){
 		$this->db->select('companies.credit_limited,IFNULL(sum(erp_sales.grand_total - erp_sales.paid), 0) AS balance');

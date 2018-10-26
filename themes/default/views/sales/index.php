@@ -744,11 +744,13 @@
                 {id: '', text: '<?= lang('select_area_to_load') ?>'}
             ]
         });
+        $('#slcustomer').change(function () {
 
+        });
         $('#slarea').change(function () {
             var v = $(this).val();
             $('#modal-loading').show();
-            if (v) {
+            if (1) {
                 $.ajax({
                     type: "get",
                     async: false,
