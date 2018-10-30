@@ -629,7 +629,7 @@
 										<div class="form-group">
 											<?= lang("group_area", "group_area"); ?>
 											<?php
-											 $ar[''] = '';
+											 $ar[''] = 'ALL';
 											foreach ($areas as $area) {
 												$ar[$area->areas_g_code] = $area->areas_group;
 											}
@@ -1879,33 +1879,7 @@
 			mywindow.document.write('</head><body >');
 			mywindow.document.write('<center>');
 			var issued_date = $('.current_date').val();
-			/*mywindow.document.write('<table class="table-condensed" style="width:95%; font-family:Verdana,Geneva,sans-serif; font-size:12px; padding-bottom:10px;">'+
-										'<tr>'+
-											'<td width="15%"><b style="font-size:18px;"><?= lang('Depreciation List') ?></b></td>'+
-											'<td width="35%"></td>'+
-											'<td width="15%"><?= lang('To') ?></td>'+
-											'<td width="35%"><?= lang(": ") ?></td>'+
-										'</tr>'+
-										'<tr>'+
-											'<td><?= lang('Invoice No ') ?></td>'+
-											'<td><?= lang(": ") ?></td>'+
-											'<td><?= lang('Contact Person') ?></td>'+
-											'<td><?= lang(": ") ?></td>'+
-										'</tr>'+
-										'<tr>'+
-											'<td><?= lang('Issued Date ') ?></td>'+
-											'<td><?= lang(": ") ?>'+ issued_date +'</td>'+
-											'<td><?= lang('HP') ?></td>'+
-											'<td><?= lang(": ") ?></td>'+
-										'</tr>'+
-										'<tr>'+
-											'<td></td>'+
-											'<td></td>'+
-											'<td><?= lang('Address') ?></td>'+
-											'<td><?= lang(": ") ?></td>'+
-										'</tr>'+
-									'</table><br/>'
-								  );*/
+
 			mywindow.document.write("<center><h4 style='font-family:Verdana,Geneva,sans-serif;'>Loan Amortization Schedule</h4></center><br/>");
 			mywindow.document.write('<table class="table-condensed" style="width:95%; font-family:Verdana,Geneva,sans-serif; font-size:12px; padding-bottom:10px;">'+
 										'<tr>'+
@@ -2081,66 +2055,79 @@
                 {id: '', text: '<?= lang('select_area_to_load') ?>'}
             ]
         });
-				
-        $('#slarea').change(function () {
-           var v = $(this).val();
-            $('#modal-loading').show();			
-            if (v) {
-                $.ajax({
-                    type: "get",
-                    async: false,
-                    url: "<?= site_url('sales/getCustomersByArea') ?>/" + v,
-                    dataType: "json",
-                    success: function (scdata) {
-                        if (scdata != null) {
-                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
-                                placeholder: "<?= lang('select_category_to_load') ?>",
-                                data: scdata
-                            });
-                        }else{
-							
-							$("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
-                                placeholder: "<?= lang('select_category_to_load') ?>",
-                                data: 'not found'
-                            });
-						}
-                    },
-                    error: function () {
-                        bootbox.alert('<?= lang('ajax_error') ?>');
-                        $('#modal-loading').hide();
-                    }
-                });
-            } else {
-                $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
-                    placeholder: "<?= lang('select_area_to_load') ?>",
-                    data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
-                });
-            }
-            $('#modal-loading').hide();
-        }).trigger('change'); 
 
-		$("#slcustomer").change(function () {
-			var v = $(this).val();
-			$('#modal-loading').show();	
-			if (v) {
-				$.ajax({
-                    type: "get",
-                    async: false,
-                    url: "<?= site_url('sales/getAreaByCustomer') ?>/" + v,
-                    dataType: "json",
-                    success: function (scdata) {
-						var option = '';
-						$.each( scdata, function( index, data ){
-							$('#slarea').val(data.areas_g_code).trigger('change');
-						});
-                    },
-                    error: function () {
-                        bootbox.alert('<?= lang('ajax_error') ?>');
-                        $('#modal-loading').hide();
-                    }
-                });
-			}
-		});
+       $('#slarea').change(function () {
+           var v = $(this).val()?$(this).val():0;
+           $('#modal-loading').show();
+           if (1) {
+               $.ajax({
+                   type: "get",
+                   async: false,
+                   url: "<?= site_url('sales/getCustomersByArea') ?>/" + v,
+                   dataType: "json",
+                   success: function (scdata) {
+                       if (scdata != null) {
+                           $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                               placeholder: "<?= lang('select_category_to_load') ?>",
+                               data: scdata
+                           });
+                       }else{
+
+                           $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                               placeholder: "<?= lang('select_category_to_load') ?>",
+                               data: 'not found'
+                           });
+                       }
+                   },
+                   error: function () {
+                       bootbox.alert('<?= lang('ajax_error') ?>');
+                       $('#modal-loading').hide();
+                   }
+               });
+           } else {
+               $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
+                   placeholder: "<?= lang('select_area_to_load') ?>",
+                   data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
+               });
+           }
+           $('#modal-loading').hide();
+       });
+
+       $('#slcustomer').change(function () {
+
+           var v = $(this).val();
+           $('#modal-loading').show();
+           if (1) {
+               $.ajax({
+                   type: "get",
+                   async: false,
+                   url: "<?= site_url('sales/getAreaByCustomer') ?>/" + v,
+                   dataType: "json",
+                   success: function (scdata) {
+                       if (scdata != null) {
+                           $.each( scdata, function( index, data ){
+                               $('#slarea').val(data.group_areas_id).trigger('change');
+                           });
+                       }else{
+                           $("#slarea").select2({
+                               placeholder: "<?= lang('select_category_to_load') ?>",
+                               data: 'not found'
+                           });
+                       }
+                   },
+                   error: function () {
+                       bootbox.alert('<?= lang('ajax_error') ?>');
+                       $('#modal-loading').hide();
+                   }
+               });
+           } else {
+               $("#slarea").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
+                   placeholder: "<?= lang('select_area_to_load') ?>",
+                   data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
+               });
+           }
+           $('#modal-loading').hide();
+       });
 		 
     });
 	

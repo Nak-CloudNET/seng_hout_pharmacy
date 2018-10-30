@@ -635,7 +635,7 @@
                             <div class="form-group">
                                 <label class="control-label" for="group_area"><?= lang("group_area"); ?></label>
                                 <?php
-                                $garea[""] = "";
+                                $garea[""] = "ALL";
                                 foreach ($areas as $area) {
                                     $garea[$area->areas_g_code] = $area->areas_group;
                                 }
@@ -739,16 +739,29 @@
 </div>
 <script>
     $(document).ready(function () {
-        $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer_to_load') ?>").select2({
-            placeholder: "<?= lang('select_area_to_load') ?>", data: [
-                {id: '', text: '<?= lang('select_area_to_load') ?>'}
-            ]
-        });
-        $('#slcustomer').change(function () {
-
+        $('#slcustomer').select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: "<?= site_url('customers/suggestions') ?>",
+                dataType: 'json',
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return {results: data.results};
+                    } else {
+                        return {results: [{id: '', text: 'No Match Found'}]};
+                    }
+                }
+            }
         });
         $('#slarea').change(function () {
-            var v = $(this).val();
+            var v = $(this).val()?$(this).val():0;
             $('#modal-loading').show();
             if (1) {
                 $.ajax({
@@ -782,8 +795,43 @@
                 });
             }
             $('#modal-loading').hide();
-        }).trigger('change');
+        });
 
+        $('#slcustomer').change(function () {
+
+            var v = $(this).val();
+            $('#modal-loading').show();
+            if (1) {
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    url: "<?= site_url('sales/getAreaByCustomer') ?>/" + v,
+                    dataType: "json",
+                    success: function (scdata) {
+                        if (scdata != null) {
+                            $.each( scdata, function( index, data ){
+                                $('#slarea').val(data.group_areas_id).trigger('change');
+                            });
+                        }else{
+                            $("#slarea").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: 'not found'
+                            });
+                        }
+                    },
+                    error: function () {
+                        bootbox.alert('<?= lang('ajax_error') ?>');
+                        $('#modal-loading').hide();
+                    }
+                });
+            } else {
+                $("#slarea").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
+                    placeholder: "<?= lang('select_area_to_load') ?>",
+                    data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
+                });
+            }
+            $('#modal-loading').hide();
+        });
 
 
     });

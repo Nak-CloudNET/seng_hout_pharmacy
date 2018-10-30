@@ -245,10 +245,12 @@ class Sales_model extends CI_Model
 	}
 
 	public function getCustomersByArea($area = null){
-		$this->db->select('id as id, CONCAT(name ," (",company, ")" ) as text');
-		if($area != null) {
+		$this->db->select('id as id,CONCAT(erp_companies.code, " - ", (
+			IF((ISNULL(erp_companies.company) OR erp_companies.company = ""), erp_companies.name, erp_companies.company)
+		)) as text');
+		if($area) {
 			$q = $this->db->get_where('companies', array('group_name' => 'customer','group_areas_id' => $area));
-		}else {
+		} else {
 			//$q = $this->db->get('companies');
 			$q = $this->db->get_where('companies', array('group_name' => 'customer'));
 		}
@@ -258,17 +260,22 @@ class Sales_model extends CI_Model
 		return false;
 	}
 
-	public function getAreaByCustomer($customer_id){
-		$this->db->select('group_areas.*')
-				 ->from('group_areas')
-				 ->join('companies', 'companies.group_areas_id = group_areas.areas_g_code', 'left')
-				 ->where('companies.id', $customer_id);
-		$q = $this->db->get();
+	public function getAreaByCustomer($customer_id = null){
+		$this->db->select('companies.group_areas_id');
+            if ($customer_id != null){
+                $q = $this->db->get_where('companies', array('group_name' => 'customer','id' => $customer_id));
+            }else {
+                //$q = $this->db->get('companies');
+                $q = $this->db->get_where('companies', array('group_name' => 'customer'));
+            }
+
 		if ($q->num_rows() > 0 ){
 			return $q->result();
         }
 		return FALSE;
 	}
+
+	//thintha
 	public function getGroupAreaBycus($customerID){
         $this->db->select('group_areas_id')
             ->from('erp_companies')

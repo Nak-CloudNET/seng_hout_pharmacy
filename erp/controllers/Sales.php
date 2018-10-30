@@ -4105,7 +4105,8 @@ class Sales extends MY_Controller
 	
 	function getAreaByCustomer($customer_id = NULL)
     {
-        if ($rows = $this->sales_model->getAreaByCustomer($customer_id)) {
+        $rows = $this->sales_model->getAreaByCustomer($customer_id);
+        if (!empty($rows) OR $rows <> NULL) {
             $data = json_encode($rows);
         } else {
             $data = false;
@@ -16961,7 +16962,7 @@ class Sales extends MY_Controller
         $this->data['sid'] = $id;
         $this->load->view($this->theme .'sales/return_chea_kheng',$this->data);
     }
-    function getGroupAreaIdBycustomer($customer = null){
-        $this->db->sales_model->getGroupAreaBycus($customer);
-    }
+//    function getGroupAreaIdBycustomer($customer = null){
+//        $this->db->sales_model->getGroupAreaBycus($customer);
+//    }
 }
