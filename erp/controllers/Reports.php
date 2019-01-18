@@ -5825,6 +5825,21 @@ class Reports extends MY_Controller
         $this->page_construct('reports/view_saleman_report', $meta, $this->data);
     }
 
+    function view_saleman_report_detail($user_id = NULL)
+    {
+
+        if (!$user_id && $_GET['d'] == null) {
+            redirect($_SERVER["HTTP_REFERER"]);
+        }
+        $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+        $this->data['date'] = date('Y-m-d');
+        $this->data['user_id'] = $user_id;
+        $this->data['billers'] = $this->site->getAllCompanies('biller');
+        $this->data['customers'] = $this->site->getCustomers();
+        $bc = array(array('link' => base_url(), 'page' => lang('home')), array('link' => site_url('reports'), 'page' => lang('reports')), array('link' => '#', 'page' => lang('saleman_detail_report_')));
+        $meta = array('page_title' => lang('saleman_detail_report_'), 'bc' => $bc);
+        $this->page_construct('reports/view_saleman_report_detail', $meta, $this->data);
+    }
     function getSalemanReportDetail($warehouse_id = NULL, $dt = NULL)
     {
         $this->erp->checkPermissions('index');
@@ -5887,14 +5902,13 @@ class Reports extends MY_Controller
 
         $this->load->library('datatables');
         $this->datatables
-        ->select("sales.id, sales.date, sales.due_date, sales.reference_no, sales.biller, companies.name as customer, sales.note, 
-                    sales.sale_status, COALESCE(erp_sales.grand_total, 0) as grand_total,  
+        ->select("sales.id, sales.date, sales.due_date, sales.reference_no, sales.biller, companies.name as customer, COALESCE(erp_sales.grand_total, 0) as grand_total,  
                     (SELECT SUM(erp_return_sales.grand_total) FROM erp_return_sales WHERE erp_return_sales.sale_id = erp_sales.id) as return_sale, 
                     COALESCE( (SELECT SUM(IF((erp_payments.paid_by != 'deposit' AND ISNULL(erp_payments.return_id)), erp_payments.amount, IF(NOT ISNULL(erp_payments.return_id), ((-1)*erp_payments.amount), 0))) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id),0) as paid, 
                     (SELECT SUM(IF(erp_payments.paid_by = 'deposit', erp_payments.amount, 0)) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id) as deposit, 
                     (SELECT SUM(COALESCE(erp_payments.discount, 0)) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id) as discount, 
                     (COALESCE(erp_sales.grand_total,0)-COALESCE((SELECT SUM(erp_return_sales.grand_total) FROM erp_return_sales WHERE erp_return_sales.sale_id = erp_sales.id), 0)-COALESCE( (SELECT SUM(IF((erp_payments.paid_by != 'deposit' AND ISNULL(erp_payments.return_id)), erp_payments.amount, IF(NOT ISNULL(erp_payments.return_id), ((-1)*erp_payments.amount), 0))) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id),0)- COALESCE((SELECT SUM(IF(erp_payments.paid_by = 'deposit', erp_payments.amount, 0)) FROM erp_payments WHERE erp_payments.sale_id = erp_sales.id  ),0)-SUM(COALESCE(erp_payments.discount,0)) ) as balance, 
-                    payment_status")
+                   ")
         ->from('sales')
         ->join('companies', 'sales.customer_id = companies.id', 'left')
         ->join('payments', 'payments.sale_id = sales.id', 'left')
@@ -27681,6 +27695,128 @@ class Reports extends MY_Controller
 			}
 			echo $this->datatables->generate();
 	}
-	
+
+    function getSalemanReportByDetail($warehouse_id = NULL, $dt = NULL, $id = NULL)
+    {
+        $this->erp->checkPermissions('index');
+
+        if ($this->input->get('customer')) {
+            $customer = $this->input->get('customer');
+        } else {
+            $customer = NULL;
+        }
+        if ($this->input->get('customerA')) {
+            $customerA = $this->input->get('customerA');
+        } else {
+            $customerA = NULL;
+        }
+
+        if ($this->input->get('reference_no')) {
+            $reference_no = $this->input->get('reference_no');
+        } else {
+            $reference_no = NULL;
+        }
+        if ($this->input->get('biller')) {
+            $biller = $this->input->get('biller');
+        } else {
+            $biller = NULL;
+        }
+        if ($this->input->get('start_date')) {
+            $start_date = $this->input->get('start_date');
+        } else {
+            $start_date = NULL;
+        }
+
+        if ($this->input->get('end_date')) {
+            $end_date = $this->input->get('end_date');
+        } else {
+            $end_date = NULL;
+        }
+        if ($start_date) {
+            $start_date = $this->erp->fld($start_date);
+            $end_date = $this->erp->fld($end_date);
+        }
+        if ($this->input->get('search_id')) {
+            $search_id = $this->input->get('search_id');
+        } else {
+            $search_id = NULL;
+        }
+        if ($this->input->get('sales_type')) {
+            $sales_type = $this->input->get('sales_type');
+        } else {
+            $sales_type = NULL;
+        }
+        if ($this->input->get('issued_by')) {
+            $issued_by = $this->input->get('issued_by');
+        } else {
+            $issued_by = NULL;
+        }
+        if ((! $this->Owner || ! $this->Admin) && ! $warehouse_id) {
+            $user = $this->site->getUser();
+            $warehouse_id = $user->warehouse_id;
+        }
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select("sales.id, sales.date, sales.due_date, sales.reference_no, sales.biller, companies.name as customer,erp_sale_items.product_code,erp_sale_items.product_name,erp_sale_items.quantity,erp_sale_items.discount, COALESCE(erp_sales.grand_total, 0) as grand_total, 
+                   ")
+            ->from('erp_sale_items')
+            ->join('erp_sales','erp_sale_items.sale_id = erp_sales.id','left')
+            ->join('companies', 'sales.customer_id = companies.id', 'left')
+            ->join('payments', 'payments.sale_id = sales.id', 'left')
+
+            ->group_by('sales.id');
+
+        if ($this->permission['sales-index'] = ''){
+            if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin) {
+                $this->datatables->where('created_by', $this->session->userdata('user_id'));
+            } elseif ($this->Customer) {
+                $this->datatables->where('customer_id', $this->session->userdata('user_id'));
+            }
+        }
+
+        if ($customer) {
+            $this->datatables->where('sales.saleman_by', $customer);
+        }
+        if ($customerA) {
+            $this->datatables->where('companies.id', $customerA);
+        }
+
+        if ($reference_no) {
+            $this->datatables->where('sales.reference_no', $reference_no);
+        }
+
+        if($this->session->userdata('biller_id') ) {
+            $this->datatables->where('sales.biller_id', $this->session->userdata('biller_id') );
+        }
+
+        if ($biller) {
+            $this->datatables->where('sales.biller_id', $biller);
+        }
+        if ($start_date) {
+            $this->datatables->where('date_format(erp_sales.date,"%Y-%m-%d") BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+        }
+
+        if ($sales_type) {
+            if($sales_type == 'wholesale'){
+                $sales_type = 0;
+                $this->db->where('sales.pos',$sales_type);
+            } elseif ($sales_type == 'retail') {
+                $sales_type = 1;
+                $this->db->where('sales.pos',$sales_type);
+            }
+        }
+
+        if ($issued_by) {
+            if ($issued_by == 'hide') {
+                $this->db->where('sales.note =', '');
+            }
+        }
+
+
+        echo $this->datatables->generate();
+    }
+
+
 }
      

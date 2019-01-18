@@ -73,7 +73,7 @@
 			null,
 			{"mRender": currencyFormat},
             {"mRender": currencyFormat},
-			null,
+                {"mRender": currencyFormat},
 			{"mRender": row_status}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, balance = 0, qtotal = 0 ,quantity=0;

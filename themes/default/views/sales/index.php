@@ -549,14 +549,12 @@
                                 ?>
                             </div>
                         </div>
-						
 						<div class="col-sm-4">
                             <div class="form-group">
                                 <label class="control-label" for="customer"><?= lang("customer"); ?></label>
                                 <?php echo form_input('customer', (isset($_POST['customer']) ? $_POST['customer'] : ""), 'class="form-control" id="slcustomer" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("customer") . '"'); ?>
                             </div>
                         </div>
-						
 						<div class="col-md-4">
 							<div class="form-group">
 							<?= lang("saleman", "saleman"); ?>
@@ -569,14 +567,12 @@
 								?>							
 							</div>
 						</div>
-						
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label class="control-label" for="reference_no"><?= lang("reference_no"); ?></label>
                                 <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ""), 'class="form-control tip" id="reference_no"'); ?>
                             </div>
                         </div>
-
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label class="control-label" for="user"><?= lang("created_by"); ?></label>

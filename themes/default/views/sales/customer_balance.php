@@ -138,7 +138,7 @@
                                         <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
                                         <div><?php } ?>
                                             <?php
-                                            echo form_input('customer_1', (isset($_POST['customer']) ? $_POST['customer'] : (isset($sale_order->company_name)?$sale_order->company_name:$this->input->get('customer'))), ' id="slcustomer"  data-placeholder="' . lang("select") . ' ' . lang("customer") . '" required="required" class="form-control " ');
+                                            echo form_input('customer_1', (isset($_POST['customer']) ? $_POST['customer'] : (isset($sale_order->company_name)?$sale_order->company_name:$this->input->get('customer'))), ' id="slcustomer"  data-placeholder="' . lang("select") . ' ' . lang("customer") . '"  class="form-control " ');
                                             ?>
                                             <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
 
@@ -185,7 +185,7 @@
 								<th style="min-width:30px; width: 30px; text-align: center;">
 									<input class="checkbox checkth" type="checkbox" name="check"/>
 								</th>
-								<th><?= lang("group-area"); ?></th>
+								<th><?= lang("Group-Area"); ?></th>
 								<th><?= lang("company"); ?></th>
 								<th><?= lang("name"); ?></th>
 								<th><?= lang("phone"); ?></th>
