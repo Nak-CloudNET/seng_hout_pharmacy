@@ -59,19 +59,13 @@ if ($this->input->post('submit_view_customer_balance')) {
                 "mRender": checkbox
             }, {"mRender": fld}, {"mRender": fld}, null, null, null,null,null,  {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-                var gtotal = 0, paid = 0, balance = 0, tReturn = 0, tDeposit = 0, qty = 0, tDiscount = 0;
+                var gtotal = 0, pName = 0, balance = 0, tReturn = 0, tDeposit = 0, qty = 0, tDiscount = 0;
                 for (var i = 0; i < aaData.length; i++) {
-
-                    gtotal += parseFloat(aaData[aiDisplay[i]][7]);
                     qty += parseFloat(aaData[aiDisplay[i]][8]);
                     tDiscount += parseFloat(aaData[aiDisplay[i]][9]);
                     gtotal += parseFloat(aaData[aiDisplay[i]][10]);
-
-
                 }
                 var nCells = nRow.getElementsByTagName('th');
-
-                nCells[7].innerHTML = currencyFormat(parseFloat(gtotal));
                 nCells[8].innerHTML = currencyFormat(parseFloat(qty));
                 nCells[9].innerHTML = currencyFormat(parseFloat(tDiscount));
                 nCells[10].innerHTML = currencyFormat(parseFloat(gtotal));
@@ -85,6 +79,7 @@ if ($this->input->post('submit_view_customer_balance')) {
             {column_number: 4, filter_default_label: "[<?=lang('shop');?>]", filter_type: "text", data: []},
             {column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
             {column_number: 6, filter_default_label: "[<?=lang('code');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('Product name');?>]", filter_type: "text", data: []},
 
         ], "footer");
 

@@ -27764,7 +27764,6 @@ class Reports extends MY_Controller
             ->join('erp_sales','erp_sale_items.sale_id = erp_sales.id','left')
             ->join('companies', 'sales.customer_id = companies.id', 'left')
             ->join('payments', 'payments.sale_id = sales.id', 'left')
-
             ->group_by('sales.id');
 
         if ($this->permission['sales-index'] = ''){
