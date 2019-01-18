@@ -106,18 +106,20 @@
                                 ?>
                             </div>
                         </div>
-						
+
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label class="control-label" for="warehouse"><?= lang("customer"); ?></label>
-                                <?php
-								$cu = array(""=>"ALL");
-								$cupp = $this->db->select("customer_id,customer")->group_by("customer_id")->get("erp_sales")->result();
-                                foreach ($cupp as $cup) {
-                                    $cu[$cup->customer_id] = $cup->customer;
-                                }
-                                echo form_dropdown('customer', $cu, (isset($_POST['customer']) ? $_POST['customer'] : ""), 'class="form-control" id="customer" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("customer") . '"');
-                                ?>
+                                <?= lang("customer", "slcustomer"); ?>
+                                <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
+                                <div><?php } ?>
+                                    <?php
+                                    echo form_input('customer_1', (isset($_POST['customer']) ? $_POST['customer'] : (isset($sale_order->company_name)?$sale_order->company_name:$this->input->get('customer'))), ' id="slcustomer"  data-placeholder="' . lang("select") . ' ' . lang("customer") . '"  class="form-control " ');
+                                    ?>
+                                    <?php if ($Owner || $Admin || $GP['customers-add']) { ?>
+
+
+                                </div>
+                            <?php } ?>
                             </div>
                         </div>
 						<div class="col-sm-4">
@@ -128,7 +130,7 @@
 								foreach ($group_areas as $group_area) {
 									$group[$group_area->areas_g_code] =  $group_area->areas_group;
 								}
-								echo form_dropdown('group_area', $group, (isset($_POST['group_area']) ? $_POST['group_area'] : ""), 'class="form-control" id="group_area" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
+								echo form_dropdown('group_area', $group, (isset($_POST['group_area']) ? $_POST['group_area'] : ""), 'class="form-control" id="slarea" data-placeholder="' . $this->lang->line("select") . " " . $this->lang->line("group_area") . '"');
 								?>
 							</div>
 						</div>
@@ -347,6 +349,56 @@
         $("#form").slideUp();
         return false;
     });
+
+    $(document).ready(function () {
+        $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer_to_load') ?>").select2({
+            placeholder: "<?= lang('select_area_to_load') ?>", data: [
+                {id: '', text: '<?= lang('select_area_to_load') ?>'}
+            ]
+        });
+
+        $('#slarea').change(function () {
+            var v = $(this).val();
+            $('#modal-loading').show();
+            if (v) {
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    url: "<?= site_url('sales/getCustomersByArea') ?>/" + v,
+                    dataType: "json",
+                    success: function (scdata) {
+                        if (scdata != null) {
+                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: scdata
+                            });
+                        }else{
+
+                            $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_customer') ?>").select2({
+                                placeholder: "<?= lang('select_category_to_load') ?>",
+                                data: 'not found'
+                            });
+                        }
+                    },
+                    error: function () {
+                        bootbox.alert('<?= lang('ajax_error') ?>');
+                        $('#modal-loading').hide();
+                    }
+                });
+            } else {
+                $("#slcustomer").select2("destroy").empty().attr("placeholder", "<?= lang('select_area_to_load') ?>").select2({
+                    placeholder: "<?= lang('select_area_to_load') ?>",
+                    data: [{id: '', text: '<?= lang('select_area_to_load') ?>'}]
+                });
+            }
+            $('#modal-loading').hide();
+        }).trigger('change');
+
+
+
+    });
+
+
 	$(document).ready(function(){
 		/*
 		$("#excel").click(function(e){

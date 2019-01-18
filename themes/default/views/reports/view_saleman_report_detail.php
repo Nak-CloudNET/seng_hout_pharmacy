@@ -69,8 +69,6 @@ if ($this->input->post('submit_view_customer_balance')) {
                 nCells[8].innerHTML = currencyFormat(parseFloat(qty));
                 nCells[9].innerHTML = currencyFormat(parseFloat(tDiscount));
                 nCells[10].innerHTML = currencyFormat(parseFloat(gtotal));
-
-
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
